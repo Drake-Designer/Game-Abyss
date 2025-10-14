@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+import dj_database_url  # for Postgres when DATABASE_URL is set
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +22,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%!!=l5468ljq2c9&18)mvgzk_v-p2vy98v!bs^rv$u3p5_184p'
+# secret key from env (fail fast if missing)
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY is not set. Set it in env.py (local) or in Heroku Config Vars.")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG is True by default local, False if I set DEBUG=False on Heroku
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+# Allowed hosts from env (empty list if not set)
+_alh = os.environ.get("ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = _alh.split(",") if _alh else []
+
+# for csrf trusted origins (needed for Heroku forms)
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(
+    ",") if os.environ.get("CSRF_TRUSTED_ORIGINS") else []
 
 
 # Application definition
@@ -41,6 +54,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # whitenoise is here to serve static files on Heroku
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -54,6 +69,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        # I can add a global templates folder here later if I want
         'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -72,12 +88,19 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# default is sqlite (local dev)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# if I set DATABASE_URL, then I use Postgres
+db_url = os.environ.get("DATABASE_URL")
+if db_url:
+    DATABASES["default"] = dj_database_url.parse(
+        db_url, conn_max_age=600, ssl_require=True)
 
 
 # Password validation
@@ -116,7 +139,21 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# static root is where collectstatic puts all static files for Heroku
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# whitenoise storage for serving static files in production
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# try to load env.py if it exists (local only, not on Heroku)
+try:
+    from env import *  # noqa
+except ImportError:
+    pass
