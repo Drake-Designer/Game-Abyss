@@ -1,0 +1,23 @@
+{
+  "name": "game-abyss",
+  "version": "1.0.0",
+  "description": "Game Abyss is a blog website for gamers who want to share their reviews, opinions, and discussions about video games. The project is built with Django and PostgreSQL as part of the Code Institute PP3 assessment.",
+  "main": "index.js",
+  "scripts": {
+    "lint:js": "eslint . --ext .js",
+    "lint:css": "stylelint \"**/*.css\"",
+    "format": "prettier --write .",
+    "check:format": "prettier --check ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "prettier": "^3.6.2",
+    "stylelint": "^16.25.0",
+    "stylelint-config-standard": "^39.0.1"
+  }
+}
