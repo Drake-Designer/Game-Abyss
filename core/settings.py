@@ -18,6 +18,13 @@ import dj_database_url  # for Postgres when DATABASE_URL is set
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+# Try to load env.py if it exists (local only, not on Heroku)
+try:
+    from env import *  # noqa
+except ImportError:
+    pass
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -54,7 +61,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # whitenoise is here to serve static files on Heroku
+    #
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -69,7 +76,6 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # I can add a global templates folder here later if I want
         'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -150,10 +156,3 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-# try to load env.py if it exists (local only, not on Heroku)
-try:
-    from env import *  # noqa
-except ImportError:
-    pass
