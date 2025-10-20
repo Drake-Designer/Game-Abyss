@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    Email Addresses - Game Abyss
+{% endblock title %}
+{% block content %}
+    <section id="auth-section" class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div id="auth-card" class="card">
+                    <div class="card-body p-4">
+                        <h2 id="auth-title" class="card-title text-center mb-4">📧 Email Addresses</h2>
+                        {% if user.emailaddress_set.all %}
+                            <p class="text-muted mb-4">Manage the email addresses associated with your account.</p>
+                            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                            <form method="post" action="{% url 'account_email' %}">
+                                {% csrf_token %}
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Your Email Addresses:</label>
+                                    {% for emailaddress in user.emailaddress_set.all %}
+                                        <div class="form-check mb-2">
+                                            <input type="radio"
+                                                   name="email"
+                                                   class="form-check-input"
+                                                   id="email_{{ forloop.counter }}"
+                                                   value="{{ emailaddress.email }}"
+                                                   {% if emailaddress.primary %}checked{% endif %}>
+                                            <label class="form-check-label" for="email_{{ forloop.counter }}">
+                                                {{ emailaddress.email }}
+                                                {% if emailaddress.primary %}<span class="badge bg-primary">Primary</span>{% endif %}
+                                                {% if emailaddress.verified %}
+                                                    <span class="badge bg-success">Verified</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark">Unverified</span>
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="d-grid gap-2 mb-3">
+                                    <button type="submit" name="action_primary" class="btn btn-primary">Make Primary</button>
+                                    <button type="submit" name="action_send" class="btn btn-outline-primary">Re-send Verification</button>
+                                    <button type="submit" name="action_remove" class="btn btn-outline-danger">Remove</button>
+                                </div>
+                            </form>
+                        {% else %}
+                            <p class="text-center text-muted mb-4">You don't have any email addresses associated with your account yet.</p>
+                        {% endif %}
+                        <hr class="my-4">
+                        <h5 class="mb-3">Add Email Address</h5>
+                        <form method="post" action="{% url 'account_email' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="id_email" class="form-label">Email Address</label>
+                                <input type="email"
+                                       name="email"
+                                       class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                                       id="id_email"
+                                       placeholder="your@email.com"
+                                       required>
+                                {% if form.email.errors %}<div class="invalid-feedback">{{ form.email.errors }}</div>{% endif %}
+                            </div>
+                            <button type="submit" name="action_add" class="btn btn-primary w-100">Add Email</button>
+                        </form>
+                        <hr class="my-4">
+                        <div class="text-center">
+                            <a href="{% url 'home' %}" class="btn btn-outline-primary">Back to Home</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}

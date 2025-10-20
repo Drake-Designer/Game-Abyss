@@ -179,25 +179,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # https://docs.allauth.org/en/latest/account/configuration.html
 
 AUTHENTICATION_BACKENDS = [
-    # Needed to login by username in Django admin, regardless of `allauth`
     'django.contrib.auth.backends.ModelBackend',
-    # `allauth` specific authentication methods, such as login by email
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 # Email configuration (for development, print emails to console)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Allauth settings
-# Allow login with username or email
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-ACCOUNT_EMAIL_REQUIRED = True  # Email is required for registration
-# Email verification is optional (set to 'mandatory' for production)
+# Allauth settings (Email is optional, username required, password to confirm twice)
+ACCOUNT_LOGIN_METHODS = {'email', 'username'}
+ACCOUNT_SIGNUP_FIELDS = ['email', 'username*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
-ACCOUNT_USERNAME_REQUIRED = True  # Username is required
-# Ask for password twice during signup
-ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
-# Automatically log in user after password reset
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
-LOGIN_REDIRECT_URL = '/'  # Redirect to home page after login
-ACCOUNT_LOGOUT_REDIRECT_URL = '/'  # Redirect to home page after logout
+LOGIN_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'

@@ -579,6 +579,10 @@ footer .social-btn:hover {
   margin-bottom: 1rem;
 }
 
+#email-icon {
+  font-size: 10rem;
+}
+
 /* -----------------------------------> Utilities */
 .link-underline-opacity-0 {
   text-decoration: none;
