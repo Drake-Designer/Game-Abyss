@@ -37,6 +37,7 @@ if not SECRET_KEY:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG is True by default local, False if I set DEBUG=False on Heroku
+
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 # Allowed hosts from env (empty list if not set)
@@ -57,11 +58,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    #
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -69,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -76,7 +79,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -131,9 +134,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-gb'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Dublin'
 
 USE_I18N = True
 
@@ -144,6 +147,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Local static folders used during development
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # static root is where collectstatic puts all static files for Heroku
 STATIC_ROOT = BASE_DIR / "staticfiles"
