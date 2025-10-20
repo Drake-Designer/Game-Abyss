@@ -32,17 +32,17 @@
             <a class="nav-link" href="">Profile</a>
           </li>
           <li class="nav-item">
-            <form action="" method="post" class="d-inline">
+            <form action="{% url 'account_logout' %}" method="post" class="d-inline">
               {% csrf_token %}
               <button class="btn btn-outline-light btn-sm" type="submit">Logout</button>
             </form>
           </li>
         {% else %}
           <li class="nav-item">
-            <a class="nav-link" href="">Login</a>
+            <a class="nav-link" href="{% url 'account_login' %}">Login</a>
           </li>
           <li class="nav-item ms-lg-2">
-            <a class="btn btn-primary btn-sm" href="">Register</a>
+            <a class="btn btn-primary btn-sm" href="{% url 'account_signup' %}">Register</a>
           </li>
         {% endif %}
       </ul>

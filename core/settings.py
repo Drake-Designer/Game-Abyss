@@ -51,6 +51,8 @@ CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(
 
 # Application definition
 
+# Application definition
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -59,7 +61,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+
+    # Third-party apps
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
 ]
+
+
+# Django sites framework
+SITE_ID = int(os.environ.get("SITE_ID", "1"))
 
 
 MIDDLEWARE = [
@@ -69,6 +80,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -162,6 +174,30 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Redirect dopo login/logout (home)
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+
+# Django-allauth configuration
+# https://docs.allauth.org/en/latest/account/configuration.html
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+    # `allauth` specific authentication methods, such as login by email
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# Email configuration (for development, print emails to console)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Allauth settings
+# Allow login with username or email
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_EMAIL_REQUIRED = True  # Email is required for registration
+# Email verification is optional (set to 'mandatory' for production)
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_USERNAME_REQUIRED = True  # Username is required
+# Ask for password twice during signup
+ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
+# Automatically log in user after password reset
+ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
+LOGIN_REDIRECT_URL = '/'  # Redirect to home page after login
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'  # Redirect to home page after logout

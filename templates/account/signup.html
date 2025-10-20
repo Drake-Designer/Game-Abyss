@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  Sign Up - Game Abyss
+{% endblock title %}
+{% block content %}
+  <section id="auth-section" class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div id="auth-card" class="card">
+          <div class="card-body p-4">
+            <h2 id="auth-title" class="card-title text-center mb-4">🚀 Create Account</h2>
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <form method="post" action="{% url 'account_signup' %}">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="id_username" class="form-label">Username</label>
+                <input type="text"
+                       name="username"
+                       class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                       id="id_username"
+                       placeholder="Choose a username"
+                       value="{{ form.username.value|default:'' }}"
+                       required>
+                {% if form.username.errors %}<div class="invalid-feedback">{{ form.username.errors }}</div>{% endif %}
+              </div>
+              <div class="mb-3">
+                <label for="id_email" class="form-label">
+                  Email <span class="text-muted">(Optional)</span>
+                </label>
+                <input type="email"
+                       name="email"
+                       class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                       id="id_email"
+                       placeholder="your@email.com (optional)"
+                       value="{{ form.email.value|default:'' }}">
+                {% if form.email.errors %}<div class="invalid-feedback">{{ form.email.errors }}</div>{% endif %}
+                <small class="text-muted">Helps with account recovery</small>
+              </div>
+              <div class="mb-3">
+                <label for="id_password1" class="form-label">Password</label>
+                <input type="password"
+                       name="password1"
+                       class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+                       id="id_password1"
+                       placeholder="Create a secure password"
+                       required>
+                {% if form.password1.errors %}<div class="invalid-feedback">{{ form.password1.errors }}</div>{% endif %}
+                <small class="text-muted">At least 8 characters, not too common</small>
+              </div>
+              <div class="mb-3">
+                <label for="id_password2" class="form-label">Confirm Password</label>
+                <input type="password"
+                       name="password2"
+                       class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+                       id="id_password2"
+                       placeholder="Repeat your password"
+                       required>
+                {% if form.password2.errors %}<div class="invalid-feedback">{{ form.password2.errors }}</div>{% endif %}
+              </div>
+              <button type="submit" class="btn btn-primary w-100 mb-3">Sign Up</button>
+            </form>
+            <hr class="my-4">
+            <div class="text-center">
+              <small>
+                Already have an account?
+                <a href="{% url 'account_login' %}">Sign in</a>
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock content %}
