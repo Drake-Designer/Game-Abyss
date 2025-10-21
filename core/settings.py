@@ -214,3 +214,6 @@ ACCOUNT_EMAIL_VERIFICATION = 'optional'
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 LOGIN_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+
+# X-Frame-Options setting: allow the site to be embedded in iframes for screenshot tools like Am I Responsive
+X_FRAME_OPTIONS = 'SAMEORIGIN'
