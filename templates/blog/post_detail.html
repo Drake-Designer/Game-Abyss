@@ -2,9 +2,11 @@
 {% block content %}
   <article class="post-detail">
     <h1>{{ post.title }}</h1>
-    <p>
-      <small>By {{ post.author }} — {{ post.published_at|date:"F j, Y" }}</small>
-    </p>
+    {% with (post.published_at|default:post.updated_at) as display_date %}
+      <p>
+        <small>By {{ post.author }} — {{ display_date|date:"F j, Y" }}</small>
+      </p>
+    {% endwith %}
     {% if post.image %}
       <img src="{{ post.image.url }}"
            alt="{{ post.title }}"

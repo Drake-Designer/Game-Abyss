@@ -12,7 +12,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import warnings
+
 import dj_database_url  # for Postgres when DATABASE_URL is set
+
+try:  # pragma: no cover - optional dependency for deployments
+    import cloudinary
+except ImportError:  # pragma: no cover - fallback when package missing
+    cloudinary = None
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -72,6 +79,9 @@ INSTALLED_APPS = [
     'pages',
     'blog',
 ]
+
+if cloudinary is not None:
+    INSTALLED_APPS.append('cloudinary')
 
 
 # Django sites framework
@@ -223,3 +233,32 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 
 # X-Frame-Options setting: allow the site to be embedded in iframes for screenshot tools like Am I Responsive
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+
+if cloudinary is not None:
+    # Cloudinary configuration for media storage
+    cloudinary_url = os.environ.get('CLOUDINARY_URL')
+    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
+    api_key = os.environ.get('CLOUDINARY_API_KEY')
+    api_secret = os.environ.get('CLOUDINARY_API_SECRET')
+
+    if cloudinary_url:
+        cloudinary.config(cloudinary_url=cloudinary_url, secure=True)
+    elif cloud_name and api_key and api_secret:
+        cloudinary.config(
+            cloud_name=cloud_name,
+            api_key=api_key,
+            api_secret=api_secret,
+            secure=True,
+        )
+    else:
+        warnings.warn(
+            'Cloudinary credentials are not configured. '
+            'Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET to enable image uploads.',
+            RuntimeWarning,
+        )
+else:
+    warnings.warn(
+        'Cloudinary package is not installed. Falling back to default file storage for images.',
+        RuntimeWarning,
+    )

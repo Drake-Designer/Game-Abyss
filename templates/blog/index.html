@@ -24,7 +24,9 @@
             <h3 class="ga-card-title">
               <a class="ga-no-decoration" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
             </h3>
-            <p class="post-meta small">By {{ post.author }} — {{ post.published_at|date:"F j, Y" }}</p>
+            {% with (post.published_at|default:post.updated_at) as display_date %}
+              <p class="post-meta small">By {{ post.author }} — {{ display_date|date:"F j, Y" }}</p>
+            {% endwith %}
             <p class="ga-card-text post-excerpt">{{ post.excerpt }}</p>
             <a class="ga-btn ga-btn-outline ga-btn-sm"
                href="{{ post.get_absolute_url }}">Read</a>

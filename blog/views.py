@@ -27,7 +27,7 @@ def post_list(request):
     Only posts that are published and approved are shown, ordered by
     published_at.
     """
-    posts = BlogPost.published.order_by('-published_at')
+    posts = BlogPost.approved.order_by('-published_at', '-updated_at')
     return render(request, 'blog/index.html', {'posts': posts})
 
 
@@ -41,6 +41,6 @@ def post_detail(request, year, month, day, slug):
     qs = qs.filter(published_at__year=year,
                    published_at__month=month, published_at__day=day)
     post = get_object_or_404(qs)
-    if (post.status != 'published' or not post.is_approved) and request.user != post.author:
+    if (post.status != BlogPost.STATUS_APPROVED) and request.user != post.author:
         return HttpResponse('Not found', status=404)
     return render(request, 'blog/post_detail.html', {'post': post})

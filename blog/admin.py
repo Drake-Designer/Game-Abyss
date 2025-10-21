@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import BlogPost
-from .forms import BlogPostForm
 from django.utils.html import format_html
-from django.urls import reverse
+
+from .forms import BlogPostForm
+from .models import BlogPost
 
 
 @admin.register(BlogPost)
@@ -11,9 +11,9 @@ class BlogPostAdmin(admin.ModelAdmin):
 
     Shows a thumbnail, status, and handy actions to publish/unpublish posts.
     """
-    list_display = ('title', 'author', 'status', 'is_approved',
+    list_display = ('title', 'author', 'status',
                     'published_at', 'updated_at')
-    list_filter = ('status', 'is_approved', 'author', 'published_at')
+    list_filter = ('status', 'author', 'published_at')
     search_fields = ('title', 'body', 'excerpt', 'tags')
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('reading_time', 'likes', 'rating',
@@ -21,8 +21,7 @@ class BlogPostAdmin(admin.ModelAdmin):
     date_hierarchy = 'published_at'
     ordering = ('-published_at',)
 
-    actions = ['make_published', 'make_draft',
-               'approve_posts', 'revoke_approval']
+    actions = ['mark_approved', 'mark_rejected']
     form = BlogPostForm
 
     def save_model(self, request, obj, form, change):
@@ -53,8 +52,8 @@ class BlogPostAdmin(admin.ModelAdmin):
         Regular users cannot change the post status.
         """
         ro = list(self.readonly_fields)
-        if not request.user.is_superuser and not request.user.is_staff:
-            ro.extend(['status', 'is_approved'])
+        if not request.user.is_superuser:
+            ro.extend(['status'])
         return ro
 
     def get_prepopulated_fields(self, request, obj=None):
@@ -75,30 +74,38 @@ class BlogPostAdmin(admin.ModelAdmin):
                 safe[key] = deps
         return safe
 
-    def make_published(self, request, queryset):
-        """Admin action: mark selected posts as published."""
-        updated = queryset.update(status='published')
-        self.message_user(request, f"Marked {updated} post(s) as published.")
+    def has_delete_permission(self, request, obj=None):
+        """Allow deletion only for superusers."""
+        if not request.user.is_superuser:
+            return False
+        return super().has_delete_permission(request, obj)
 
-    make_published.short_description = 'Mark selected posts as published'
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if not request.user.is_superuser:
+            # Remove all bulk actions for non-superusers
+            for action in list(actions):
+                actions.pop(action)
+        return actions
 
-    def make_draft(self, request, queryset):
-        """Admin action: mark selected posts as draft."""
-        updated = queryset.update(status='draft')
-        self.message_user(request, f"Marked {updated} post(s) as draft.")
-
-    make_draft.short_description = 'Mark selected posts as draft'
-
-    def approve_posts(self, request, queryset):
+    def mark_approved(self, request, queryset):
         """Admin action: mark selected posts as approved."""
-        updated = queryset.update(is_approved=True)
-        self.message_user(request, f"Approved {updated} post(s).")
+        updated = 0
+        for post in queryset:
+            post.status = BlogPost.STATUS_APPROVED
+            post.save()
+            updated += 1
+        self.message_user(request, f"Marked {updated} post(s) as approved.")
 
-    approve_posts.short_description = 'Mark selected posts as approved'
+    mark_approved.short_description = 'Mark selected posts as approved'
 
-    def revoke_approval(self, request, queryset):
-        """Admin action: revoke approval for selected posts."""
-        updated = queryset.update(is_approved=False)
-        self.message_user(request, f"Revoked approval for {updated} post(s).")
+    def mark_rejected(self, request, queryset):
+        """Admin action: mark selected posts as rejected."""
+        updated = 0
+        for post in queryset:
+            post.status = BlogPost.STATUS_REJECTED
+            post.save()
+            updated += 1
+        self.message_user(request, f"Marked {updated} post(s) as rejected.")
 
-    revoke_approval.short_description = 'Revoke approval for selected posts'
+    mark_rejected.short_description = 'Mark selected posts as rejected'

@@ -1,16 +1,23 @@
-from django.db import models
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.utils.text import slugify
+from django.core.mail import send_mail
+from django.db import models, transaction
 from django.utils import timezone
+from django.utils.text import slugify
+
+try:  # pragma: no cover - optional dependency
+    from cloudinary.models import CloudinaryField
+except ImportError:  # pragma: no cover - fallback for local development/tests
+    CloudinaryField = None
 
 User = get_user_model()
 
 
-class PublishedManager(models.Manager):
-    """Manager returning posts that are published and approved."""
+class ApprovedManager(models.Manager):
+    """Manager returning posts that are approved and visible on the blog."""
 
     def get_queryset(self):
-        return super().get_queryset().filter(status='published', is_approved=True)
+        return super().get_queryset().filter(status=self.model.STATUS_APPROVED)
 
 
 class BlogPost(models.Model):
@@ -18,9 +25,11 @@ class BlogPost(models.Model):
 
     Stores title, author, body, image, tags, status and timestamps
     """
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
     STATUS_CHOICES = [
-        ('draft', 'Draft'),
-        ('published', 'Published'),
+        (STATUS_APPROVED, 'Approved'),
+        (STATUS_REJECTED, 'Rejected'),
     ]
 
     title = models.CharField(max_length=100)
@@ -30,15 +39,15 @@ class BlogPost(models.Model):
         User, on_delete=models.CASCADE, related_name='blog_posts')
     excerpt = models.CharField(max_length=250, blank=True)
     body = models.TextField()
-    image = models.ImageField(upload_to='blog_images/', blank=True, null=True)
+    if CloudinaryField is not None:
+        image = CloudinaryField('image', blank=True, null=True)
+    else:
+        image = models.ImageField(upload_to='blog_images/', blank=True, null=True)
     tags = models.CharField(max_length=100, blank=True,
                             help_text='Comma-separated tags')
     status = models.CharField(
-        max_length=10, choices=STATUS_CHOICES, default='draft')
-    is_approved = models.BooleanField(
-        default=False,
-        help_text='Indicates whether the post has passed editorial review.')
-    published_at = models.DateTimeField(default=timezone.now)
+        max_length=10, choices=STATUS_CHOICES, default=STATUS_REJECTED)
+    published_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     reading_time = models.PositiveIntegerField(
         default=1, help_text='Estimated reading time in minutes')
@@ -47,10 +56,10 @@ class BlogPost(models.Model):
         default=0, help_text='Rating out of 5 (future use)')
 
     objects = models.Manager()
-    published = PublishedManager()
+    approved = ApprovedManager()
 
     class Meta:
-        ordering = ['-published_at']
+        ordering = ['-published_at', '-updated_at']
         verbose_name = 'Blog Post'
         verbose_name_plural = 'Blog Posts'
 
@@ -60,6 +69,21 @@ class BlogPost(models.Model):
         If `slug` is empty it is created from the title and published date.
         Reading time is estimated from the body text.
         """
+        previous_status = None
+        if self.pk:
+            previous_status = BlogPost.objects.filter(pk=self.pk).values_list('status', flat=True).first()
+
+        should_notify_rejection = (
+            previous_status is not None
+            and previous_status != self.STATUS_REJECTED
+            and self.status == self.STATUS_REJECTED
+        )
+
+        if self.status == self.STATUS_APPROVED and not self.published_at:
+            self.published_at = timezone.now()
+        elif self.status == self.STATUS_REJECTED:
+            self.published_at = None
+
         # Auto-generate slug from title if not set
         if not self.slug:
             base_slug = slugify(self.title)[:100]
@@ -71,6 +95,23 @@ class BlogPost(models.Model):
             words = len(self.body.split())
             self.reading_time = max(1, words // 200)
         super().save(*args, **kwargs)
+
+        if should_notify_rejection and self.author.email:
+            def _send_rejection_email():
+                send_mail(
+                    subject=f"Il tuo post '{self.title}' non è stato approvato",
+                    message=(
+                        "Ciao {username},\n\n"
+                        "il tuo post non è stato approvato dalla redazione e non sarà visibile sul blog.\n"
+                        "Puoi aggiornarlo e riproporlo per la revisione in qualsiasi momento.\n\n"
+                        "Grazie per aver contribuito a Game Abyss!"
+                    ).format(username=self.author.get_username()),
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                    recipient_list=[self.author.email],
+                    fail_silently=True,
+                )
+
+            transaction.on_commit(_send_rejection_email)
 
     def __str__(self):
         return self.title

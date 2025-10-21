@@ -16,7 +16,7 @@ class BlogPostForm(forms.ModelForm):
     class Meta:
         model = BlogPost
         fields = ['author', 'title', 'excerpt',
-                  'body', 'image', 'tags', 'status', 'is_approved']
+                  'body', 'image', 'tags', 'status']
         widgets = {
             'author': forms.Select(attrs={'class': 'form-select'}),
             'body': forms.Textarea(attrs={'rows': 8}),
@@ -40,8 +40,8 @@ class PublicBlogPostForm(forms.ModelForm):
 
     def save(self, commit=True):
         post = super().save(commit=False)
-        post.status = 'draft'
-        post.is_approved = False
+        post.status = BlogPost.STATUS_REJECTED
+        post.published_at = None
         if commit:
             post.save()
         return post
