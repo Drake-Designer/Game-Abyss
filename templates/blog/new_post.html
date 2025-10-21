@@ -10,7 +10,7 @@
         <div class="ga-auth-card ga-card">
           <div class="ga-card-body p-4">
             <h2 class="ga-auth-title text-center mb-2">📝 Create a new post</h2>
-            <p class="text-center text-muted mb-4">Fill the fields below to publish your article.</p>
+            <p class="text-center text-muted mb-4">Fill the fields below to submit your article for review.</p>
             {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
             <form method="post"
                   enctype="multipart/form-data"
@@ -38,7 +38,7 @@
                 </div>
               {% endfor %}
               <div class="ga-form-actions d-grid gap-2 mt-4">
-                <button type="submit" class="ga-btn ga-btn-primary">Publish</button>
+                <button type="submit" class="ga-btn ga-btn-primary">Submit</button>
                 <a href="{% url 'pages:home' %}" class="ga-btn ga-btn-outline">Cancel</a>
               </div>
             </form>

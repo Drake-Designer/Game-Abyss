@@ -6,6 +6,13 @@ from django.utils import timezone
 User = get_user_model()
 
 
+class PublishedManager(models.Manager):
+    """Manager returning posts that are published and approved."""
+
+    def get_queryset(self):
+        return super().get_queryset().filter(status='published', is_approved=True)
+
+
 class BlogPost(models.Model):
     """A blog post record.
 
@@ -18,7 +25,7 @@ class BlogPost(models.Model):
 
     title = models.CharField(max_length=100)
     slug = models.SlugField(
-        max_length=120, unique_for_date='published_at', blank=True)
+        max_length=120, unique_for_date='published_at', blank=True, editable=False)
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='blog_posts')
     excerpt = models.CharField(max_length=250, blank=True)
@@ -28,6 +35,9 @@ class BlogPost(models.Model):
                             help_text='Comma-separated tags')
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default='draft')
+    is_approved = models.BooleanField(
+        default=False,
+        help_text='Indicates whether the post has passed editorial review.')
     published_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     reading_time = models.PositiveIntegerField(
@@ -35,6 +45,9 @@ class BlogPost(models.Model):
     likes = models.PositiveIntegerField(default=0)
     rating = models.PositiveIntegerField(
         default=0, help_text='Rating out of 5 (future use)')
+
+    objects = models.Manager()
+    published = PublishedManager()
 
     class Meta:
         ordering = ['-published_at']

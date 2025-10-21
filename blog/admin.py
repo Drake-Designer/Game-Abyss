@@ -11,17 +11,24 @@ class BlogPostAdmin(admin.ModelAdmin):
 
     Shows a thumbnail, status, and handy actions to publish/unpublish posts.
     """
-    list_display = ('title', 'author', 'status', 'published_at', 'updated_at')
-    list_filter = ('status', 'author', 'published_at')
+    list_display = ('title', 'author', 'status', 'is_approved',
+                    'published_at', 'updated_at')
+    list_filter = ('status', 'is_approved', 'author', 'published_at')
     search_fields = ('title', 'body', 'excerpt', 'tags')
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('reading_time', 'likes', 'rating',
-                       'slug', 'published_at', 'updated_at')
+                       'slug', 'published_at', 'updated_at', 'author')
     date_hierarchy = 'published_at'
     ordering = ('-published_at',)
 
-    actions = ['make_published', 'make_draft']
+    actions = ['make_published', 'make_draft',
+               'approve_posts', 'revoke_approval']
     form = BlogPostForm
+
+    def save_model(self, request, obj, form, change):
+        """Assign the author to the current user before saving."""
+        obj.author = request.user
+        super().save_model(request, obj, form, change)
 
     def thumbnail(self, obj):
         """Return a small thumbnail HTML for list display (or '-' if none)."""
@@ -47,7 +54,7 @@ class BlogPostAdmin(admin.ModelAdmin):
         """
         ro = list(self.readonly_fields)
         if not request.user.is_superuser and not request.user.is_staff:
-            ro.append('status')
+            ro.extend(['status', 'is_approved'])
         return ro
 
     def get_prepopulated_fields(self, request, obj=None):
@@ -81,3 +88,17 @@ class BlogPostAdmin(admin.ModelAdmin):
         self.message_user(request, f"Marked {updated} post(s) as draft.")
 
     make_draft.short_description = 'Mark selected posts as draft'
+
+    def approve_posts(self, request, queryset):
+        """Admin action: mark selected posts as approved."""
+        updated = queryset.update(is_approved=True)
+        self.message_user(request, f"Approved {updated} post(s).")
+
+    approve_posts.short_description = 'Mark selected posts as approved'
+
+    def revoke_approval(self, request, queryset):
+        """Admin action: revoke approval for selected posts."""
+        updated = queryset.update(is_approved=False)
+        self.message_user(request, f"Revoked approval for {updated} post(s).")
+
+    revoke_approval.short_description = 'Revoke approval for selected posts'
