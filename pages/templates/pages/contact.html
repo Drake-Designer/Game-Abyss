@@ -13,42 +13,17 @@
             <p class="text-center ga-card-text mb-5">Have a question, feedback, or need assistance? We'd love to hear from you!</p>
             <form method="post">
               {% csrf_token %}
-              <div class="mb-3">
-                <label for="id_name" class="form-label">Name</label>
-                <input type="text"
-                       name="name"
-                       class="form-control"
-                       id="id_name"
-                       placeholder="Your name"
-                       required>
-              </div>
-              <div class="mb-3">
-                <label for="id_email" class="form-label">Email</label>
-                <input type="email"
-                       name="email"
-                       class="form-control"
-                       id="id_email"
-                       placeholder="your@email.com"
-                       required>
-              </div>
-              <div class="mb-3">
-                <label for="id_subject" class="form-label">Subject</label>
-                <input type="text"
-                       name="subject"
-                       class="form-control"
-                       id="id_subject"
-                       placeholder="What's this about?"
-                       required>
-              </div>
-              <div class="mb-3">
-                <label for="id_message" class="form-label">Message</label>
-                <textarea name="message"
-                          class="form-control"
-                          id="id_message"
-                          rows="6"
-                          placeholder="Tell us more..."
-                          required></textarea>
-              </div>
+              {% for field in form %}
+                <div class="mb-3">
+                  <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                  {{ field }}
+                  {% if field.errors %}
+                    <div class="text-danger small mt-1">
+                      {% for error in field.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              {% endfor %}
               <button type="submit" class="ga-btn ga-btn-outline w-100">Send Message</button>
             </form>
             <hr class="my-4">
