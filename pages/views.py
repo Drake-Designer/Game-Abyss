@@ -8,27 +8,27 @@ from .forms import ContactForm
 
 
 class HomeView(TemplateView):
-    """Homepage view"""
+    """Render the homepage."""
     template_name = 'pages/home.html'
 
 
 class AboutView(TemplateView):
-    """About page view"""
+    """Render the about page."""
     template_name = 'pages/about.html'
 
 
 class ContactView(View):
-    """Contact page view with form handling"""
+    """Contact page: GET shows form, POST sends message."""
     template_name = 'pages/contact.html'
     form_class = ContactForm
 
     def get(self, request):
-        """Display contact form"""
+        """Show the contact form."""
         form = self.form_class()
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
-        """Handle contact form submission"""
+        """Process the contact form and send an email on success."""
         form = self.form_class(request.POST)
 
         if form.is_valid():

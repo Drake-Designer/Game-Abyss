@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+  <header class="mb-4">
+    <h1 class="h2 ga-hero-title">Blog</h1>
+    <p class="ga-hero-subtitle">Latest posts and reviews from Game Abyss.</p>
+  </header>
+  {% if posts %}
+    <div class="blog-list">
+      {% for post in posts %}
+        <article class="post-card ga-card">
+          {% if post.image %}
+            <div class="ga-card-image-wrap">
+              <a href="{{ post.get_absolute_url }}">
+                <img class="ga-card-image post-image"
+                     src="{{ post.image.url }}"
+                     alt="{{ post.title }}"
+                     width="{{ post.image.width|default:600 }}"
+                     height="{{ post.image.height|default:400 }}"
+                     loading="lazy">
+              </a>
+            </div>
+          {% endif %}
+          <div class="ga-card-body">
+            <h3 class="ga-card-title">
+              <a class="ga-no-decoration" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+            </h3>
+            <p class="post-meta small">By {{ post.author }} — {{ post.published_at|date:"F j, Y" }}</p>
+            <p class="ga-card-text post-excerpt">{{ post.excerpt }}</p>
+            <a class="ga-btn ga-btn-outline ga-btn-sm"
+               href="{{ post.get_absolute_url }}">Read</a>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>No posts yet.</p>
+  {% endif %}
+{% endblock content %}

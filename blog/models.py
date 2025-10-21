@@ -7,6 +7,10 @@ User = get_user_model()
 
 
 class BlogPost(models.Model):
+    """A blog post record.
+
+    Stores title, author, body, image, tags, status and timestamps
+    """
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('published', 'Published'),
@@ -38,6 +42,11 @@ class BlogPost(models.Model):
         verbose_name_plural = 'Blog Posts'
 
     def save(self, *args, **kwargs):
+        """Auto-generate slug and compute reading time, then save.
+
+        If `slug` is empty it is created from the title and published date.
+        Reading time is estimated from the body text.
+        """
         # Auto-generate slug from title if not set
         if not self.slug:
             base_slug = slugify(self.title)[:100]
@@ -52,3 +61,11 @@ class BlogPost(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        """Return the canonical URL for this post.
+
+        Example: /blog/2025/10/21/my-post-slug/
+        """
+        date = self.published_at or timezone.now()
+        return f"/blog/{date.year}/{date.month:02d}/{date.day:02d}/{self.slug}/"

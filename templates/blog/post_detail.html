@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+  <article class="post-detail">
+    <h1>{{ post.title }}</h1>
+    <p>
+      <small>By {{ post.author }} — {{ post.published_at|date:"F j, Y" }}</small>
+    </p>
+    {% if post.image %}
+      <img src="{{ post.image.url }}"
+           alt="{{ post.title }}"
+           width="{{ post.image.width|default:600 }}"
+           height="{{ post.image.height|default:400 }}"
+           loading="lazy"
+           class="post-image" />
+    {% endif %}
+    <div class="post-body">{{ post.body|linebreaks }}</div>
+  </article>
+{% endblock content %}
