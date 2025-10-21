@@ -507,6 +507,82 @@ if db_url:
 
 Added `DATABASE_URL` to Heroku config vars with proper PostgreSQL connection string.
 
+### Bugs Not Fixed
+
+#### 🔇 Background Music Autoplay Limitation (Browser Security)
+
+**Issue:**
+The background music player doesn't automatically resume after 2-3 page reloads in Chrome and Edge browsers, even though the music state is correctly saved in localStorage.
+
+**Technical Details:**
+
+Game Abyss includes a persistent background music player with the following features:
+
+- Music toggle button with animated visual states
+- localStorage persistence for playback position, state, and volume
+- Seamless music continuation across page navigation
+- Auto-resume functionality on user interaction
+
+**The Problem:**
+
+Modern browsers (Chrome, Edge, Safari) implement strict **autoplay policies** that block audio from playing automatically without recent user interaction. This is a browser security feature designed to prevent intrusive auto-playing media.
+
+What happens:
+
+1. Music works perfectly on first page load
+2. Music continues seamlessly when navigating between pages
+3. After 2-3 page reloads without clicking, the browser blocks autoplay
+4. Music only resumes after the user clicks anywhere on the page
+
+**What We Tried:**
+
+Multiple implementation approaches were attempted:
+
+```javascript
+// ❌ Attempted Solution 1: Multiple autoplay triggers
+audio.play().catch(() => console.log('Autoplay blocked'))
+
+// ❌ Attempted Solution 2: Restore volume before playing
+audio.volume = savedVolume
+audio.currentTime = savedTime
+audio.play()
+
+// ❌ Attempted Solution 3: Save state on multiple events
+window.addEventListener('beforeunload', saveState)
+window.addEventListener('pagehide', saveState)
+document.addEventListener('visibilitychange', saveState)
+
+// ✅ Partial Solution: Auto-resume on any click
+document.addEventListener(
+    'click',
+    () => {
+        if (shouldBePlaying && audio.paused) {
+            audio.play()
+        }
+    },
+    { once: true },
+)
+```
+
+The current implementation includes an **auto-resume mechanism** that restarts music on the first user click after a page load, minimizing the interruption.
+
+**Why Can't This Be Fixed?**
+
+This is a **fundamental browser limitation**, not a coding error. Browsers intentionally block autoplay to protect users from unwanted audio. The only way to achieve truly seamless music across page loads would be to convert the entire site into a **Single Page Application (SPA)** using React, Vue, or similar frameworks, where pages don't actually reload.
+
+**Current Workaround:**
+
+The music automatically resumes on the first click after a page load, so users only experience a brief silence until they interact with the page.
+
+**Future Solution:**
+
+If Game Abyss is rebuilt as an SPA in the future, this limitation will be eliminated entirely, allowing uninterrupted background music.
+
+**References:**
+
+- [Chrome Autoplay Policy](https://developer.chrome.com/blog/autoplay/)
+- [MDN Web Docs: Autoplay Guide](https://developer.mozilla.org/en-US/docs/Web/Media/Autoplay_guide)
+
 ---
 
 ## Deployment
