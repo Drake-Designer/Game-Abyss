@@ -1,17 +1,30 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top ga-navbar">
-  <div class="container">
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top ga-navbar">
+  <div class="container align-items-center">
+    <!-- Brand -->
     <a class="navbar-brand ga-navbar-brand" href="{% url 'pages:home' %}">Game Abyss</a>
-    <button class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#mainNav"
-            aria-controls="mainNav"
-            aria-expanded="false"
-            aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="mainNav">
-      <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+    <!-- Right side: desktop New Post + toggler -->
+    <div class="d-flex align-items-center ms-auto order-lg-2">
+      {% if user.is_authenticated %}
+        <!-- Desktop only -->
+        <a class="ga-btn ga-btn-primary ga-btn-sm d-none d-lg-inline-flex align-items-center gap-2 ga-navbar-newpost"
+           href="{% url 'blog:new' %}">
+          <i class="fa-solid fa-plus"></i>
+          <span>New Post</span>
+        </a>
+      {% endif %}
+      <button class="navbar-toggler ms-2"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#mainNav"
+              aria-controls="mainNav"
+              aria-expanded="false"
+              aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div>
+    <!-- Collapsible menu -->
+    <div class="collapse navbar-collapse order-lg-1" id="mainNav">
+      <ul class="navbar-nav me-lg-auto mb-2 mb-lg-0">
         <li class="nav-item">
           <a class="nav-link ga-navbar-link" href="{% url 'pages:home' %}">Home</a>
         </li>
@@ -25,10 +38,17 @@
           <a class="nav-link ga-navbar-link" href="">Blog</a>
         </li>
       </ul>
-      <ul class="navbar-nav ms-auto">
+      <ul class="navbar-nav ms-lg-auto align-items-lg-center">
         {% if user.is_authenticated %}
           <li class="nav-item">
             <a class="nav-link ga-navbar-link" href="">Profile</a>
+          </li>
+          <!-- Mobile-only New Post as a normal menu item -->
+          <li class="nav-item d-lg-none">
+            <a class="nav-link ga-navbar-link d-flex align-items-center gap-2"
+               href="{% url 'blog:new' %}">
+              <i class="fa-solid fa-plus"></i><span>New Post</span>
+            </a>
           </li>
           <li class="nav-item">
             <form action="{% url 'account_logout' %}" method="post" class="d-inline">
