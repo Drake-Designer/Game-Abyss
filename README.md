@@ -534,7 +534,7 @@ What happens:
 3. After 2-3 page reloads without clicking, the browser blocks autoplay
 4. Music only resumes after the user clicks anywhere on the page
 
-**What We Tried:**
+**What I Tried:**
 
 Multiple implementation approaches were attempted:
 
