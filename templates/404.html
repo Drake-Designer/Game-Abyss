@@ -1,12 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-  <section id="error-404"
-           class="d-flex flex-column align-items-center justify-content-center">
-    <h1 id="error-404-title" class="display-1">Lost in the Abyss</h1>
-    <h2 id="error-404-subtitle" class="mb-4">Page Not Found</h2>
-    <p id="error-404-message" class="lead mb-4">
+  <section class="ga-error-page d-flex flex-column align-items-center justify-content-center">
+    <h1 class="ga-error-title display-1">Lost in the Abyss</h1>
+    <h2 class="ga-error-subtitle mb-4">Page Not Found</h2>
+    <p class="ga-error-message lead mb-4">
       Looks like this page got lost in the abyss. Maybe it never existed, or it respawned somewhere else.
     </p>
-    <a href="{% url 'home' %}" class="btn btn-primary">Respawn to Home</a>
+    <a href="{% url 'home' %}" class="ga-btn ga-btn-primary">Respawn to Home</a>
   </section>
 {% endblock content %}

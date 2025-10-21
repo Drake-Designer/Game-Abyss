@@ -4,18 +4,18 @@
   Sign Out - Game Abyss
 {% endblock title %}
 {% block content %}
-  <section id="auth-section" class="container">
+  <section class="ga-auth-section container">
     <div class="row justify-content-center">
       <div class="col-md-6 col-lg-4">
-        <div id="auth-card" class="card text-center">
-          <div class="card-body p-5">
-            <h2 id="auth-title" class="card-title mb-4">👋 Sign Out</h2>
+        <div class="ga-auth-card ga-card text-center">
+          <div class="ga-card-body p-5">
+            <h2 class="ga-auth-title mb-4">👋 Sign Out</h2>
             <p class="mb-4">Are you sure you want to sign out?</p>
             <form method="post" action="{% url 'account_logout' %}">
               {% csrf_token %}
-              <button type="submit" class="btn btn-primary w-100 mb-3">Yes, sign out</button>
+              <button type="submit" class="ga-btn ga-btn-primary w-100 mb-3">Yes, sign out</button>
             </form>
-            <a href="{% url 'home' %}" class="btn btn-outline-primary w-100">Cancel</a>
+            <a href="{% url 'home' %}" class="ga-btn ga-btn-outline w-100">Cancel</a>
           </div>
         </div>
       </div>
