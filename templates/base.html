@@ -34,6 +34,20 @@
           href="{% static 'favicon/game-abyss-favicon.svg' %}">
   </head>
   <body class="d-flex flex-column min-vh-100">
+    <!-- Music Player -->
+    <div class="ga-music-player">
+      <button id="gaMusicBtn"
+              class="ga-music-toggle"
+              aria-label="Toggle background music">
+        <i class="fas fa-music" id="gaMusicIcon"></i>
+        <span class="ga-music-mute" id="gaMusicMute"></span>
+      </button>
+    </div>
+    <!-- Background Music - Optimized for instant playback -->
+    <audio id="gaBgMusic" loop preload="auto" autobuffer autoplay>
+      <source src="{% static 'audio/audio-theme.mp3' %}" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
     <!-- Navbar -->
     {% include "shared/_navbar.html" %}
     <!-- Hero -->
@@ -85,6 +99,8 @@
     <!-- Font Awesome -->
     <script src="https://kit.fontawesome.com/1632434743.js"
             crossorigin="anonymous"></script>
+    <!-- Music Player Script -->
+    <script src="{% static 'js/music-player.js' %}" defer></script>
     {% block extra_scripts %}
     {% endblock extra_scripts %}
   </body>
