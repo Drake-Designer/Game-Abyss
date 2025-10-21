@@ -2,7 +2,7 @@
 {% block content %}
   <article class="post-detail">
     <h1>{{ post.title }}</h1>
-    {% with (post.published_at|default:post.updated_at) as display_date %}
+    {% with post.published_at|default_if_none:post.updated_at as display_date %}
       <p>
         <small>By {{ post.author }} — {{ display_date|date:"F j, Y" }}</small>
       </p>

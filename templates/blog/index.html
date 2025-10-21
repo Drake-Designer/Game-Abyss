@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load cloudinary %}
 {% block content %}
   <header class="mb-4">
     <h1 class="h2 ga-hero-title">Blog</h1>
@@ -11,11 +12,10 @@
           {% if post.image %}
             <div class="ga-card-image-wrap">
               <a href="{{ post.get_absolute_url }}">
+                {% cloudinary_url post.image width=1200 height=675 crop="fill" gravity="auto" fetch_format="auto" quality="auto" as thumb_url %}
                 <img class="ga-card-image post-image"
-                     src="{{ post.image.url }}"
+                     src="{{ thumb_url }}"
                      alt="{{ post.title }}"
-                     width="{{ post.image.width|default:600 }}"
-                     height="{{ post.image.height|default:400 }}"
                      loading="lazy">
               </a>
             </div>
@@ -24,8 +24,8 @@
             <h3 class="ga-card-title">
               <a class="ga-no-decoration" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
             </h3>
-            {% with (post.published_at|default:post.updated_at) as display_date %}
-              <p class="post-meta small">By {{ post.author }} — {{ display_date|date:"F j, Y" }}</p>
+            {% with display_date=post.published_at|default_if_none:post.updated_at %}
+              <p class="post-meta small">By {{ post.author }} · {{ display_date|date:"F j, Y" }}</p>
             {% endwith %}
             <p class="ga-card-text post-excerpt">{{ post.excerpt }}</p>
             <a class="ga-btn ga-btn-outline ga-btn-sm"
