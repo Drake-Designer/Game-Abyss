@@ -86,10 +86,35 @@ class BlogPost(models.Model):
 
         # Auto-generate slug from title if not set
         if not self.slug:
-            base_slug = slugify(self.title)[:100]
-            date_str = self.published_at.strftime(
-                '%Y-%m-%d') if self.published_at else timezone.now().strftime('%Y-%m-%d')
-            self.slug = f"{base_slug}-{date_str}"
+            slug_field = self._meta.get_field('slug')
+            base_slug = slugify(self.title)[:100] or 'post'
+            reference_dt = self.published_at or timezone.now()
+            date_str = reference_dt.strftime('%Y-%m-%d')
+            base_without_suffix = f"{base_slug}-{date_str}"[:slug_field.max_length].rstrip('-')
+
+            # Ensure slug uniqueness for the given publication date, including drafts
+            if self.pk:
+                existing = BlogPost.objects.exclude(pk=self.pk)
+            else:
+                existing = BlogPost.objects.all()
+
+            if self.published_at:
+                existing = existing.filter(published_at__date=reference_dt.date())
+            else:
+                existing = existing.filter(published_at__isnull=True)
+
+            unique_slug = base_without_suffix
+            counter = 2
+            while existing.filter(slug=unique_slug).exists():
+                suffix = f"-{counter}"
+                allowed_length = slug_field.max_length - len(suffix)
+                trimmed_base = base_without_suffix[:max(allowed_length, 1)].rstrip('-')
+                if not trimmed_base:
+                    trimmed_base = base_without_suffix[:1] or 'post'
+                unique_slug = f"{trimmed_base}{suffix}"
+                counter += 1
+
+            self.slug = unique_slug
         # Calculate reading time (roughly 200 words/minute)
         if self.body:
             words = len(self.body.split())
