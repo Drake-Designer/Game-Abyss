@@ -338,6 +338,14 @@ That's why I invested the time to set up proper email infrastructure now — it'
 
 (And yes, setting up SendGrid was a bit tricky at first, but totally worth it!)
 
+---
+
+> **Note on Contact Form Emails:**
+>
+> Emails sent via the contact form may be flagged as spam by Gmail or other providers. This is a known limitation when using free SMTP services (like SendGrid) with a Gmail address and no custom domain. For production use, setting up a custom domain with proper SPF/DKIM records would resolve this issue. For academic/demo purposes, please check your spam folder if you do not see the email in your inbox.
+
+---
+
 #### 🎨 Design Features
 
 - **Dark Theme**: Modern gaming-inspired dark interface
