@@ -14,9 +14,9 @@
 
 ---
 
-## 👉 [Visit Game Abyss](https://game-abyss-d0a64d3f2cf0.herokuapp.com/)
+## 👉 [Visit Game Abyss](https://game-abyss-a25a8ac090c2.herokuapp.com/)
 
-![Game Abyss Screenshot](documentation/am-i-responsive.png)
+![Game Abyss Screenshot](documentation/am-i-responsive.webp)
 
 ---
 
@@ -51,23 +51,58 @@ A modern blog platform designed for the gaming community. Whether you're a casua
 
 > Share your thoughts, read reviews, and connect with fellow gamers from around the world!
 
+### The Story Behind Game Abyss
+
+Here's the truth: **I've wanted to create a gaming blog for ages!**
+
+For years, I've been thinking: _"Wouldn't it be cool to have my own gaming community where people can share reviews, discuss their favorite games, and just... talk about gaming?"_ But I never knew where to start or how to build it.
+
+Then came my journey with **Python and Django** through the Code Institute course, and suddenly everything clicked! 🎯
+
+I realized: _"Wait a minute... I'm literally learning exactly what I need to build that blog I've always wanted!"_
+
+So instead of creating just another practice project to tick off the assessment requirements, I thought: **"Why not make this count? Why not build something I actually care about and can continue developing after graduation?"**
+
+And that's how Game Abyss was born! 🚀
+
+This project is my way of combining:
+
+- ✅ My passion for gaming (I've been a gamer since I was a kid!)
+- ✅ My newly acquired Python and Django skills
+- ✅ My long-term dream of running a gaming community
+- ✅ A real-world portfolio project I'm genuinely proud of
+
+The best part? This isn't just a one-and-done academic project. I'm already planning features to add after I submit this (comments system, user profiles, game reviews database, maybe even an API!). Game Abyss is just getting started! 💪
+
 ### Key Features
 
-- **User Authentication**: Secure registration, login, and password reset functionality
-- **Blog System**: Create, read, update, and delete blog posts
-- **User Profiles**: Personalized profiles for each member of the community
-- **Responsive Design**: Fully responsive interface that works on all devices
-- **Admin Dashboard**: Comprehensive admin panel for content management
-- **Comment System**: Engage with posts through comments and discussions
+- **User Authentication**: Secure registration, login, and password reset functionality powered by Django-allauth
+- **Professional Email System**: Real password reset emails via SendGrid (not just console output!)
+- **Responsive Design**: Fully responsive interface that works beautifully on all devices
+- **Admin Dashboard**: Comprehensive Django admin panel for content management
+- **Modern Dark Theme**: Gaming-inspired design with custom CSS variables
+- **Production-Ready**: Deployed on Heroku with PostgreSQL database
+
+### What's Coming Next (Future Features)
+
+Because I plan to keep working on this after graduation:
+
+- **Blog System**: Full CRUD functionality for creating and managing blog posts
+- **Comment System**: Let users discuss and engage with each other's posts
+- **User Profiles**: Personalized profile pages showing user activity and posts
+- **Like/Favorite System**: Save your favorite posts and show appreciation
+- **Search & Filter**: Find posts by game title, genre, or keywords
+- **Game Database Integration**: Pull game info from APIs like RAWG or IGDB
 
 ### Target Audience
 
 Game Abyss is built for:
 
-- Gamers who want to share their gaming experiences
-- Players looking for honest reviews and recommendations
-- Gaming enthusiasts who enjoy community discussions
-- Content creators who want a platform for their gaming content
+- **Gamers** who want to share their gaming experiences and opinions
+- **Players** looking for honest reviews and recommendations from real people
+- **Gaming enthusiasts** who enjoy community discussions and debates
+- **Content creators** who want a platform for their gaming content
+- **Anyone** who loves games and wants to be part of a friendly community
 
 ---
 
@@ -85,12 +120,17 @@ Game Abyss is built for:
 
 #### As a Registered User
 
-- I want to log in securely to access my account
+- I want to **register for an account** using my email and username
+- I want to **log in securely** to access my account
+- I want to **reset my password** via email if I forget it
+- I want to **verify my email address** (optional verification)
+- I want to **log out safely** to protect my account
+- I want to **see my authentication status** in the navbar
 - I want to create and publish my own blog posts
-- I want to edit or delete my posts if I change my mind
-- I want to comment on other users' posts
-- I want to reset my password if I forget it
-- I want to customize my profile information
+- I want to edit or delete my posts
+- I want to comment on posts and engage with the community
+- I want to customize my public profile
+- I want to delete my account permanently if needed
 
 #### As an Admin
 
@@ -151,28 +191,41 @@ Each wireframe includes:
 
 The wireframes helped establish the visual hierarchy and ensure the layout works seamlessly on all screen sizes.
 
-![Wireframes](documentation/wireframes.png)
+![Wireframes]()
 
 #### Colour Palette
 
-Game Abyss uses a dark, modern colour scheme inspired by gaming aesthetics:
+Game Abyss uses a dark, modern colour scheme inspired by gaming aesthetics.
 
-| Name           | Hex Code  | Use                             |
-| -------------- | --------- | ------------------------------- |
-| Deep Black     | `#0a0e27` | Primary background              |
-| Dark Navy      | `#1a1f3a` | Secondary background / Cards    |
-| Slate Grey     | `#2d3250` | Borders / Dividers              |
-| Light Text     | `#e4e4e7` | Primary text                    |
-| Muted Text     | `#9ca3af` | Secondary text / Labels         |
-| Primary Accent | `#7c3aed` | Buttons / Links / Active states |
-| Hover Accent   | `#9333ea` | Hover states                    |
-| Success Green  | `#10b981` | Success messages                |
-| Warning Yellow | `#f59e0b` | Warnings                        |
-| Error Red      | `#ef4444` | Errors                          |
+Following my usual approach, I created **CSS custom properties (CSS variables)** in the `:root` to define the main colour palette, making it easy to maintain consistency throughout the entire project.
 
-This dark palette creates an immersive gaming atmosphere while maintaining excellent readability and accessibility.
+#### Main Colour Palette
 
-![Color Palette](documentation/color-palette.png)
+The five core colours that define the Game Abyss visual identity:
+
+| Name      | Hex Code  | CSS Variable        | Use                          |
+| --------- | --------- | ------------------- | ---------------------------- |
+| Dark      | `#0a0a0f` | `--color-dark`      | Primary background           |
+| Surface   | `#1a1a24` | `--color-surface`   | Cards / Secondary background |
+| Primary   | `#ff6b35` | `--color-primary`   | CTA buttons / Main accent    |
+| Secondary | `#4ecdc4` | `--color-secondary` | Links / Secondary accent     |
+| Text      | `#e8e8e8` | `--color-text`      | Primary text                 |
+
+```css
+/* Main Colour Palette in CSS */
+:root {
+    /* Palette */
+    --color-dark: #0a0a0f;
+    --color-surface: #1a1a24;
+    --color-primary: #ff6b35;
+    --color-secondary: #4ecdc4;
+    --color-text: #e8e8e8;
+}
+```
+
+This dark palette creates an immersive gaming atmosphere while maintaining excellent readability and accessibility. Using CSS variables ensures consistency and makes future theme updates simple and efficient.
+
+![Color Palette]()
 
 #### Typography
 
@@ -218,12 +271,72 @@ Game Abyss uses carefully selected fonts from [Google Fonts](https://fonts.googl
 - **Post Categories**: Organize content by game genres or topics
 - **Post Views**: Track how many people read your posts
 
-#### 👤 User Authentication
+#### 👤 User Authentication (Django-allauth)
 
-- **Registration**: Secure sign-up with email verification
-- **Login/Logout**: Secure authentication system
+Game Abyss uses **[Django-allauth](https://docs.allauth.org/)**, a comprehensive authentication system that provides a complete set of user management features out of the box.
+
+- **Registration**: Secure sign-up with username and email
+    - Custom registration forms with validation
+    - Optional email verification for added security
+    - Automatic user account creation
+
+- **Login System**: Secure authentication with multiple options
+    - Login with username or email
+    - "Remember Me" functionality
+    - Session management
+
 - **Password Reset**: Email-based password recovery
-- **Profile Management**: Update your profile information
+    - Secure token-based password reset
+    - Email notifications via Django email backend
+    - Password strength validation
+
+- **Email Verification**: Optional email confirmation
+    - Verification emails sent automatically
+    - Configurable verification requirements
+    - Resend verification option
+
+- **Custom Templates**: Fully customized allauth templates
+    - Consistent styling with site design
+    - Responsive authentication pages
+    - Clear error messages and user feedback
+
+#### 📧 Email System (SendGrid Integration)
+
+One of the features I'm most proud of is the **professional email system** I set up for Game Abyss!
+
+**Why I Built This:**
+
+Instead of using Django's default console email backend (which just prints emails to the terminal), I wanted Game Abyss to feel like a _real, production-ready application_. So I decided to:
+
+1. **Create a dedicated Gmail account** for the Game Abyss project
+2. **Integrate SendGrid** as the email delivery service
+3. **Set up automated password reset emails** for users who registered with an email address
+
+**How It Works:**
+
+- When a user forgets their password and requests a reset, they receive an **actual email** (not just a console message!)
+- The email contains a secure, time-limited token link to reset their password
+- All emails are sent from the official Game Abyss Gmail account via SendGrid's SMTP service
+- Only users who provided an email during registration can use this feature
+
+**Why SendGrid?**
+
+SendGrid is a professional email delivery service that ensures emails actually reach users' inboxes (not spam folders!). It's perfect for projects that need reliable email functionality.
+
+**Future Vision:**
+
+Here's the exciting part: Game Abyss isn't just an academic project for me. I genuinely want to **keep building on it after graduation**!
+
+My long-term plan is to:
+
+- Continue developing the blog features
+- Add more community features (comments, likes, user profiles)
+- Eventually **purchase a custom domain** for Game Abyss
+- Turn it into a real gaming community platform
+
+That's why I invested the time to set up proper email infrastructure now — it's not just for this assessment, it's the foundation for something bigger! 🚀
+
+(And yes, setting up SendGrid was a bit tricky at first, but totally worth it!)
 
 #### 🎨 Design Features
 
@@ -239,21 +352,6 @@ Game Abyss uses carefully selected fonts from [Google Fonts](https://fonts.googl
 - **Environment Variables**: Sensitive data protection
 - **HTTPS**: Secure connection in production
 
-### Future Features
-
-Features planned for future releases:
-
-- 💬 **Comment System**: Allow users to comment on blog posts
-- ⭐ **Like System**: Let users like and favorite posts
-- 🔍 **Search Functionality**: Search posts by title, content, or tags
-- 🏷️ **Tag System**: Better content organization with tags
-- 👥 **User Profiles**: Public profile pages with user's posts
-- 📧 **Email Notifications**: Notify users of new comments or likes
-- 🖼️ **Image Upload**: Allow users to add images to posts
-- 📱 **Social Sharing**: Share posts on social media platforms
-- 🎮 **Game Database**: Integration with game APIs for metadata
-- 🏆 **User Reputation**: Gamification with points and badges
-
 ---
 
 ## Database Design
@@ -262,56 +360,13 @@ Game Abyss uses PostgreSQL in production and SQLite for local development. The d
 
 ### Entity Relationship Diagram
 
-```
-┌─────────────────┐
-│      User       │
-│  (Django Auth)  │
-├─────────────────┤
-│ id (PK)         │
-│ username        │
-│ email           │
-│ password        │
-│ date_joined     │
-└────────┬────────┘
-         │
-         │ 1:N
-         │
-┌────────▼────────┐
-│    BlogPost     │
-├─────────────────┤
-│ id (PK)         │
-│ title           │
-│ slug            │
-│ author (FK)     │
-│ content         │
-│ excerpt         │
-│ created_at      │
-│ updated_at      │
-│ published       │
-│ views           │
-└─────────────────┘
-```
-
 ### Models Overview
 
 #### User Model (Django Built-in)
 
 Django's built-in User model provides authentication functionality.
 
-#### BlogPost Model (Future)
-
-```python
-class BlogPost(models.Model):
-    title = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    content = models.TextField()
-    excerpt = models.TextField(max_length=300)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    published = models.BooleanField(default=False)
-    views = models.IntegerField(default=0)
-```
+#### BlogPost Model
 
 ---
 
@@ -321,8 +376,8 @@ class BlogPost(models.Model):
 
 #### Backend
 
-- **[Python 3.12](https://www.python.org/)** – Programming language
-- **[Django 5.2](https://www.djangoproject.com/)** – Web framework
+- **[Python 3.13](https://www.python.org/)** – Programming language
+- **[Django 5.2.7](https://www.djangoproject.com/)** – Web framework
 - **[PostgreSQL](https://www.postgresql.org/)** – Production database
 - **[SQLite](https://www.sqlite.org/)** – Development database
 
@@ -338,17 +393,29 @@ class BlogPost(models.Model):
 ```python
 # Core Framework
 Django==5.2.7
-psycopg2-binary==2.9.10  # PostgreSQL adapter
-dj-database-url==2.3.0   # Database URL parsing
+psycopg2-binary==2.9.11     # PostgreSQL adapter
+dj-database-url==3.0.1      # Database URL parsing
 
 # Authentication
-django-allauth==65.4.0   # User authentication
+django-allauth==65.12.0     # User authentication
+
+# Forms & UI
+django-crispy-forms==2.4    # Bootstrap form rendering
+crispy-bootstrap5==2025.6   # Bootstrap 5 integration
+
+# Rich Text Editor
+django-summernote==0.8.20.0 # WYSIWYG editor for blog posts
+bleach==6.2.0               # HTML sanitization
 
 # Static Files
-whitenoise==6.8.2        # Static file serving
+whitenoise==6.11.0          # Static file serving
 
-# Environment Variables
-python-dotenv==1.0.0     # Load .env files
+# Image Processing
+pillow==11.3.0              # Image handling
+
+# Development Tools
+django-debug-toolbar==6.0.0 # Debugging toolbar
+djlint==1.36.2              # Django template linter
 ```
 
 ### Development Tools
@@ -365,6 +432,8 @@ python-dotenv==1.0.0     # Load .env files
 - **[Font Awesome](https://fontawesome.com/)** – Icons
 - **[RealFaviconGenerator](https://realfavicongenerator.net/)** – Favicon generation
 - **[Coolors](https://coolors.co/)** – Colour palette
+- **[Freepik](https://www.freepik.com/)** – Free stock images (hero image)
+- **[Squoosh](https://squoosh.app/)** – Image compression and optimization
 
 ### Testing & Validation
 
@@ -388,7 +457,7 @@ Full details on all testing carried out—including:
 - Manual feature testing
 - Automated testing
 
-> can be found in the **[TESTING.md](/TESTING.md)** file.
+> can be found in the **[TESTING.md](TESTING.md)** file.
 
 ### Key Bug Fixes
 
@@ -448,7 +517,7 @@ Game Abyss is deployed on **Heroku** with PostgreSQL database and uses **WhiteNo
 
 #### Prerequisites
 
-- Python 3.12 or higher
+- Python 3.13 or higher
 - Git
 - A code editor (VS Code recommended)
 
@@ -587,19 +656,23 @@ web: gunicorn core.wsgi:application
 
 **requirements.txt** (Python dependencies):
 
-```
+```txt
 Django==5.2.7
-psycopg2-binary==2.9.10
-dj-database-url==2.3.0
-django-allauth==65.4.0
-whitenoise==6.8.2
+psycopg2-binary==2.9.11
+dj-database-url==3.0.1
+django-allauth==65.12.0
+whitenoise==6.11.0
 gunicorn==23.0.0
+django-crispy-forms==2.4
+crispy-bootstrap5==2025.6
+django-summernote==0.8.20.0
+pillow==11.3.0
 ```
 
 **runtime.txt** (Python version):
 
-```
-python-3.12.8
+```txt
+python-3.13.0
 ```
 
 ### Useful Links
@@ -694,28 +767,18 @@ Thank you to everyone who tested Game Abyss and provided valuable feedback:
 
 - **Friends and Family** – For testing on different devices
 - **Code Institute Peers** – For peer review and suggestions
-- **Fellow Students** – For constructive criticism and ideas
 
 ### Special Thanks
-
-A huge thank you to:
-
-- **[Code Institute](https://codeinstitute.net/)** – For the amazing course and support
-- **My Mentor** – For guidance and code reviews throughout the project
-- **Student Care Team** – For always being supportive and helpful
-- **Slack Community** – For answering questions and sharing knowledge
 
 ### Personal Note
 
 Building Game Abyss has been an incredible learning experience. Coming from my previous Phaser game project ([Dungeon Escape!](https://github.com/Drake-Designer/Dungeon-Escape)), this Django application represents my growth as a developer.
 
-While Dungeon Escape! taught me JavaScript and game development, Game Abyss introduced me to backend development, databases, user authentication, and deployment — skills that have opened up a whole new world of possibilities!
-
-I'm excited to continue learning and building more projects in the future! 🚀
+While Dungeon Escape! taught me JavaScript and game development, Game Abyss introduced me to backend development, databases, user authentication, and deployment.. skills that have opened up a whole new world of possibilities!
 
 ---
 
 <div align="center">
   <p><strong>Game Abyss</strong> • Built with ❤️ by <a href="https://github.com/Drake-Designer">Drake-Designer</a></p>
-  <p><em>Milestone Project 4 - Code Institute</em></p>
+  <p><em>Milestone Project 3 - Code Institute</em></p>
 </div>

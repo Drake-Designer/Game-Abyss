@@ -86,6 +86,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+
     # Temporarily disabled for Am I Responsive screenshot
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
