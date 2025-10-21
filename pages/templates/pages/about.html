@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  About - Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="ga-card">
+          <div class="ga-card-body">
+            <h1 class="ga-card-title text-center mb-4">About Game Abyss</h1>
+            <div class="mb-4">
+              <h3 class="ga-card-title h4 mb-3">🎮 Our Mission</h3>
+              <p class="ga-card-text">
+                Game Abyss is a community-driven platform where gamers can share their experiences, read honest reviews, and stay updated on the latest gaming news. We believe in creating a space where every voice matters.
+              </p>
+            </div>
+            <div class="mb-4">
+              <h3 class="ga-card-title h4 mb-3">✨ What We Offer</h3>
+              <ul class="ga-card-text">
+                <li>In-depth game reviews from our community</li>
+                <li>Latest gaming news and updates</li>
+                <li>Discussion forums for gamers</li>
+                <li>Platform for sharing your gaming experiences</li>
+              </ul>
+            </div>
+            <div class="mb-4">
+              <h3 class="ga-card-title h4 mb-3">🚀 Join Us</h3>
+              <p class="ga-card-text">
+                Whether you're a casual gamer or a hardcore enthusiast, Game Abyss is your home. Create an account, share your thoughts, and connect with fellow gamers from around the world.
+              </p>
+            </div>
+            <div class="text-center mt-5 d-flex flex-column flex-sm-row gap-3 justify-content-center">
+              <a href="{% url 'account_signup' %}" class="ga-btn ga-btn-outline">Join Now</a>
+              <a href="{% url 'pages:contact' %}" class="ga-btn ga-btn-outline">Contact Us</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock content %}

@@ -261,7 +261,7 @@ hr {
    HERO SECTION
    ============================================ */
 .ga-hero {
-  padding: 2rem 0;
+  padding: 3rem 0;
   position: relative;
   overflow: hidden;
 }
@@ -446,7 +446,6 @@ hr {
   margin-bottom: 0.5rem;
 }
 
-/* Keep helper text aligned with label colour inside auth cards */
 .ga-auth-card
   :where(.text-muted, .form-text, small.text-muted, .form-label .text-muted, small) {
   color: var(--color-text) !important;

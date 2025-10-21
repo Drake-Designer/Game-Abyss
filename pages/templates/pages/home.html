@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  Home - Game Abyss
+{% endblock title %}
+{% block hero %}
+  <section class="ga-hero">
+    <div class="container">
+      <div class="row align-items-center gy-4">
+        <div class="col-lg-6">
+          <h1 class="ga-hero-title display-4 fw-bold mb-3">Welcome to Game Abyss</h1>
+          <p class="ga-hero-subtitle mb-4">Dive deep into the world of gaming with reviews, news, and community discussions.</p>
+          <div class="d-flex gap-3 flex-wrap">
+            <a href="{% url 'pages:about' %}" class="ga-btn ga-btn-outline">Learn More</a>
+            <a href="#latest-posts" class="ga-btn ga-btn-outline">Latest Posts</a>
+          </div>
+        </div>
+        <div class="col-lg-6 text-center">
+          <img src="{% static 'images/game-abyss-hero.webp' %}"
+               alt="Gaming Hero"
+               class="ga-hero-image img-fluid"
+               width="1600"
+               height="1205"
+               loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock hero %}
+{% block content %}
+  <section id="latest-posts" class="py-5">
+    <div class="row mb-4">
+      <div class="col">
+        <h2 class="text-center mb-4">Latest Posts</h2>
+      </div>
+    </div>
+    <div class="row gy-4">
+      <!-- Placeholder for blog posts -->
+      <div class="col-md-6 col-lg-4">
+        <div class="ga-card">
+          <div class="ga-card-body">
+            <h3 class="ga-card-title">Coming Soon</h3>
+            <p class="ga-card-text">Blog posts will appear here once created.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock content %}
