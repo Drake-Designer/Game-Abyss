@@ -20,6 +20,13 @@ class ApprovedManager(models.Manager):
         return super().get_queryset().filter(status=self.model.STATUS_APPROVED)
 
 
+class ApprovedCommentManager(models.Manager):
+    """Manager returning comments that are approved for display."""
+
+    def get_queryset(self):
+        return super().get_queryset().filter(status=self.model.STATUS_APPROVED)
+
+
 class BlogPost(models.Model):
     """A blog post record.
 
@@ -153,3 +160,46 @@ class BlogPost(models.Model):
         """
         date = self.published_at or timezone.now()
         return f"/blog/{date.year}/{date.month:02d}/{date.day:02d}/{self.slug}/"
+
+
+class Comment(models.Model):
+    """A comment associated with a blog post."""
+
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_APPROVED, 'Approved'),
+        (STATUS_REJECTED, 'Rejected'),
+    ]
+
+    post = models.ForeignKey(
+        BlogPost,
+        on_delete=models.CASCADE,
+        related_name='comments',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments',
+    )
+    body = models.TextField()
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_PENDING,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = models.Manager()
+    approved = ApprovedCommentManager()
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Comment'
+        verbose_name_plural = 'Comments'
+
+    def __str__(self):
+        return f"Comment by {self.author} on {self.post}"

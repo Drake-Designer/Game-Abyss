@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from .forms import BlogPostForm
-from .models import BlogPost
+from .models import BlogPost, Comment
 
 
 @admin.register(BlogPost)
@@ -82,8 +82,8 @@ class BlogPostAdmin(admin.ModelAdmin):
 
     def get_actions(self, request):
         actions = super().get_actions(request)
-        if not request.user.is_superuser:
-            # Remove all bulk actions for non-superusers
+        if not request.user.has_perm('blog.change_blogpost'):
+            # Remove all bulk actions for users without change permissions
             for action in list(actions):
                 actions.pop(action)
         return actions
@@ -109,3 +109,32 @@ class BlogPostAdmin(admin.ModelAdmin):
         self.message_user(request, f"Marked {updated} post(s) as rejected.")
 
     mark_rejected.short_description = 'Mark selected posts as rejected'
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    """Admin interface for moderating blog comments."""
+
+    list_display = ('post', 'author', 'status', 'created_at', 'updated_at')
+    list_filter = ('status', 'created_at', 'post')
+    search_fields = ('post__title', 'author__username', 'body')
+    autocomplete_fields = ('post', 'author')
+    actions = ['mark_pending', 'mark_approved', 'mark_rejected']
+
+    def mark_pending(self, request, queryset):
+        updated = queryset.update(status=Comment.STATUS_PENDING)
+        self.message_user(request, f"Marked {updated} comment(s) as pending.")
+
+    mark_pending.short_description = 'Mark selected comments as pending'
+
+    def mark_approved(self, request, queryset):
+        updated = queryset.update(status=Comment.STATUS_APPROVED)
+        self.message_user(request, f"Marked {updated} comment(s) as approved.")
+
+    mark_approved.short_description = 'Mark selected comments as approved'
+
+    def mark_rejected(self, request, queryset):
+        updated = queryset.update(status=Comment.STATUS_REJECTED)
+        self.message_user(request, f"Marked {updated} comment(s) as rejected.")
+
+    mark_rejected.short_description = 'Mark selected comments as rejected'

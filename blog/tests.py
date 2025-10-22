@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
-from .models import BlogPost
+from .models import BlogPost, Comment
 
 
 class BlogPostModelTests(TestCase):
@@ -49,3 +49,41 @@ class BlogPostModelTests(TestCase):
 
         self.assertTrue(post_two.slug.endswith('-2'))
         self.assertNotEqual(post_one.slug, post_two.slug)
+
+
+class CommentModelTests(TestCase):
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='commenter', password='pass')
+        self.post = BlogPost.objects.create(
+            author=self.user,
+            title='Test Post',
+            body='content',
+        )
+
+    def test_default_status_is_pending(self):
+        comment = Comment.objects.create(
+            post=self.post,
+            author=self.user,
+            body='Nice article!',
+        )
+        self.assertEqual(comment.status, Comment.STATUS_PENDING)
+
+    def test_approved_manager_filters_status(self):
+        pending = Comment.objects.create(
+            post=self.post,
+            author=self.user,
+            body='Pending comment',
+        )
+        approved = Comment.objects.create(
+            post=self.post,
+            author=self.user,
+            body='Approved comment',
+            status=Comment.STATUS_APPROVED,
+        )
+
+        approved_comments = Comment.approved.all()
+
+        self.assertIn(approved, approved_comments)
+        self.assertNotIn(pending, approved_comments)
