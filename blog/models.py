@@ -5,9 +5,9 @@ from django.db import models, transaction
 from django.utils import timezone
 from django.utils.text import slugify
 
-try:
+try:  # pragma: no cover - optional dependency
     from cloudinary.models import CloudinaryField
-except ImportError:
+except ImportError:  # pragma: no cover - fallback for local development/tests
     CloudinaryField = None
 
 User = get_user_model()
@@ -20,11 +20,18 @@ class ApprovedManager(models.Manager):
         return super().get_queryset().filter(status=self.model.STATUS_APPROVED)
 
 
-class ApprovedCommentManager(models.Manager):
+class CommentQuerySet(models.QuerySet):
+    """QuerySet helper exposing filters used across comment views."""
+
+    def approved(self):
+        return self.filter(status=self.model.STATUS_APPROVED)
+
+
+class ApprovedCommentManager(models.Manager.from_queryset(CommentQuerySet)):
     """Manager returning comments that are approved for display."""
 
     def get_queryset(self):
-        return super().get_queryset().filter(status=self.model.STATUS_APPROVED)
+        return super().get_queryset().approved()
 
 
 class BlogPost(models.Model):
@@ -41,9 +48,11 @@ class BlogPost(models.Model):
 
     title = models.CharField(max_length=100)
     slug = models.SlugField(
-        max_length=120, unique_for_date='published_at', blank=True, editable=False)
+        max_length=120, unique_for_date='published_at', blank=True, editable=False
+    )
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='blog_posts')
+        User, on_delete=models.CASCADE, related_name='blog_posts'
+    )
     excerpt = models.CharField(max_length=250, blank=True)
     body = models.TextField()
     if CloudinaryField is not None:
@@ -51,17 +60,21 @@ class BlogPost(models.Model):
     else:
         image = models.ImageField(
             upload_to='blog_images/', blank=True, null=True)
-    tags = models.CharField(max_length=100, blank=True,
-                            help_text='Comma-separated tags (e.g. rpg, soulslike).')
+    tags = models.CharField(
+        max_length=100, blank=True, help_text='Comma-separated tags'
+    )
     status = models.CharField(
-        max_length=10, choices=STATUS_CHOICES, default=STATUS_REJECTED)
+        max_length=10, choices=STATUS_CHOICES, default=STATUS_REJECTED
+    )
     published_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     reading_time = models.PositiveIntegerField(
-        default=1, help_text='Estimated reading time in minutes')
+        default=1, help_text='Estimated reading time in minutes'
+    )
     likes = models.PositiveIntegerField(default=0)
     rating = models.PositiveIntegerField(
-        default=0, help_text='Rating out of 5 (future use)')
+        default=0, help_text='Rating out of 5 (future use)'
+    )
 
     objects = models.Manager()
     approved = ApprovedManager()
@@ -80,7 +93,8 @@ class BlogPost(models.Model):
         previous_status = None
         if self.pk:
             previous_status = BlogPost.objects.filter(
-                pk=self.pk).values_list('status', flat=True).first()
+                pk=self.pk
+            ).values_list('status', flat=True).first()
 
         should_notify_rejection = (
             previous_status is not None
@@ -100,7 +114,7 @@ class BlogPost(models.Model):
             reference_dt = self.published_at or timezone.now()
             date_str = reference_dt.strftime('%Y-%m-%d')
             base_without_suffix = f"{base_slug}-{date_str}"[
-                :slug_field.max_length].rstrip('-')
+                : slug_field.max_length].rstrip('-')
 
             # Ensure slug uniqueness for the given publication date, including drafts
             if self.pk:
@@ -119,7 +133,7 @@ class BlogPost(models.Model):
             while existing.filter(slug=unique_slug).exists():
                 suffix = f"-{counter}"
                 allowed_length = slug_field.max_length - len(suffix)
-                trimmed_base = base_without_suffix[:max(
+                trimmed_base = base_without_suffix[: max(
                     allowed_length, 1)].rstrip('-')
                 if not trimmed_base:
                     trimmed_base = base_without_suffix[:1] or 'post'
@@ -127,12 +141,15 @@ class BlogPost(models.Model):
                 counter += 1
 
             self.slug = unique_slug
-        # Calculate reading time (roughly 200 words/minute)
+
+        # Calculate reading time (roughly 200 words per minute)
         if self.body:
             words = len(self.body.split())
             self.reading_time = max(1, words // 200)
+
         super().save(*args, **kwargs)
 
+        # Notify the author when a post becomes rejected
         if should_notify_rejection and self.author.email:
             def _send_rejection_email():
                 send_mail(
@@ -163,7 +180,7 @@ class BlogPost(models.Model):
 
 
 class Comment(models.Model):
-    """A comment associated with a blog post."""
+    """A comment left by a user on a blog post."""
 
     STATUS_PENDING = 'pending'
     STATUS_APPROVED = 'approved'
@@ -193,7 +210,8 @@ class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    objects = models.Manager()
+    # Expose the QuerySet as the default manager and keep a convenience "approved" manager
+    objects = CommentQuerySet.as_manager()
     approved = ApprovedCommentManager()
 
     class Meta:

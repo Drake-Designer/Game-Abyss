@@ -17,4 +17,41 @@
     {% endif %}
     <div class="post-body">{{ post.body|linebreaks }}</div>
   </article>
+  <section class="post-comments mt-5">
+    <h2>Comments</h2>
+    {% if comments %}
+      <ul class="list-unstyled">
+        {% for comment in comments %}
+          <li class="mb-4">
+            <p class="mb-1">
+              <strong>{{ comment.author }}</strong> — {{ comment.created_at|date:"F j, Y H:i" }}
+            </p>
+            <p class="mb-0">{{ comment.body|linebreaks }}</p>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted">No approved comments yet.</p>
+    {% endif %}
+    <div class="alert alert-info" role="alert">Comments are published only after editorial approval.</div>
+    {% if user.is_authenticated %}
+      <form method="post" class="comment-form mt-4">
+        {% csrf_token %}
+        {{ comment_form.non_field_errors }}
+        <div class="mb-3">
+          {{ comment_form.body.label_tag }}
+          {{ comment_form.body }}
+          {% if comment_form.body.errors %}
+            <div class="invalid-feedback d-block">{{ comment_form.body.errors|join:" " }}</div>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Comment</button>
+      </form>
+    {% else %}
+      <p>
+        <a href="{% url 'account_login' %}?next={{ request.path }}">Log in</a>
+        to submit a comment.
+      </p>
+    {% endif %}
+  </section>
 {% endblock content %}
