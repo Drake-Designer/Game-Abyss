@@ -2,9 +2,9 @@ from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from django.views import View
 from django.contrib import messages
-from django.core.mail import send_mail
-from django.conf import settings
-from .forms import ContactForm
+
+from .forms import HelpRequestForm
+from .models import HelpRequest
 
 
 class HomeView(TemplateView):
@@ -18,71 +18,55 @@ class AboutView(TemplateView):
 
 
 class ContactView(View):
-    """Contact page: GET shows form, POST sends message."""
+    """Contact page backed by the HelpRequest model."""
+
     template_name = 'pages/contact.html'
-    form_class = ContactForm
+    form_class = HelpRequestForm
+
+    def get_initial(self, request):
+        """Return default initial values for the form."""
+        initial = {
+            'priority': HelpRequest.PRIORITY_MEDIUM,
+        }
+        if request.user.is_authenticated:
+            initial.update({
+                'name': request.user.get_full_name() or request.user.get_username(),
+                'email': request.user.email,
+            })
+        return initial
 
     def get(self, request):
-        """Show the contact form."""
-        form = self.form_class()
+        """Show the help request form."""
+        form = self.form_class(initial=self.get_initial(request))
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
-        """Process the contact form and send an email on success."""
+        """Create a HelpRequest from the submitted data."""
         form = self.form_class(request.POST)
 
         if form.is_valid():
-            # Get cleaned data
-            name = form.cleaned_data['name']
-            email = form.cleaned_data['email']
-            subject = form.cleaned_data['subject']
-            message = form.cleaned_data['message']
+            help_request = form.save(commit=False)
 
-            # Prepare email content
-            email_subject = f"[Game Abyss Contact] {subject}"
-            email_message = f"""
-New contact form submission from Game Abyss:
+            if request.user.is_authenticated:
+                help_request.user = request.user
+                # Auto-fill missing details from the authenticated user
+                if not help_request.name:
+                    help_request.name = request.user.get_full_name() or request.user.get_username()
+                if not help_request.email:
+                    help_request.email = request.user.email
 
-From: {name} <{email}>
-Subject: {subject}
+            help_request.status = help_request.status or HelpRequest.STATUS_OPEN
+            help_request.priority = help_request.priority or HelpRequest.PRIORITY_MEDIUM
+            help_request.save()
 
-Message:
-{message}
+            messages.success(
+                request,
+                "Thanks for reaching out! Your help request has been submitted successfully."
+            )
+            return redirect('pages:contact')
 
----
-This email was sent from the Game Abyss contact form.
-Reply directly to this email to respond to {name}.
-            """
-
-            try:
-                # Send email
-                send_mail(
-                    subject=email_subject,
-                    message=email_message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    # Send to yourself
-                    recipient_list=[settings.DEFAULT_FROM_EMAIL],
-                    fail_silently=False,
-                )
-
-                messages.success(
-                    request,
-                    f"Thanks {name}! Your message has been sent. We'll get back to you soon! 🎮"
-                )
-                return redirect('pages:contact')
-
-            except Exception as e:
-                # Log the actual error for debugging
-                print(f"Email error: {str(e)}")
-                messages.error(
-                    request,
-                    f"Oops! Something went wrong sending your message. Please try again later."
-                )
-                return render(request, self.template_name, {'form': form})
-
-        # Form is invalid
         messages.error(
             request,
-            "Please fix the errors below."
+            "We couldn't send your request. Please review the errors below and try again."
         )
         return render(request, self.template_name, {'form': form})
