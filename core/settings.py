@@ -55,9 +55,6 @@ ALLOWED_HOSTS = _alh.split(",") if _alh else []
 CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(
     ",") if os.environ.get("CSRF_TRUSTED_ORIGINS") else []
 
-
-# Application definition
-
 # Application definition
 
 INSTALLED_APPS = [

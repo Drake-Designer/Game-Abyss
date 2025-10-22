@@ -17,7 +17,6 @@
                   class="ga-post-form"
                   novalidate>
               {% csrf_token %}
-              {# Loop all fields and render label + widget + help + errors #}
               {% for field in form %}
                 <div class="mb-3">
                   <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
@@ -25,15 +24,13 @@
                     {% if field.field.required %}*{% endif %}
                   </label>
                   {{ field }}
-                  {# Built-in help text #}
-                  {% if field.help_text %}<div class="form-text text-muted">{{ field.help_text|safe }}</div>{% endif %}
-                  {# Hint for common fields #}
-                  {% if field.name == "tags" %}
+                  {% if field.help_text %}
+                    <div class="form-text text-muted">{{ field.help_text|safe }}</div>
+                  {% elif field.name == "tags" %}
                     <div class="form-text text-muted">
                       Comma-separated tags (e.g. <em>rpg, soulslike</em>).
                     </div>
                   {% endif %}
-                  {# Field errors #}
                   {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                 </div>
               {% endfor %}

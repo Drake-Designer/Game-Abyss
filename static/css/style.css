@@ -241,7 +241,6 @@ hr {
   font-size: var(--fs-btn);
 }
 
-/* hover non necessita font-size */
 .ga-navbar-newpost:hover {
   background: linear-gradient(135deg, #ff8c42 0%, var(--color-primary) 100%);
   box-shadow: 0 4px 16px rgb(255 107 53 / 30%);
@@ -577,7 +576,7 @@ hr {
 }
 
 .ga-auth-card .form-control::placeholder {
-  color: rgb(231 229 229 / 80%);
+  color: rgb(231 229 229 / 60%);
 }
 
 .ga-auth-card textarea {
@@ -623,11 +622,14 @@ hr {
   width: 100%;
 }
 
+.ga-auth-card input[name='tags'],
+.ga-auth-card input#id-tags,
 .ga-auth-card input[name*='tag'],
 .ga-auth-card input[id*='tag'] {
   border-radius: 999px;
   padding-left: 0.9rem;
   padding-right: 0.9rem;
+  color: var(--color-text) !important;
 }
 
 .ga-auth-card select {
@@ -677,6 +679,39 @@ hr {
 .ga-auth-card input[id*='title'] {
   font-weight: 600;
   letter-spacing: 0.2px;
+}
+
+/* ============================================
+  TAGS INPUT OVERRIDE
+  ============================================ */
+
+.ga-auth-card input[name='tags'],
+.ga-auth-card input[name*='tag'],
+.ga-auth-card input[id*='tag'],
+.ga-auth-card [class*='select2-search__field'],
+.ga-auth-card [class*='select2-container'] [class*='select2-selection__rendered'] {
+  color: var(--color-text) !important;
+  background: transparent !important;
+  border-radius: 999px !important;
+  padding: 8px 14px !important;
+  border: 1px solid rgb(255 255 255 / 6%) !important;
+}
+
+.ga-auth-card input[name='tags']::placeholder,
+.ga-auth-card input[name*='tag']::placeholder,
+.ga-auth-card input[id*='tag']::placeholder,
+.ga-auth-card [class*='select2-search__field']::placeholder {
+  color: lightgray !important;
+  opacity: 1 !important;
+}
+
+.ga-auth-card
+  [class*='select2-container--default']
+  [class*='select2-selection--single'] {
+  background: transparent !important;
+  border-radius: 999px !important;
+  border: 1px solid rgb(255 255 255 / 6%) !important;
+  color: var(--color-text) !important;
 }
 
 /* ============================================

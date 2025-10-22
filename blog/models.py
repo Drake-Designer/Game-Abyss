@@ -5,9 +5,9 @@ from django.db import models, transaction
 from django.utils import timezone
 from django.utils.text import slugify
 
-try:  # pragma: no cover - optional dependency
+try:
     from cloudinary.models import CloudinaryField
-except ImportError:  # pragma: no cover - fallback for local development/tests
+except ImportError:
     CloudinaryField = None
 
 User = get_user_model()
@@ -42,9 +42,10 @@ class BlogPost(models.Model):
     if CloudinaryField is not None:
         image = CloudinaryField('image', blank=True, null=True)
     else:
-        image = models.ImageField(upload_to='blog_images/', blank=True, null=True)
+        image = models.ImageField(
+            upload_to='blog_images/', blank=True, null=True)
     tags = models.CharField(max_length=100, blank=True,
-                            help_text='Comma-separated tags')
+                            help_text='Comma-separated tags (e.g. rpg, soulslike).')
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default=STATUS_REJECTED)
     published_at = models.DateTimeField(blank=True, null=True)
@@ -71,7 +72,8 @@ class BlogPost(models.Model):
         """
         previous_status = None
         if self.pk:
-            previous_status = BlogPost.objects.filter(pk=self.pk).values_list('status', flat=True).first()
+            previous_status = BlogPost.objects.filter(
+                pk=self.pk).values_list('status', flat=True).first()
 
         should_notify_rejection = (
             previous_status is not None
@@ -90,7 +92,8 @@ class BlogPost(models.Model):
             base_slug = slugify(self.title)[:100] or 'post'
             reference_dt = self.published_at or timezone.now()
             date_str = reference_dt.strftime('%Y-%m-%d')
-            base_without_suffix = f"{base_slug}-{date_str}"[:slug_field.max_length].rstrip('-')
+            base_without_suffix = f"{base_slug}-{date_str}"[
+                :slug_field.max_length].rstrip('-')
 
             # Ensure slug uniqueness for the given publication date, including drafts
             if self.pk:
@@ -99,7 +102,8 @@ class BlogPost(models.Model):
                 existing = BlogPost.objects.all()
 
             if self.published_at:
-                existing = existing.filter(published_at__date=reference_dt.date())
+                existing = existing.filter(
+                    published_at__date=reference_dt.date())
             else:
                 existing = existing.filter(published_at__isnull=True)
 
@@ -108,7 +112,8 @@ class BlogPost(models.Model):
             while existing.filter(slug=unique_slug).exists():
                 suffix = f"-{counter}"
                 allowed_length = slug_field.max_length - len(suffix)
-                trimmed_base = base_without_suffix[:max(allowed_length, 1)].rstrip('-')
+                trimmed_base = base_without_suffix[:max(
+                    allowed_length, 1)].rstrip('-')
                 if not trimmed_base:
                     trimmed_base = base_without_suffix[:1] or 'post'
                 unique_slug = f"{trimmed_base}{suffix}"
