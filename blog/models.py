@@ -5,23 +5,23 @@ from django.db import models, transaction
 from django.utils import timezone
 from django.utils.text import slugify
 
-try:  # pragma: no cover - optional dependency
+try:
     from cloudinary.models import CloudinaryField
-except ImportError:  # pragma: no cover - fallback for local development/tests
+except ImportError:
     CloudinaryField = None
 
 User = get_user_model()
 
 
 class ApprovedManager(models.Manager):
-    """Manager returning posts that are approved and visible on the blog."""
+    """Manager returning posts that are published and visible on the blog."""
 
     def get_queryset(self):
-        return super().get_queryset().filter(status=self.model.STATUS_APPROVED)
+        return super().get_queryset().filter(status=self.model.STATUS_PUBLISHED)
 
 
 class CommentQuerySet(models.QuerySet):
-    """QuerySet helper exposing filters used across comment views."""
+    """QuerySet helpers used across comment views."""
 
     def approved(self):
         return self.filter(status=self.model.STATUS_APPROVED)
@@ -35,45 +35,68 @@ class ApprovedCommentManager(models.Manager.from_queryset(CommentQuerySet)):
 
 
 class BlogPost(models.Model):
-    """A blog post record.
+    """A blog post record with workflow, flags and useful metadata."""
 
-    Stores title, author, body, image, tags, status and timestamps
-    """
-    STATUS_APPROVED = 'approved'
-    STATUS_REJECTED = 'rejected'
+    # Workflow
+    STATUS_DRAFT = 'draft'
+    STATUS_PUBLISHED = 'published'
     STATUS_CHOICES = [
-        (STATUS_APPROVED, 'Approved'),
-        (STATUS_REJECTED, 'Rejected'),
+        (STATUS_DRAFT, 'Draft'),
+        (STATUS_PUBLISHED, 'Published'),
     ]
+
+    # Backward compatibility aliases for legacy code
+    STATUS_APPROVED = STATUS_PUBLISHED
+    STATUS_REJECTED = STATUS_DRAFT
 
     title = models.CharField(max_length=100)
     slug = models.SlugField(
-        max_length=120, unique_for_date='published_at', blank=True, editable=False
+        max_length=120,
+        unique_for_date='published_at',
+        blank=True,
+        editable=False,
     )
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='blog_posts'
+        User,
+        on_delete=models.CASCADE,
+        related_name='blog_posts',
     )
     excerpt = models.CharField(max_length=250, blank=True)
     body = models.TextField()
+
+    # Optional Cloudinary integration
     if CloudinaryField is not None:
         image = CloudinaryField('image', blank=True, null=True)
     else:
         image = models.ImageField(
             upload_to='blog_images/', blank=True, null=True)
+
     tags = models.CharField(
-        max_length=100, blank=True, help_text='Comma-separated tags'
+        max_length=100,
+        blank=True,
+        help_text='Comma-separated tags',
     )
+
     status = models.CharField(
-        max_length=10, choices=STATUS_CHOICES, default=STATUS_REJECTED
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default=STATUS_DRAFT,
     )
+    featured = models.BooleanField(default=False)
+
+    # Use default=timezone.now instead of auto_now_add to avoid conflicts on existing rows
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
     published_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
+
     reading_time = models.PositiveIntegerField(
-        default=1, help_text='Estimated reading time in minutes'
+        default=1,
+        help_text='Estimated reading time in minutes',
     )
     likes = models.PositiveIntegerField(default=0)
     rating = models.PositiveIntegerField(
-        default=0, help_text='Rating out of 5 (future use)'
+        default=0,
+        help_text='Rating out of 5 (future use)',
     )
 
     objects = models.Manager()
@@ -85,29 +108,20 @@ class BlogPost(models.Model):
         verbose_name_plural = 'Blog Posts'
 
     def save(self, *args, **kwargs):
-        """Auto-generate slug and compute reading time, then save.
-
-        If `slug` is empty it is created from the title and published date.
-        Reading time is estimated from the body text.
-        """
+        """Generate slug, sync published_at with status, compute reading time, then save."""
         previous_status = None
         if self.pk:
             previous_status = BlogPost.objects.filter(
                 pk=self.pk
             ).values_list('status', flat=True).first()
 
-        should_notify_rejection = (
-            previous_status is not None
-            and previous_status != self.STATUS_REJECTED
-            and self.status == self.STATUS_REJECTED
-        )
-
-        if self.status == self.STATUS_APPROVED and not self.published_at:
+        # Sync published_at with workflow
+        if self.status == self.STATUS_PUBLISHED and not self.published_at:
             self.published_at = timezone.now()
-        elif self.status == self.STATUS_REJECTED:
+        elif self.status == self.STATUS_DRAFT:
             self.published_at = None
 
-        # Auto-generate slug from title if not set
+        # Auto slug from title and reference date when missing
         if not self.slug:
             slug_field = self._meta.get_field('slug')
             base_slug = slugify(self.title)[:100] or 'post'
@@ -116,12 +130,8 @@ class BlogPost(models.Model):
             base_without_suffix = f"{base_slug}-{date_str}"[
                 : slug_field.max_length].rstrip('-')
 
-            # Ensure slug uniqueness for the given publication date, including drafts
-            if self.pk:
-                existing = BlogPost.objects.exclude(pk=self.pk)
-            else:
-                existing = BlogPost.objects.all()
-
+            existing = BlogPost.objects.exclude(
+                pk=self.pk) if self.pk else BlogPost.objects.all()
             if self.published_at:
                 existing = existing.filter(
                     published_at__date=reference_dt.date())
@@ -142,15 +152,20 @@ class BlogPost(models.Model):
 
             self.slug = unique_slug
 
-        # Calculate reading time (roughly 200 words per minute)
+        # Reading time at ~200 wpm
         if self.body:
             words = len(self.body.split())
             self.reading_time = max(1, words // 200)
 
         super().save(*args, **kwargs)
 
-        # Notify the author when a post becomes rejected
-        if should_notify_rejection and self.author.email:
+        # Optional notification when a post is moved to draft from another state
+        if (
+            previous_status is not None
+            and previous_status != self.STATUS_DRAFT
+            and self.status == self.STATUS_DRAFT
+            and self.author.email
+        ):
             def _send_rejection_email():
                 send_mail(
                     subject=f"Il tuo post '{self.title}' non è stato approvato",
@@ -164,17 +179,13 @@ class BlogPost(models.Model):
                     recipient_list=[self.author.email],
                     fail_silently=True,
                 )
-
             transaction.on_commit(_send_rejection_email)
 
     def __str__(self):
         return self.title
 
     def get_absolute_url(self):
-        """Return the canonical URL for this post.
-
-        Example: /blog/2025/10/21/my-post-slug/
-        """
+        """Canonical URL like /blog/YYYY/MM/DD/slug/."""
         date = self.published_at or timezone.now()
         return f"/blog/{date.year}/{date.month:02d}/{date.day:02d}/{self.slug}/"
 
@@ -207,10 +218,11 @@ class Comment(models.Model):
         choices=STATUS_CHOICES,
         default=STATUS_PENDING,
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    # Same approach as BlogPost to avoid mutually exclusive options
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # Expose the QuerySet as the default manager and keep a convenience "approved" manager
     objects = CommentQuerySet.as_manager()
     approved = ApprovedCommentManager()
 

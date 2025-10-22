@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+
 from .models import BlogPost, Comment
 
 
@@ -7,7 +8,7 @@ from .models import BlogPost, Comment
 Forms for the blog app.
 
 - BlogPostForm: used in the admin site
-- PublicBlogPostForm: used for public submissions, stored as unpublished
+- PublicBlogPostForm: used for public submissions, supports draft or publish
 - CommentForm: used for public comment submission
 """
 
@@ -15,14 +16,28 @@ Forms for the blog app.
 class BlogPostForm(forms.ModelForm):
     class Meta:
         model = BlogPost
-        fields = ['author', 'title', 'excerpt',
-                  'body', 'image', 'tags', 'status']
+        fields = [
+            'author',
+            'title',
+            'excerpt',
+            'body',
+            'image',
+            'tags',
+            'status',
+            'featured',
+        ]
         widgets = {
             'author': forms.Select(attrs={'class': 'form-select'}),
-            'body': forms.Textarea(attrs={'rows': 8}),
-            'excerpt': forms.Textarea(attrs={'rows': 2}),
-            'tags': forms.TextInput(attrs={'placeholder': 'tag1, tag2, ...'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'body': forms.Textarea(attrs={'rows': 8, 'class': 'form-control'}),
+            'excerpt': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
+            'tags': forms.TextInput(
+                attrs={'placeholder': 'tag1, tag2, ...',
+                       'class': 'form-control'}
+            ),
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
+            'featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         help_texts = {
             'tags': 'Separate tags with commas.',
@@ -31,18 +46,25 @@ class BlogPostForm(forms.ModelForm):
 
 
 class PublicBlogPostForm(forms.ModelForm):
-    """Form used on the public site. Submissions are saved as unpublished drafts."""
+    """Form used on the public site. Users can save drafts or publish."""
 
     class Meta:
         model = BlogPost
-        fields = ['title', 'excerpt', 'body', 'image', 'tags']
+        fields = ['title', 'excerpt', 'body', 'image', 'tags', 'status']
         widgets = {
-            'body': forms.Textarea(attrs={'rows': 8}),
-            'excerpt': forms.Textarea(attrs={'rows': 2}),
-            'tags': forms.TextInput(attrs={'placeholder': 'tag1, tag2, ...'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'body': forms.Textarea(attrs={'rows': 8, 'class': 'form-control'}),
+            'excerpt': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
+            'tags': forms.TextInput(
+                attrs={'placeholder': 'tag1, tag2, ...',
+                       'class': 'form-control'}
+            ),
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
         }
         help_texts = {
             'tags': 'Separate tags with commas.',
+            'status': 'Save as draft to continue later or publish immediately.',
         }
 
     def clean_tags(self):
@@ -56,9 +78,6 @@ class PublicBlogPostForm(forms.ModelForm):
 
     def save(self, commit=True):
         post = super().save(commit=False)
-        # If you prefer a review queue, you can switch this to STATUS_PENDING
-        post.status = BlogPost.STATUS_REJECTED
-        post.published_at = None
         if commit:
             post.save()
         return post
