@@ -1,26 +1,29 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
-  Contact - Game Abyss
+  Contact — Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="py-5">
+  <!-- PAGE: Contact -->
+  <section class="py-5 page-contact">
     <div class="row justify-content-center">
       <div class="col-lg-8">
-        <div class="ga-card">
-          <div class="ga-card-body">
-            <h1 class="ga-card-title text-center mb-4">📧 Contact Us</h1>
-            <p class="text-center ga-card-text mb-5">Have a question, feedback, or need assistance? We'd love to hear from you!</p>
-            <form method="post" novalidate>
+        <div class="comp-card">
+          <div class="comp-card__body">
+            <h1 class="comp-card__title text-center mb-4">Contact Us</h1>
+            <p class="text-center comp-card__text mb-5">
+              Have a question, feedback, or need assistance? We’d love to hear from you.
+            </p>
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger" role="alert">
+                {% for error in form.non_field_errors %}
+                  {{ error }}
+                  {% if not forloop.last %}<br>{% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+            <form method="post" class="comp-form" novalidate>
               {% csrf_token %}
-              {% if form.non_field_errors %}
-                <div class="alert alert-danger" role="alert">
-                  {% for error in form.non_field_errors %}
-                    {{ error }}
-                    {% if not forloop.last %}<br>{% endif %}
-                  {% endfor %}
-                </div>
-              {% endif %}
               {% for field in form %}
                 <div class="mb-3">
                   <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
@@ -33,18 +36,17 @@
                   {% endif %}
                 </div>
               {% endfor %}
-              <button type="submit" class="ga-btn ga-btn-outline w-100">Submit help request</button>
+              <button type="submit" class="comp-button comp-button--outline w-100">Submit help request</button>
             </form>
             <hr class="my-4">
             <div class="text-center">
-              <h5 class="ga-card-title h6 mb-3">Other Ways to Reach Us</h5>
-              <p class="ga-card-text small">
-                Follow us on social media or join our Discord community for quick responses and updates.
-              </p>
+              <h5 class="comp-card__title h6 mb-3">Other ways to reach us</h5>
+              <p class="comp-card__text small">Follow our socials or join the Discord for quick responses and updates.</p>
             </div>
           </div>
         </div>
       </div>
     </div>
   </section>
+  <!-- END PAGE: Contact -->
 {% endblock content %}

@@ -1,12 +1,13 @@
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top ga-navbar">
+{# SHARED: Navbar #}
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top comp-navbar">
   <div class="container align-items-center">
     <!-- Brand -->
-    <a class="navbar-brand ga-navbar-brand" href="{% url 'pages:home' %}">Game Abyss</a>
-    <!-- Right side: desktop New Post + toggler -->
+    <a class="navbar-brand comp-navbar__brand" href="{% url 'pages:home' %}">Game Abyss</a>
+    <!-- Right cluster: desktop New Post + burger -->
     <div class="d-flex align-items-center ms-auto order-lg-2">
       {% if user.is_authenticated %}
-        <!-- Desktop only -->
-        <a class="ga-btn ga-btn-primary ga-btn-sm d-none d-lg-inline-flex align-items-center gap-2 ga-navbar-newpost"
+        <!-- Desktop New Post -->
+        <a class="comp-button comp-button--primary comp-button--sm d-none d-lg-inline-flex comp-navbar__newpost"
            href="{% url 'blog:new' %}">
           <i class="fa-solid fa-plus"></i>
           <span>New Post</span>
@@ -26,26 +27,26 @@
     <div class="collapse navbar-collapse order-lg-1" id="mainNav">
       <ul class="navbar-nav me-lg-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link ga-navbar-link" href="{% url 'pages:home' %}">Home</a>
+          <a class="nav-link comp-navbar__link" href="{% url 'pages:home' %}">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link ga-navbar-link" href="{% url 'pages:about' %}">About</a>
+          <a class="nav-link comp-navbar__link" href="{% url 'pages:about' %}">About</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link ga-navbar-link" href="{% url 'pages:contact' %}">Contact</a>
+          <a class="nav-link comp-navbar__link" href="{% url 'pages:contact' %}">Contact</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link ga-navbar-link" href="{% url 'blog:index' %}">Blog</a>
+          <a class="nav-link comp-navbar__link" href="{% url 'blog:index' %}">Blog</a>
         </li>
       </ul>
       <ul class="navbar-nav ms-lg-auto align-items-lg-center">
         {% if user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link ga-navbar-link" href="">Profile</a>
+            <a class="nav-link comp-navbar__link" href="#">Profile</a>
           </li>
-          <!-- Mobile-only New Post as a normal menu item -->
+          <!-- Mobile New Post inside menu -->
           <li class="nav-item d-lg-none">
-            <a class="nav-link ga-navbar-link d-flex align-items-center gap-2"
+            <a class="nav-link comp-navbar__link d-flex align-items-center gap-2"
                href="{% url 'blog:new' %}">
               <i class="fa-solid fa-plus"></i><span>New Post</span>
             </a>
@@ -53,15 +54,16 @@
           <li class="nav-item">
             <form action="{% url 'account_logout' %}" method="post" class="d-inline">
               {% csrf_token %}
-              <button class="ga-btn ga-btn-outline ga-btn-sm" type="submit">Logout</button>
+              <button class="comp-button comp-button--outline comp-button--sm"
+                      type="submit">Logout</button>
             </form>
           </li>
         {% else %}
           <li class="nav-item">
-            <a class="nav-link ga-navbar-link" href="{% url 'account_login' %}">Login</a>
+            <a class="nav-link comp-navbar__link" href="{% url 'account_login' %}">Login</a>
           </li>
           <li class="nav-item ms-lg-2">
-            <a class="ga-btn ga-btn-primary ga-btn-sm"
+            <a class="comp-button comp-button--primary comp-button--sm"
                href="{% url 'account_signup' %}">Register</a>
           </li>
         {% endif %}
@@ -69,3 +71,4 @@
     </div>
   </div>
 </nav>
+{# END SHARED: Navbar #}

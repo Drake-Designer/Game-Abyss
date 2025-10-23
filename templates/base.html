@@ -2,26 +2,25 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- META: basics -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Title -->
+    <!-- TITLE -->
     <title>
       {% block title %}
         Game Abyss
       {% endblock title %}
     </title>
-    <!-- Meta tags -->
+    <!-- META: SEO -->
     <meta name="description"
           content="{% block meta_description %}Game Abyss is a place for gamers to read reviews, share thoughts, and stay updated on new releases and gaming news.{% endblock meta_description %}">
     <meta name="keywords"
           content="gaming, video games, reviews, news, PC, PlayStation, Xbox, Nintendo, indie">
     <meta name="author" content="Game Abyss">
-    <!-- Bootstrap CSS -->
+    <!-- ASSETS: CSS & fonts -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
           rel="stylesheet"
-          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
           crossorigin="anonymous">
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap"
@@ -30,113 +29,46 @@
           rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap"
           rel="stylesheet">
-    <!-- Project Styles -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
-    <!-- Favicons -->
+    <!-- Favicon -->
     <link rel="icon"
           type="image/svg+xml"
           href="{% static 'favicon/game-abyss-favicon.svg' %}">
   </head>
   <body class="d-flex flex-column min-vh-100">
-    <!-- Music Player -->
-    <div class="ga-music-player">
+    {# SHARED: Music player #}
+    <div class="comp-music-player">
       <button id="gaMusicBtn"
-              class="ga-music-toggle"
+              class="comp-music-toggle"
               aria-label="Toggle background music">
         <i class="fas fa-music" id="gaMusicIcon"></i>
-        <span class="ga-music-mute" id="gaMusicMute"></span>
+        <span class="comp-music-mute" id="gaMusicMute"></span>
       </button>
     </div>
-    <!-- Background Music -->
     <audio id="gaBgMusic" loop preload="auto">
       <source src="{% static 'audio/audio-theme.mp3' %}" type="audio/mpeg">
       Your browser does not support the audio element.
     </audio>
-    <!-- Navbar -->
+    {# END SHARED: Music player #}
     {% include "shared/_navbar.html" %}
-    <!-- Hero -->
+    <!-- HERO (optional block) -->
     {% block hero %}
     {% endblock hero %}
+    <!-- MAIN content area -->
     <main class="flex-grow-1 py-4">
       <div class="container">
-        <!-- Django Messages -->
-        {% if messages %}
-          {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show"
-                 role="alert">
-              {{ message }}
-              <button type="button"
-                      class="btn-close"
-                      data-bs-dismiss="alert"
-                      aria-label="Close"></button>
-            </div>
-          {% endfor %}
-        {% endif %}
+        {% include "shared/_messages.html" %}
         {% block content %}
         {% endblock content %}
       </div>
     </main>
-    <footer class="ga-footer">
-      <div class="container py-4">
-        <div class="row gy-4 align-items-start">
-          <div class="col-md-6">
-            <h2 class="ga-footer-title mb-3">
-              <a href="{% url 'pages:home' %}" class="ga-footer-link ga-no-decoration">Game Abyss</a>
-            </h2>
-            <p class="ga-footer-description mb-2">Reviews, news and opinions about games.</p>
-            <ul class="list-unstyled small ga-footer-description mb-0">
-              <li>
-                <a class="ga-footer-link ga-no-decoration"
-                   href="{% url 'pages:about' %}">About</a>
-              </li>
-              <li>
-                <a class="ga-footer-link ga-no-decoration"
-                   href="{% url 'pages:contact' %}">Contact</a>
-              </li>
-            </ul>
-          </div>
-          <div class="col-md-6 text-md-end">
-            <div class="mb-2">
-              <a class="ga-footer-social me-2"
-                 href="https://github.com/Drake-Designer"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 aria-label="GitHub"><i class="fa-brands fa-github fa-bounce fa-xl"></i></a>
-              <a class="ga-footer-social me-2"
-                 href="https://discord.com/"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 aria-label="Discord"><i class="fa-brands fa-discord fa-bounce fa-xl"></i></a>
-              <a class="ga-footer-social me-2"
-                 href="https://www.facebook.com/"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 aria-label="Facebook"><i class="fa-brands fa-facebook-f fa-bounce fa-xl"></i></a>
-              <a class="ga-footer-social me-2"
-                 href="https://www.instagram.com/"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 aria-label="Instagram"><i class="fa-brands fa-instagram fa-bounce fa-xl"></i></a>
-              <a class="ga-footer-social"
-                 href="https://www.youtube.com/"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 aria-label="YouTube"><i class="fa-brands fa-youtube fa-bounce fa-xl"></i></a>
-            </div>
-            <div class="ga-footer-meta small">© {{ now|date:"Y" }} Game Abyss. All rights reserved.</div>
-          </div>
-        </div>
-      </div>
-    </footer>
-    <!-- Bootstrap JS -->
+    {% include "shared/_footer.html" %}
+    <!-- ASSETS: JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
             crossorigin="anonymous"
             defer></script>
-    <!-- Font Awesome -->
     <script src="https://kit.fontawesome.com/1632434743.js"
             crossorigin="anonymous"></script>
-    <!-- Music Player Script -->
     <script src="{% static 'js/music-player.js' %}" defer></script>
     {% block extra_scripts %}
     {% endblock extra_scripts %}

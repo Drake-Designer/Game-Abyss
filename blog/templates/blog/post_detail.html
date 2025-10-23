@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  Post — Game Abyss
+{% endblock title %}
+{% block content %}
+  <!-- PAGE: Post detail -->
+  <section class="container py-4">
+    {% include "shared/_messages.html" %}
+    <article>
+      <h1 class="page-post-detail__title d-flex align-items-center gap-2">
+        {{ post.title }}
+        {% if post.featured %}<span class="comp-badge comp-badge--featured">Featured</span>{% endif %}
+        {% if user.is_authenticated and post.status != post.STATUS_APPROVED %}
+          {% if user.is_staff or user == post.author %}
+            <span class="badge {% if post.status == post.STATUS_PENDING %}bg-secondary{% else %}bg-danger{% endif %}">
+              {{ post.get_status_display }}
+            </span>
+          {% endif %}
+        {% endif %}
+      </h1>
+      {% with post.published_at|default_if_none:post.updated_at as display_date %}
+        <p>By {{ post.author }} — {{ display_date|date:"F j, Y" }}</p>
+      {% endwith %}
+      {% if post.image %}
+        <img src="{{ post.image.url }}"
+             alt="{{ post.title }}"
+             width="{{ post.image.width|default:600 }}"
+             height="{{ post.image.height|default:400 }}"
+             loading="lazy"
+             class="page-post-detail__image" />
+      {% endif %}
+      <div class="page-post-detail__body">{{ post.body|linebreaks }}</div>
+    </article>
+    <!-- Comments -->
+    <section class="mt-5">
+      <h2>Comments</h2>
+      {% if comments %}
+        <ul class="list-unstyled">
+          {% for comment in comments %}
+            <li class="mb-4">
+              <p class="mb-1">
+                <strong>{{ comment.author }}</strong> — {{ comment.created_at|date:"F j, Y H:i" }}
+              </p>
+              <p class="mb-0">{{ comment.body|linebreaks }}</p>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted">No approved comments yet — be the first to leave a signal in the Abyss.</p>
+      {% endif %}
+      <div class="alert alert-info" role="alert">Comments enter orbit first and appear after editorial approval.</div>
+      {% if user.is_authenticated %}
+        <form method="post" class="comp-form mt-4">
+          {% csrf_token %}
+          {{ comment_form.non_field_errors }}
+          <div class="mb-3">
+            {{ comment_form.body.label_tag }}
+            {{ comment_form.body }}
+            {% if comment_form.body.errors %}
+              <div class="invalid-feedback d-block">{{ comment_form.body.errors|join:" " }}</div>
+            {% endif %}
+          </div>
+          <button type="submit" class="comp-button comp-button--primary">Submit Comment</button>
+        </form>
+      {% else %}
+        <p>
+          <a href="{% url 'account_login' %}?next={{ request.path }}">Log in</a> to submit a comment.
+        </p>
+      {% endif %}
+    </section>
+  </section>
+  <!-- END PAGE: Post detail -->
+{% endblock content %}

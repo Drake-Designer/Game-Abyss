@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  New Post — Game Abyss
+{% endblock title %}
+{% block content %}
+  <!-- PAGE: New post -->
+  <section class="page-new-post container">
+    <div class="row justify-content-center">
+      <div class="col-md-10 col-lg-8">
+        <div class="comp-card page-new-post__card">
+          <div class="comp-card__body p-4">
+            {% include "shared/_messages.html" %}
+            <h2 class="page-new-post__title text-center mb-2">Summon a New Chronicle</h2>
+            <p class="text-center text-muted mb-4">
+              Craft your entry below.
+              {% if not request.user.is_staff and not request.user.is_superuser %}
+                Held in review until it dares to break the void.
+              {% endif %}
+            </p>
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <form method="post"
+                  enctype="multipart/form-data"
+                  class="comp-form"
+                  novalidate>
+              {% csrf_token %}
+              {% for field in form %}
+                {% if field.name != "status" %}
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+                      {{ field.label }}
+                      {% if field.field.required %}*{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}
+                      <div class="form-text text-muted">{{ field.help_text|safe }}</div>
+                    {% elif field.name == "tags" %}
+                      <div class="form-text text-muted">
+                        Comma-separated tags (e.g. <em>rpg, soulslike</em>).
+                      </div>
+                    {% endif %}
+                    {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+              <!-- Actions -->
+              <div class="d-grid gap-2 mt-4 page-new-post__actions">
+                <button type="submit" class="comp-button comp-button--primary">Transmit</button>
+                <a href="{% url 'pages:home' %}"
+                   class="comp-button comp-button--outline">Abort</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- END PAGE: New post -->
+{% endblock content %}

@@ -7,10 +7,7 @@ from .models import BlogPost, Comment
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
-    """Admin interface for BlogPost.
-
-    Shows a thumbnail, status, featured flag, and quick actions to publish or move back to draft.
-    """
+    """Moderation console for BlogPost — quick actions to approve, reject, and feature."""
     list_display = (
         'title',
         'author',
@@ -34,43 +31,42 @@ class BlogPostAdmin(admin.ModelAdmin):
     date_hierarchy = 'published_at'
     ordering = ('-published_at',)
 
-    actions = ['mark_published', 'mark_draft',
+    actions = ['mark_pending', 'mark_approved', 'mark_rejected',
                'mark_featured', 'mark_unfeatured']
     form = BlogPostForm
 
     def save_model(self, request, obj, form, change):
-        """Assign the author to the current user before saving."""
+        """Author is always the operator; default status based on role on creation."""
         obj.author = request.user
+        if not change:
+            if request.user.is_staff:
+                obj.status = BlogPost.STATUS_APPROVED
+            else:
+                obj.status = BlogPost.STATUS_PENDING
         super().save_model(request, obj, form, change)
 
     def thumbnail(self, obj):
-        """Return a small thumbnail HTML for list display or '-' if none."""
+        """Small thumbnail for list display or '-' if none."""
         if getattr(obj, 'image', None):
-            return format_html(
-                '<img src="{}" style="height:40px;border-radius:4px;"/>',
-                obj.image.url,
-            )
+            return format_html('<img src="{}" style="height:40px;border-radius:4px;"/>', obj.image.url)
         return '-'
     thumbnail.short_description = 'Image'
 
     def view_on_site(self, obj):
-        """Return a short link that opens the post on the site."""
-        url = obj.get_absolute_url()
-        return format_html('<a href="{}" target="_blank">View</a>', url)
+        """Open the post on the site."""
+        return format_html('<a href="{}" target="_blank">View</a>', obj.get_absolute_url())
     view_on_site.short_description = 'On site'
 
-    # Place thumbnail first and an on-site link last
     list_display = ('thumbnail',) + list_display + ('view_on_site',)
 
     def get_readonly_fields(self, request, obj=None):
-        """Make some fields read-only for non-superusers."""
+        """Status remains editable for staff/superusers only."""
         ro = list(self.readonly_fields)
-        if not request.user.is_superuser:
+        if not (request.user.is_staff or request.user.is_superuser):
             ro.extend(['status'])
         return ro
 
     def get_prepopulated_fields(self, request, obj=None):
-        """Return only prepopulated fields that actually exist on the form."""
         fields = getattr(self, 'prepopulated_fields', {}) or {}
         try:
             form = self.get_form(request, obj)()
@@ -83,7 +79,7 @@ class BlogPostAdmin(admin.ModelAdmin):
         return safe
 
     def has_delete_permission(self, request, obj=None):
-        """Allow deletion only for superusers."""
+        """Only superusers can erase matter from the Abyss."""
         if not request.user.is_superuser:
             return False
         return super().has_delete_permission(request, obj)
@@ -91,48 +87,57 @@ class BlogPostAdmin(admin.ModelAdmin):
     def get_actions(self, request):
         actions = super().get_actions(request)
         if not request.user.has_perm('blog.change_blogpost'):
-            # Remove all bulk actions for users without change permissions
             for action in list(actions):
                 actions.pop(action)
         return actions
 
-    def mark_published(self, request, queryset):
-        """Admin action: mark selected posts as published."""
+    # Moderation actions
+    def mark_pending(self, request, queryset):
         updated = 0
         for post in queryset:
-            post.status = BlogPost.STATUS_PUBLISHED
+            post.status = BlogPost.STATUS_PENDING
             post.save()
             updated += 1
-        self.message_user(request, f"Marked {updated} post(s) as published.")
-    mark_published.short_description = 'Publish selected posts'
+        self.message_user(
+            request, f"Shifted {updated} post(s) back to stasis (Pending).")
+    mark_pending.short_description = 'Mark selected posts as pending'
 
-    def mark_draft(self, request, queryset):
-        """Admin action: move selected posts back to draft."""
+    def mark_approved(self, request, queryset):
         updated = 0
         for post in queryset:
-            post.status = BlogPost.STATUS_DRAFT
+            post.status = BlogPost.STATUS_APPROVED
             post.save()
             updated += 1
-        self.message_user(request, f"Moved {updated} post(s) to draft.")
-    mark_draft.short_description = 'Move selected posts to draft'
+        self.message_user(
+            request, f"Ascended {updated} post(s) to the front page (Approved).")
+    mark_approved.short_description = 'Approve selected posts'
 
+    def mark_rejected(self, request, queryset):
+        updated = 0
+        for post in queryset:
+            post.status = BlogPost.STATUS_REJECTED
+            post.save()
+            updated += 1
+        self.message_user(
+            request, f"Banished {updated} post(s) to the void (Rejected).")
+    mark_rejected.short_description = 'Reject selected posts'
+
+    # Featured flags
     def mark_featured(self, request, queryset):
-        """Admin action: set featured flag on selected posts."""
         updated = queryset.update(featured=True)
-        self.message_user(request, f"Marked {updated} post(s) as featured.")
+        self.message_user(request, f"Flagged {updated} post(s) as Featured ⭐")
     mark_featured.short_description = 'Mark selected posts as featured'
 
     def mark_unfeatured(self, request, queryset):
-        """Admin action: remove featured flag from selected posts."""
         updated = queryset.update(featured=False)
         self.message_user(
-            request, f"Removed featured flag from {updated} post(s).")
+            request, f"Removed the Featured mark from {updated} post(s).")
     mark_unfeatured.short_description = 'Remove featured flag'
 
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    """Admin interface for moderating blog comments."""
+    """Moderation console for comments."""
     list_display = ('post', 'author', 'status', 'created_at', 'updated_at')
     list_filter = ('status', 'created_at', 'post')
     search_fields = ('post__title', 'author__username', 'body')
@@ -141,15 +146,18 @@ class CommentAdmin(admin.ModelAdmin):
 
     def mark_pending(self, request, queryset):
         updated = queryset.update(status=Comment.STATUS_PENDING)
-        self.message_user(request, f"Marked {updated} comment(s) as pending.")
+        self.message_user(
+            request, f"Queued {updated} comment(s) in stasis (Pending).")
     mark_pending.short_description = 'Mark selected comments as pending'
 
     def mark_approved(self, request, queryset):
         updated = queryset.update(status=Comment.STATUS_APPROVED)
-        self.message_user(request, f"Marked {updated} comment(s) as approved.")
+        self.message_user(
+            request, f"Cleared {updated} comment(s) for orbit (Approved).")
     mark_approved.short_description = 'Mark selected comments as approved'
 
     def mark_rejected(self, request, queryset):
         updated = queryset.update(status=Comment.STATUS_REJECTED)
-        self.message_user(request, f"Marked {updated} comment(s) as rejected.")
+        self.message_user(
+            request, f"Vented {updated} comment(s) into the void (Rejected).")
     mark_rejected.short_description = 'Mark selected comments as rejected'

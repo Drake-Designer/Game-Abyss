@@ -1,43 +1,47 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
-  About - Game Abyss
+  About — Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="py-5">
+  <!-- PAGE: About -->
+  <section class="py-5 page-about">
     <div class="row justify-content-center">
       <div class="col-lg-8">
-        <div class="ga-card">
-          <div class="ga-card-body">
-            <h1 class="ga-card-title text-center mb-4">About Game Abyss</h1>
+        <div class="comp-card">
+          <div class="comp-card__body">
+            <h1 class="comp-card__title text-center mb-4">About Game Abyss</h1>
             <div class="mb-4">
-              <h3 class="ga-card-title h4 mb-3">🎮 What's Game Abyss?</h3>
-              <p class="ga-card-text">
-                Think of us as your gaming hangout spot! Game Abyss is where gamers like you come to chat about their favorite games, drop honest reviews, and keep up with what's hot in the gaming world. No fancy stuff.. just real gamers sharing real opinions!
+              <h3 class="comp-card__title h4 mb-3">What’s Game Abyss?</h3>
+              <p class="comp-card__text">
+                Think of us as your gaming hangout. Real opinions, clean vibes, and an ever-growing vault of game takes.
               </p>
             </div>
             <div class="mb-4">
-              <h3 class="ga-card-title h4 mb-3">✨ What's Cool Here?</h3>
-              <ul class="ga-card-text">
-                <li>Real reviews from real players (no paid promotions!)</li>
-                <li>Fresh gaming news delivered daily</li>
-                <li>Chill forums to geek out with other gamers</li>
-                <li>Your own corner to share epic wins and funny fails</li>
+              <h3 class="comp-card__title h4 mb-3">What’s cool here?</h3>
+              <ul class="comp-card__text">
+                <li>Authentic reviews from real players</li>
+                <li>Fresh gaming news</li>
+                <li>Chill forum vibes</li>
+                <li>Your corner for wins and fails</li>
               </ul>
             </div>
             <div class="mb-4">
-              <h3 class="ga-card-title h4 mb-3">🚀 Come Join the Fun!</h3>
-              <p class="ga-card-text">
-                Whether you game on weekends or speedrun in your sleep, you're welcome here! Jump in, share your gaming stories, and make some friends who actually get why you spent 100 hours on that side quest. Let's game together! 🎉
+              <h3 class="comp-card__title h4 mb-3">Come join the fun</h3>
+              <p class="comp-card__text">
+                Whether you play on weekends or speedrun in your sleep—pull up a chair. Share your stories, meet your people.
               </p>
             </div>
             <div class="text-center mt-5 d-flex flex-column flex-sm-row gap-3 justify-content-center">
-              <a href="{% url 'account_signup' %}" class="ga-btn ga-btn-outline">Join Now</a>
-              <a href="{% url 'pages:contact' %}" class="ga-btn ga-btn-outline">Contact Us</a>
+              <a href="{% url 'account_signup' %}"
+                 class="comp-button comp-button--outline">Join Now</a>
+              <a href="{% url 'pages:contact' %}"
+                 class="comp-button comp-button--outline">Contact Us</a>
             </div>
           </div>
         </div>
       </div>
     </div>
   </section>
+  <!-- END PAGE: About -->
 {% endblock content %}

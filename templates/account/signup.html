@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
-  Sign Up - Game Abyss
+  Sign Up — Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="ga-auth-section container">
+  <!-- PAGE: Account / Sign up -->
+  <section class="container page-account-signup">
     <div class="row justify-content-center">
       <div class="col-md-8 col-lg-6">
-        <div class="ga-auth-card ga-card">
-          <div class="ga-card-body p-4">
-            <h2 class="ga-auth-title text-center mb-4">🚀 Create Account</h2>
+        <div class="comp-card">
+          <div class="comp-card__body p-4">
+            <h2 class="comp-card__title text-center mb-4">Create Account</h2>
             {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
-            <form method="post" action="{% url 'account_signup' %}">
+            <form method="post" action="{% url 'account_signup' %}" class="comp-form">
               {% csrf_token %}
               <div class="mb-3">
                 <label for="id_username" class="form-label">Username</label>
@@ -32,7 +33,7 @@
                        name="email"
                        class="form-control {% if form.email.errors %}is-invalid{% endif %}"
                        id="id_email"
-                       placeholder="your@email.com (optional)"
+                       placeholder="your@email.com"
                        value="{{ form.email.value|default:'' }}">
                 {% if form.email.errors %}<div class="invalid-feedback">{{ form.email.errors }}</div>{% endif %}
                 <small class="text-muted">Helps with account recovery</small>
@@ -46,7 +47,6 @@
                        placeholder="Create a secure password"
                        required>
                 {% if form.password1.errors %}<div class="invalid-feedback">{{ form.password1.errors }}</div>{% endif %}
-                <small class="text-muted">At least 8 characters, not too common</small>
               </div>
               <div class="mb-3">
                 <label for="id_password2" class="form-label">Confirm Password</label>
@@ -58,7 +58,7 @@
                        required>
                 {% if form.password2.errors %}<div class="invalid-feedback">{{ form.password2.errors }}</div>{% endif %}
               </div>
-              <button type="submit" class="ga-btn ga-btn-outline w-100 mb-3">Sign Up</button>
+              <button type="submit" class="comp-button comp-button--outline w-100 mb-3">Sign Up</button>
             </form>
             <hr class="my-4">
             <div class="text-center">
@@ -72,4 +72,5 @@
       </div>
     </div>
   </section>
+  <!-- END PAGE: Account / Sign up -->
 {% endblock content %}

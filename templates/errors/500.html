@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  Server Error — Game Abyss
+{% endblock title %}
+{% block content %}
+  <!-- PAGE: Error 500 -->
+  <section class="page-error-500">
+    <h1 class="page-error-404__title">Something Went Wrong</h1>
+    <h2 class="page-error-404__subtitle mb-4">Server Error</h2>
+    <p class="page-error-404__message">
+      Our server took a wrong turn in the void. We’re on it. Try again in a moment or head back home.
+    </p>
+    <a href="{% url 'pages:home' %}"
+       class="comp-button comp-button--primary">Back to Home</a>
+  </section>
+  <!-- END PAGE: Error 500 -->
+{% endblock content %}

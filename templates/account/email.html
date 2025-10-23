@@ -1,19 +1,20 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
-  Email Addresses - Game Abyss
+  Email Addresses — Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="ga-auth-section container">
+  <!-- PAGE: Account / Email addresses -->
+  <section class="container page-account-email">
     <div class="row justify-content-center">
       <div class="col-md-8 col-lg-6">
-        <div class="ga-auth-card ga-card">
-          <div class="ga-card-body p-4">
-            <h2 class="ga-auth-title text-center mb-4">📧 Email Addresses</h2>
+        <div class="comp-card">
+          <div class="comp-card__body p-4">
+            <h2 class="comp-card__title text-center mb-4">Email Addresses</h2>
             {% if user.emailaddress_set.all %}
               <p class="text-muted mb-4">Manage the email addresses associated with your account.</p>
               {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
-              <form method="post" action="{% url 'account_email' %}">
+              <form method="post" action="{% url 'account_email' %}" class="comp-form">
                 {% csrf_token %}
                 <div class="mb-4">
                   <label class="form-label fw-bold">Your Email Addresses:</label>
@@ -38,11 +39,15 @@
                   {% endfor %}
                 </div>
                 <div class="d-grid gap-2 mb-3">
-                  <button type="submit" name="action_primary" class="ga-btn ga-btn-primary">Make Primary</button>
-                  <button type="submit" name="action_send" class="ga-btn ga-btn-outline">Re-send Verification</button>
+                  <button type="submit"
+                          name="action_primary"
+                          class="comp-button comp-button--primary">Make Primary</button>
+                  <button type="submit"
+                          name="action_send"
+                          class="comp-button comp-button--outline">Re-send Verification</button>
                   <button type="submit"
                           name="action_remove"
-                          class="ga-btn ga-btn-outline ga-btn-outline-danger">Remove</button>
+                          class="comp-button comp-button--danger-outline">Remove</button>
                 </div>
               </form>
             {% else %}
@@ -50,7 +55,7 @@
             {% endif %}
             <hr class="my-4">
             <h5 class="mb-3">Add Email Address</h5>
-            <form method="post" action="{% url 'account_email' %}">
+            <form method="post" action="{% url 'account_email' %}" class="comp-form">
               {% csrf_token %}
               <div class="mb-3">
                 <label for="id_email" class="form-label">Email Address</label>
@@ -62,15 +67,19 @@
                        required>
                 {% if form.email.errors %}<div class="invalid-feedback">{{ form.email.errors }}</div>{% endif %}
               </div>
-              <button type="submit" name="action_add" class="ga-btn ga-btn-primary w-100">Add Email</button>
+              <button type="submit"
+                      name="action_add"
+                      class="comp-button comp-button--primary w-100">Add Email</button>
             </form>
             <hr class="my-4">
             <div class="text-center">
-              <a href="{% url 'home' %}" class="ga-btn ga-btn-outline">Back to Home</a>
+              <a href="{% url 'pages:home' %}"
+                 class="comp-button comp-button--outline">Back to Home</a>
             </div>
           </div>
         </div>
       </div>
     </div>
   </section>
+  <!-- END PAGE: Account / Email addresses -->
 {% endblock content %}

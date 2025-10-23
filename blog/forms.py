@@ -5,15 +5,16 @@ from .models import BlogPost, Comment
 
 
 """
-Forms for the blog app.
+Forms for the blog app — Game-Abyss edition.
 
-- BlogPostForm: used in the admin site
-- PublicBlogPostForm: used for public submissions, supports draft or publish
-- CommentForm: used for public comment submission
+- BlogPostForm (admin): reviewers can set status and featured.
+- PublicBlogPostForm: status is set by the system; users just craft the post.
+- CommentForm: submit a thought; moderation keeps the void at bay.
 """
 
 
 class BlogPostForm(forms.ModelForm):
+    """Admin/reviewer form: exposes status and featured."""
     class Meta:
         model = BlogPost
         fields = [
@@ -28,47 +29,41 @@ class BlogPostForm(forms.ModelForm):
         ]
         widgets = {
             'author': forms.Select(attrs={'class': 'form-select'}),
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'body': forms.Textarea(attrs={'rows': 8, 'class': 'form-control'}),
-            'excerpt': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
-            'tags': forms.TextInput(
-                attrs={'placeholder': 'tag1, tag2, ...',
-                       'class': 'form-control'}
-            ),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Title of your chronicle'}),
+            'body': forms.Textarea(attrs={'rows': 8, 'class': 'form-control', 'placeholder': 'Forge your story here…'}),
+            'excerpt': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'Short teaser shown in lists'}),
+            'tags': forms.TextInput(attrs={'placeholder': 'rpg, soulslike, starship…', 'class': 'form-control'}),
             'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         help_texts = {
-            'tags': 'Separate tags with commas.',
-            'excerpt': 'A short summary shown in post listings.',
+            'tags': 'Separate with commas — keep them tight and relevant.',
+            'excerpt': 'Optional. Used on cards and listings. Clean beats long.',
         }
 
 
 class PublicBlogPostForm(forms.ModelForm):
-    """Form used on the public site. Users can save drafts or publish."""
-
+    """
+    Public submission form.
+    Status is NOT shown; it will be set by the view based on the author role.
+    """
     class Meta:
         model = BlogPost
-        fields = ['title', 'excerpt', 'body', 'image', 'tags', 'status']
+        fields = ['title', 'excerpt', 'body', 'image', 'tags']  # no 'status'
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'body': forms.Textarea(attrs={'rows': 8, 'class': 'form-control'}),
-            'excerpt': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
-            'tags': forms.TextInput(
-                attrs={'placeholder': 'tag1, tag2, ...',
-                       'class': 'form-control'}
-            ),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Name your expedition'}),
+            'body': forms.Textarea(attrs={'rows': 8, 'class': 'form-control', 'placeholder': 'Drop your build, review, or tale…'}),
+            'excerpt': forms.Textarea(attrs={'rows': 2, 'class': 'form-control', 'placeholder': 'One-liner to lure explorers'}),
+            'tags': forms.TextInput(attrs={'placeholder': 'rpg, lore, co-op, sandbox', 'class': 'form-control'}),
             'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'status': forms.Select(attrs={'class': 'form-select'}),
         }
         help_texts = {
-            'tags': 'Separate tags with commas.',
-            'status': 'Save as draft to continue later or publish immediately.',
+            'tags': 'Comma-separated tags. Think categories, not paragraphs.',
         }
 
     def clean_tags(self):
-        """Normalize tags string by trimming spaces and removing duplicates."""
+        """Trim and deduplicate user tag input."""
         value = self.cleaned_data.get('tags')
         if not value:
             return value
@@ -77,6 +72,7 @@ class PublicBlogPostForm(forms.ModelForm):
         return normalized
 
     def save(self, commit=True):
+        """Status is assigned in the view; this just builds the instance."""
         post = super().save(commit=False)
         if commit:
             post.save()
@@ -84,8 +80,7 @@ class PublicBlogPostForm(forms.ModelForm):
 
 
 class CommentForm(forms.ModelForm):
-    """Form used to submit a public comment on a blog post."""
-
+    """Public comment form — be kind to your fellow travelers."""
     class Meta:
         model = Comment
         fields = ['body']
@@ -93,17 +88,18 @@ class CommentForm(forms.ModelForm):
         widgets = {
             'body': forms.Textarea(attrs={
                 'rows': 4,
-                'placeholder': 'Share your thoughts…',
+                'placeholder': 'Add your signal to the constellation…',
                 'class': 'form-control',
             }),
         }
         help_texts = {
-            'body': 'Keep a respectful tone. No spam.',
+            'body': 'Keep it civil. No spoilers without tags. No toxicity.',
         }
 
     def clean_body(self):
-        """Ensure that comments are not too short."""
+        """Minimum signal to avoid low-effort stardust."""
         body = self.cleaned_data.get('body', '') or ''
         if len(body.strip()) < 5:
-            raise ValidationError('The comment is too short.')
+            raise ValidationError(
+                'Your comment is too short to register on our scanners.')
         return body

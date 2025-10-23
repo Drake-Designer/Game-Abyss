@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  Blog — Game Abyss
+{% endblock title %}
+{% block content %}
+  <!-- PAGE: Blog index -->
+  <section class="container py-4">
+    <!-- Toolbar -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h1 class="page-blog-index__title mb-0">Echoes from the Abyss</h1>
+      <a href="{% url 'blog:new' %}" class="comp-button comp-button--outline">Launch Post</a>
+    </div>
+    {% include "shared/_messages.html" %}
+    {% if posts %}
+      <!-- Grid -->
+      <div class="row g-4">
+        {% for post in posts %}
+          <div class="col-md-6 col-lg-4">
+            <article class="comp-card h-100">
+              {% if post.image %}
+                <div class="comp-card__image-wrap">
+                  <img src="{{ post.image.url }}"
+                       alt="{{ post.title }}"
+                       class="comp-card__image"
+                       loading="lazy"
+                       {% if post.image.width %}width="{{ post.image.width }}"{% endif %}
+                       {% if post.image.height %}height="{{ post.image.height }}"{% endif %} />
+                </div>
+              {% endif %}
+              <div class="comp-card__body d-flex flex-column">
+                <h3 class="comp-card__title h5 d-flex align-items-center gap-2">
+                  <a class="util-no-decoration" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                  {% if post.featured %}<span class="comp-badge comp-badge--featured">Featured</span>{% endif %}
+                </h3>
+                <p class="page-blog-index__meta mb-2">
+                  By <span>{{ post.author }}</span> —
+                  <time datetime="{{ post.published_at|default:post.updated_at|date:'c' }}">
+                    {{ post.published_at|default:post.updated_at|date:"F j, Y" }}
+                  </time>
+                </p>
+                <p class="page-blog-index__excerpt mb-3">
+                  {% if post.excerpt %}
+                    {{ post.excerpt }}
+                  {% else %}
+                    {{ post.body|striptags|truncatechars:140 }}
+                  {% endif %}
+                </p>
+                <div class="mt-auto d-flex justify-content-between align-items-center">
+                  <a class="comp-button comp-button--primary"
+                     href="{{ post.get_absolute_url }}">Read</a>
+                  {% if post.tags %}
+                    <span class="small">{{ post.tags }}</span>
+                  {% else %}
+                    <span class="page-blog-index__tags--empty small"></span>
+                  {% endif %}
+                </div>
+              </div>
+            </article>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- Empty state -->
+      <div class="text-center py-5">
+        <h3 class="mb-2">The Abyss is quiet.</h3>
+        <p class="text-muted mb-4">No echoes yet. Launch the first post and light up the void.</p>
+        <a href="{% url 'blog:new' %}" class="comp-button comp-button--primary">Start a Transmission</a>
+      </div>
+    {% endif %}
+  </section>
+  <!-- END PAGE: Blog index -->
+{% endblock content %}

@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
-  Login - Game Abyss
+  Login — Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="ga-auth-section container">
+  <!-- PAGE: Account / Login -->
+  <section class="container page-account-login">
     <div class="row justify-content-center">
       <div class="col-md-6 col-lg-5">
-        <div class="ga-auth-card ga-card">
-          <div class="ga-card-body p-4">
-            <h2 class="ga-auth-title text-center mb-4">🎮 Login</h2>
+        <div class="comp-card">
+          <div class="comp-card__body p-4">
+            <h2 class="comp-card__title text-center mb-4">Login</h2>
             {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
-            <form method="post" action="{% url 'account_login' %}">
+            <form method="post" action="{% url 'account_login' %}" class="comp-form">
               {% csrf_token %}
               <div class="mb-3">
                 <label for="id_login" class="form-label">Username or Email</label>
@@ -40,12 +41,10 @@
                        id="id_remember">
                 <label class="form-check-label" for="id_remember">Remember me</label>
               </div>
-              <button type="submit" class="ga-btn ga-btn-outline w-100 mb-3">Sign In</button>
+              <button type="submit" class="comp-button comp-button--outline w-100 mb-3">Sign In</button>
             </form>
             <div class="text-center">
-              <small>
-                <a href="{% url 'account_reset_password' %}">Forgot password?</a>
-              </small>
+              <small><a href="{% url 'account_reset_password' %}">Forgot password?</a></small>
             </div>
             <hr class="my-4">
             <div class="text-center">
@@ -59,4 +58,5 @@
       </div>
     </div>
   </section>
+  <!-- END PAGE: Account / Login -->
 {% endblock content %}

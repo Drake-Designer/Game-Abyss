@@ -1,0 +1,17 @@
+{
+    "extends": ["stylelint-config-standard"],
+    "ignoreFiles": ["**/node_modules/**", "**/static/vendor/**"],
+    "defaultSeverity": "warning",
+    "reportNeedlessDisables": true,
+    "rules": {
+        "selector-class-pattern": [
+            "^(comp|page|util)-(?:[a-z0-9]+(?:-[a-z0-9]+)*)(?:__(?:[a-z0-9]+(?:-[a-z0-9]+)*))?(?:--(?:[a-z0-9]+(?:-[a-z0-9]+)*))?$",
+            {
+                "message": "Class names must start with comp-, page-, or util-, use kebab-case, and optional BEM (__ / --).",
+                "resolveNestedSelectors": true
+            }
+        ],
+
+        "no-descending-specificity": null
+    }
+}

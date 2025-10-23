@@ -1,0 +1,65 @@
+{# SHARED: Footer #}
+<footer class="comp-footer">
+  <div class="container py-4">
+    <div class="row gy-4 align-items-start">
+      <div class="col-md-6">
+        <h2 class="comp-footer__title mb-3">
+          <a href="{% url 'pages:home' %}"
+             class="comp-footer__link util-no-decoration">Game Abyss</a>
+        </h2>
+        <p class="comp-footer__description mb-2">Reviews, news and opinions about games.</p>
+        <ul class="list-unstyled comp-footer__description mb-0">
+          <li>
+            <a class="comp-footer__link util-no-decoration"
+               href="{% url 'pages:about' %}">About</a>
+          </li>
+          <li>
+            <a class="comp-footer__link util-no-decoration"
+               href="{% url 'pages:contact' %}">Contact</a>
+          </li>
+        </ul>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <div class="mb-2">
+          <a class="comp-footer__social me-2"
+             href="https://github.com/Drake-Designer"
+             target="_blank"
+             rel="noopener noreferrer"
+             aria-label="GitHub">
+            <i class="fa-brands fa-github fa-bounce fa-xl"></i>
+          </a>
+          <a class="comp-footer__social me-2"
+             href="https://discord.com/"
+             target="_blank"
+             rel="noopener noreferrer"
+             aria-label="Discord">
+            <i class="fa-brands fa-discord fa-bounce fa-xl"></i>
+          </a>
+          <a class="comp-footer__social me-2"
+             href="https://www.facebook.com/"
+             target="_blank"
+             rel="noopener noreferrer"
+             aria-label="Facebook">
+            <i class="fa-brands fa-facebook-f fa-bounce fa-xl"></i>
+          </a>
+          <a class="comp-footer__social me-2"
+             href="https://www.instagram.com/"
+             target="_blank"
+             rel="noopener noreferrer"
+             aria-label="Instagram">
+            <i class="fa-brands fa-instagram fa-bounce fa-xl"></i>
+          </a>
+          <a class="comp-footer__social"
+             href="https://www.youtube.com/"
+             target="_blank"
+             rel="noopener noreferrer"
+             aria-label="YouTube">
+            <i class="fa-brands fa-youtube fa-bounce fa-xl"></i>
+          </a>
+        </div>
+        <div class="comp-footer__meta">© {{ now|date:"Y" }} Game Abyss. All rights reserved.</div>
+      </div>
+    </div>
+  </div>
+</footer>
+{# END SHARED: Footer #}
