@@ -43,15 +43,14 @@
               </div>
               <button type="submit" class="comp-button comp-button--outline w-100 mb-3">Sign In</button>
             </form>
-            <div class="text-center">
-              <small><a href="{% url 'account_reset_password' %}">Forgot password?</a></small>
+            <div class="comp-auth-extra text-center mb-3">
+              <a class="comp-auth-link" href="{% url 'account_reset_password' %}">Forgot password?</a>
             </div>
             <hr class="my-4">
-            <div class="text-center">
-              <small>
-                Don't have an account?
-                <a href="{% url 'account_signup' %}">Sign up now</a>
-              </small>
+            <div class="comp-auth-extra text-center">
+              <small class="comp-auth-note">Don't have an account?</small>
+              <a class="comp-button comp-button--outline comp-button--sm comp-auth-cta"
+                 href="{% url 'account_signup' %}">Sign up now</a>
             </div>
           </div>
         </div>

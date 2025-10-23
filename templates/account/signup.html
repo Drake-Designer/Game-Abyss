@@ -61,11 +61,10 @@
               <button type="submit" class="comp-button comp-button--outline w-100 mb-3">Sign Up</button>
             </form>
             <hr class="my-4">
-            <div class="text-center">
-              <small>
-                Already have an account?
-                <a href="{% url 'account_login' %}">Sign in</a>
-              </small>
+            <div class="comp-auth-extra text-center">
+              <small class="comp-auth-note">Already have an account?</small>
+              <a class="comp-button comp-button--outline comp-button--sm comp-auth-cta"
+                 href="{% url 'account_login' %}">Sign in</a>
             </div>
           </div>
         </div>
