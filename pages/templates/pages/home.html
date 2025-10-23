@@ -9,20 +9,25 @@
     <div class="container">
       <div class="row align-items-center gy-4">
         <div class="col-lg-6">
-          <h1 class="page-home-hero__title display-4 fw-bold mb-3">Welcome to Game Abyss</h1>
+          <h1 class="page-home-hero__title display-4 fw-bold mb-3">Enter the Game Abyss</h1>
           <p class="page-home-hero__subtitle mb-4">
-            Dive deep into the world of gaming with reviews, news, and community discussions.
+            Descend into the void of gaming: unfiltered reviews, breaking news,
+            and a community that thrives in the shadows.
           </p>
           <div class="d-flex gap-3 flex-wrap">
             <a href="{% url 'pages:about' %}"
-               class="comp-button comp-button--outline">Learn More</a>
-            <a href="#latest-posts" class="comp-button comp-button--outline">Latest Posts</a>
+               class="comp-button comp-button--outline">
+              <i class="fas fa-mask me-2"></i> Discover the Abyss
+            </a>
+            <a href="#latest-posts" class="comp-button comp-button--outline">
+              <i class="fas fa-scroll me-2"></i> Latest Posts
+            </a>
           </div>
         </div>
         <div class="col-lg-6 text-center">
           <div class="page-home-hero__media">
             <img src="{% static 'images/game-abyss-hero.webp' %}"
-                 alt="Gaming Hero"
+                 alt="Abyssal Gaming Hero"
                  class="page-home-hero__image img-fluid"
                  width="1600"
                  height="1205"
@@ -39,16 +44,21 @@
   <section id="latest-posts" class="py-5">
     <div class="row mb-4">
       <div class="col">
-        <h2 class="text-center mb-4">Latest Posts</h2>
+        <h2 class="text-center mb-4">
+          <i class="fas fa-fire me-2 text-primary"></i>Latest Posts
+        </h2>
       </div>
     </div>
     <div class="row gy-4">
       <!-- Placeholder card -->
       <div class="col-md-6 col-lg-4">
         <div class="comp-card">
-          <div class="comp-card__body">
-            <h3 class="comp-card__title">Coming Soon</h3>
-            <p class="comp-card__text">Blog posts will appear here once created.</p>
+          <div class="comp-card__body text-center">
+            <h3 class="comp-card__title">
+              <i class="fas fa-hourglass-half me-2 text-secondary"></i>
+              Coming Soon
+            </h3>
+            <p class="comp-card__text">New echoes from the abyss will rise here once posts are created.</p>
           </div>
         </div>
       </div>

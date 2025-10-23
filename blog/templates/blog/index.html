@@ -4,22 +4,24 @@
   Blog — Game Abyss
 {% endblock title %}
 {% block content %}
-  <!-- PAGE: Blog index -->
   <section class="container py-4">
     <!-- Toolbar -->
     <div class="d-flex align-items-center justify-content-between mb-3">
-      <h1 class="page-blog-index__title mb-0">Echoes from the Abyss</h1>
+      <h1 class="page-blog-index__title mb-0">
+        <i class="fas fa-wave-square me-2 text-primary"></i>Echoes from the Abyss
+      </h1>
       {% if request.user.is_authenticated %}
-        <a href="{% url 'blog:new' %}" class="comp-button comp-button--outline">Launch Post</a>
+        <a href="{% url 'blog:new' %}" class="comp-button comp-button--outline">
+          <i class="fas fa-rocket-launch me-2"></i>Launch Post
+        </a>
       {% endif %}
     </div>
     {% include "shared/_messages.html" %}
     {% if posts %}
-      <!-- Grid -->
       <div class="row g-4">
         {% for post in posts %}
           <div class="col-md-6 col-lg-4">
-            <article class="comp-card h-100">
+            <article class="comp-card h-100" aria-labelledby="post-{{ post.pk }}-title">
               {% if post.image %}
                 <div class="comp-card__image-wrap">
                   <img src="{{ post.image.url }}"
@@ -27,17 +29,27 @@
                        class="comp-card__image"
                        loading="lazy"
                        {% if post.image.width %}width="{{ post.image.width }}"{% endif %}
-                       {% if post.image.height %}height="{{ post.image.height }}"{% endif %} />
+                       {% if post.image.height %}height="{{ post.image.height }}"{% endif %}>
                 </div>
               {% endif %}
               <div class="comp-card__body d-flex flex-column">
-                <h3 class="comp-card__title h5 d-flex align-items-center gap-2">
+                <h3 id="post-{{ post.pk }}-title"
+                    class="comp-card__title h5 d-flex align-items-center gap-2">
                   <a class="util-no-decoration" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
-                  {% if post.featured %}<span class="comp-badge comp-badge--featured">Featured</span>{% endif %}
+                  {% if post.featured %}
+                    <span class="comp-badge comp-badge--featured d-inline-flex align-items-center gap-1">
+                      <i class="fas fa-star"></i> Featured
+                    </span>
+                  {% endif %}
                 </h3>
-                <p class="page-blog-index__meta mb-2">
-                  By <span>{{ post.author }}</span> —
-                  <time datetime="{{ post.published_at|default:post.updated_at|date:'c' }}">
+                <p class="page-blog-index__meta mb-2 d-flex align-items-center flex-wrap gap-2">
+                  <span class="d-inline-flex align-items-center gap-1">
+                    <i class="fas fa-user-astronaut"></i> {{ post.author }}
+                  </span>
+                  <span class="opacity-75">·</span>
+                  <time datetime="{{ post.published_at|default:post.updated_at|date:'c' }}"
+                        class="d-inline-flex align-items-center gap-1">
+                    <i class="fas fa-calendar-alt"></i>
                     {{ post.published_at|default:post.updated_at|date:"F j, Y" }}
                   </time>
                 </p>
@@ -48,13 +60,29 @@
                     {{ post.body|striptags|truncatechars:140 }}
                   {% endif %}
                 </p>
+                {% if post.tags.all %}
+                  <ul class="list-unstyled d-flex flex-wrap gap-2 mb-3">
+                    {% for tag in post.tags.all %}
+                      <li>
+                        <a href="{% url 'blog:index' %}?tag={{ tag.slug }}"
+                           class="badge rounded-pill text-decoration-none comp-tag-badge">
+                          <i class="fas fa-hashtag me-1"></i>{{ tag.name }}
+                        </a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <span class="page-blog-index__tags--empty small"></span>
+                {% endif %}
                 <div class="mt-auto d-flex justify-content-between align-items-center">
                   <a class="comp-button comp-button--primary"
-                     href="{{ post.get_absolute_url }}">Read</a>
-                  {% if post.tags %}
-                    <span class="small">{{ post.tags }}</span>
-                  {% else %}
-                    <span class="page-blog-index__tags--empty small"></span>
+                     href="{{ post.get_absolute_url }}">
+                    <i class="fas fa-book-open me-2"></i>Read
+                  </a>
+                  {% if post.read_time %}
+                    <span class="small d-inline-flex align-items-center gap-1 opacity-75">
+                      <i class="fas fa-hourglass-half"></i> {{ post.read_time }} min
+                    </span>
                   {% endif %}
                 </div>
               </div>
@@ -63,13 +91,15 @@
         {% endfor %}
       </div>
     {% else %}
-      <!-- Empty state -->
       <div class="text-center py-5">
-        <h3 class="mb-2">The Abyss is quiet.</h3>
+        <h3 class="mb-2">
+          <i class="fas fa-moon me-2 text-secondary"></i>The Abyss is quiet
+        </h3>
         <p class="text-muted mb-4">No echoes yet. Launch the first post and light up the void.</p>
-        <a href="{% url 'blog:new' %}" class="comp-button comp-button--primary">Start a Transmission</a>
+        <a href="{% url 'blog:new' %}" class="comp-button comp-button--primary">
+          <i class="fas fa-satellite-dish me-2"></i>Start a Transmission
+        </a>
       </div>
     {% endif %}
   </section>
-  <!-- END PAGE: Blog index -->
 {% endblock content %}

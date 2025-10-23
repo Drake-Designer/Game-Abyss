@@ -6,13 +6,17 @@
 {% block content %}
   <!-- PAGE: Error 404 -->
   <section class="page-error-404">
-    <h1 class="page-error-404__title">Lost in the Abyss</h1>
+    <h1 class="page-error-404__title">
+      <i class="fas fa-ghost me-2"></i>Lost in the Abyss
+    </h1>
     <h2 class="page-error-404__subtitle mb-4">Page Not Found</h2>
     <p class="page-error-404__message">
       Looks like this page got lost in the abyss. Maybe it never existed, or it respawned somewhere else.
     </p>
     <a href="{% url 'pages:home' %}"
-       class="comp-button comp-button--primary">Respawn to Home</a>
+       class="comp-button comp-button--primary">
+      <i class="fas fa-home me-2"></i>Respawn to Home
+    </a>
   </section>
   <!-- END PAGE: Error 404 -->
 {% endblock content %}

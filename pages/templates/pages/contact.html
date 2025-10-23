@@ -10,9 +10,13 @@
       <div class="col-lg-8">
         <div class="comp-card">
           <div class="comp-card__body">
-            <h1 class="comp-card__title text-center mb-4">Contact Us</h1>
+            <h1 class="comp-card__title text-center mb-4">
+              <i class="fas fa-envelope-open-text me-2 text-primary"></i>
+              Reach into the Abyss
+            </h1>
             <p class="text-center comp-card__text mb-5">
-              Have a question, feedback, or need assistance? We’d love to hear from you.
+              Have a question, a whisper from the void, or need support?
+              Send your message. We echo back from the depths.
             </p>
             {% if form.non_field_errors %}
               <div class="alert alert-danger" role="alert">
@@ -26,7 +30,9 @@
               {% csrf_token %}
               {% for field in form %}
                 <div class="mb-3">
-                  <label for="{{ field.id_for_label }}" class="form-label ">{{ field.label }}</label>
+                  <label for="{{ field.id_for_label }}" class="form-label">
+                    <i class="fas fa-caret-right text-secondary me-1"></i>{{ field.label }}
+                  </label>
                   {{ field }}
                   {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
                   {% if field.errors %}
@@ -36,12 +42,25 @@
                   {% endif %}
                 </div>
               {% endfor %}
-              <button type="submit" class="comp-button comp-button--outline w-100">Submit help request</button>
+              <button type="submit" class="comp-button comp-button--outline w-100">
+                <i class="fas fa-paper-plane me-2"></i>Submit to the Abyss
+              </button>
             </form>
             <hr class="my-4">
             <div class="text-center">
-              <h5 class="comp-card__title h6 mb-3">Other ways to reach us</h5>
-              <p class="comp-card__text small">Follow our socials or join the Discord for quick responses and updates.</p>
+              <h5 class="comp-card__title h6 mb-3">
+                <i class="fas fa-share-alt me-2 text-secondary"></i>
+                Other ways to connect
+              </h5>
+              <p class="comp-card__text small">
+                Wander with us on socials or step into the Discord
+                the quickest way to hear echoes and updates.
+              </p>
+              <div class="d-flex justify-content-center gap-3 mt-3">
+                <a href="#" class="comp-footer__social"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="comp-footer__social"><i class="fab fa-discord"></i></a>
+                <a href="#" class="comp-footer__social"><i class="fab fa-twitch"></i></a>
+              </div>
             </div>
           </div>
         </div>

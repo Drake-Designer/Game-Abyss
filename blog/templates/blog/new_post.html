@@ -1,53 +1,95 @@
 {% extends "base.html" %}
 {% load static %}
+{% load widget_tweaks %}
 {% block title %}
   New Post — Game Abyss
 {% endblock title %}
 {% block content %}
-  <!-- PAGE: New post -->
   <section class="page-new-post container">
     <div class="row justify-content-center">
       <div class="col-md-10 col-lg-8">
         <div class="comp-card page-new-post__card">
           <div class="comp-card__body p-4">
+            {# Flash messages #}
             {% include "shared/_messages.html" %}
             <h2 class="page-new-post__title text-center mb-2">Summon a New Chronicle</h2>
             <p class="text-center text-muted mb-4">
-              Craft your entry below.
+              Forge your entry below.
               {% if not request.user.is_staff and not request.user.is_superuser %}
-                Held in review until it dares to break the void.
+                Your post will wait in the shadows until approved.
               {% endif %}
             </p>
-            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            {# Non-field errors #}
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+            {% endif %}
             <form method="post"
                   enctype="multipart/form-data"
                   class="comp-form"
                   novalidate>
               {% csrf_token %}
+              {# STATUS field: visible only to staff and superusers #}
+              {% if request.user.is_staff or request.user.is_superuser %}
+                {% if form.status %}
+                  <div class="mb-3">
+                    <label for="{{ form.status.id_for_label }}" class="form-label fw-semibold">
+                      <i class="fas fa-signal me-1 text-secondary"></i>{{ form.status.label }}
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.help_text %}<div class="form-text text-muted">{{ form.status.help_text|safe }}</div>{% endif %}
+                    {% for error in form.status.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                  </div>
+                {% endif %}
+              {% endif %}
+              {# Loop through remaining fields except status #}
               {% for field in form %}
                 {% if field.name != "status" %}
                   <div class="mb-3">
-                    <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+                    <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                      {% if field.name == "title" %}
+                        <i class="fas fa-pen-nib me-1 text-secondary"></i>
+                      {% elif field.name == "excerpt" or field.name == "body" %}
+                        <i class="fas fa-scroll me-1 text-secondary"></i>
+                      {% elif field.name == "image" %}
+                        <i class="fas fa-image me-1 text-secondary"></i>
+                      {% elif field.name == "tags" %}
+                        <i class="fas fa-hashtag me-1 text-secondary"></i>
+                      {% endif %}
                       {{ field.label }}
                       {% if field.field.required %}*{% endif %}
                     </label>
-                    {{ field }}
-                    {% if field.help_text %}
-                      <div class="form-text text-muted">{{ field.help_text|safe }}</div>
-                    {% elif field.name == "tags" %}
-                      <div class="form-text text-muted">
-                        Comma-separated tags (e.g. <em>rpg, soulslike</em>).
-                      </div>
+                    {# Special hint for image field #}
+                    {% if field.name == "image" %}
+                      {% with hint_id="hint-"|add:field.id_for_label %}
+                        {% render_field field aria-describedby=hint_id %}
+                        <div id="{{ hint_id }}" class="form-text text-muted">
+                          Recommended formats: JPG, PNG, or WebP. Keep it light for faster loading.
+                        </div>
+                      {% endwith %}
+                    {% else %}
+                      {{ field }}
+                      {% if field.help_text %}
+                        <div class="form-text text-muted">{{ field.help_text|safe }}</div>
+                      {% elif field.name == "tags" %}
+                        <div class="form-text text-muted">
+                          Comma-separated tags, for example <em>rpg, soulslike</em>.
+                        </div>
+                      {% endif %}
                     {% endif %}
+                    {# Field errors #}
                     {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                   </div>
                 {% endif %}
               {% endfor %}
-              <!-- Actions -->
+              {# Form actions #}
               <div class="d-grid gap-2 mt-4 page-new-post__actions">
-                <button type="submit" class="comp-button comp-button--primary">Transmit</button>
+                <button type="submit" class="comp-button comp-button--primary">
+                  <i class="fas fa-satellite-dish me-2"></i>Transmit
+                </button>
                 <a href="{% url 'pages:home' %}"
-                   class="comp-button comp-button--outline">Abort</a>
+                   class="comp-button comp-button--outline">
+                  <i class="fas fa-skull-crossbones me-2"></i>Abort
+                </a>
               </div>
             </form>
           </div>
@@ -55,5 +97,4 @@
       </div>
     </div>
   </section>
-  <!-- END PAGE: New post -->
 {% endblock content %}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
-  About — Game Abyss
+  About - Game Abyss
 {% endblock title %}
 {% block content %}
   <!-- PAGE: About -->
@@ -10,33 +10,64 @@
       <div class="col-lg-8">
         <div class="comp-card">
           <div class="comp-card__body">
-            <h1 class="comp-card__title text-center mb-4">About Game Abyss</h1>
+            <h1 class="comp-card__title-about text-center mb-4">Into the Abyss</h1>
             <div class="mb-4">
-              <h3 class="comp-card__title h4 mb-3">What’s Game Abyss?</h3>
+              <h3 class="comp-card__title h4 mb-3">
+                <i class="fas fa-question-circle me-2 text-primary"></i>
+                What is Game Abyss?
+              </h3>
               <p class="comp-card__text">
-                Think of us as your gaming hangout. Real opinions, clean vibes, and an ever-growing vault of game takes.
+                A dark, quiet place for games. Real talk, no noise. We cut through hype and find what a game really is.
               </p>
             </div>
             <div class="mb-4">
-              <h3 class="comp-card__title h4 mb-3">What’s cool here?</h3>
+              <h3 class="comp-card__title h4 mb-3">
+                <i class="fas fa-bolt me-2 text-primary"></i>
+                What is here?
+              </h3>
               <ul class="comp-card__text">
-                <li>Authentic reviews from real players</li>
-                <li>Fresh gaming news</li>
-                <li>Chill forum vibes</li>
-                <li>Your corner for wins and fails</li>
+                <li>
+                  <i class="fas fa-gamepad me-2 text-secondary"></i>
+                  <strong>Write reviews.</strong> Share your verdicts from real play. Short takes or deep dives, your choice.
+                </li>
+                <li>
+                  <i class="fas fa-newspaper me-2 text-secondary"></i>
+                  <strong>Stay updated.</strong> Track the latest reviews and highlights as they drop from the void.
+                </li>
+                <li>
+                  <i class="fas fa-hammer me-2 text-secondary"></i>
+                  <strong>Contribute.</strong> Post guides, tips, challenges, or mods. Help others beat the darkness.
+                </li>
+                <li>
+                  <i class="fas fa-users me-2 text-secondary"></i>
+                  <strong>Connect.</strong> Meet players, trade builds, compare runs, and join events with our community.
+                </li>
+                <li>
+                  <i class="fas fa-skull me-2 text-secondary"></i>
+                  <strong>Own your story.</strong> Celebrate wins, confess fails, and log every glitch that tried to break you.
+                </li>
               </ul>
             </div>
             <div class="mb-4">
-              <h3 class="comp-card__title h4 mb-3">Come join the fun</h3>
+              <h3 class="comp-card__title h4 mb-3">
+                <i class="fas fa-door-open me-2 text-primary"></i>
+                Step inside
+              </h3>
               <p class="comp-card__text">
-                Whether you play on weekends or speedrun in your sleep—pull up a chair. Share your stories, meet your people.
+                Casual explorer or speedrunner on a mission. There is a seat for you here.
+                Create your profile, publish your first review, follow creators you like,
+                and help shape the next wave of voices. The COUNCIL awaits.
               </p>
             </div>
             <div class="text-center mt-5 d-flex flex-column flex-sm-row gap-3 justify-content-center">
               <a href="{% url 'account_signup' %}"
-                 class="comp-button comp-button--outline">Join Now</a>
+                 class="comp-button comp-button--outline">
+                <i class="fas fa-user-astronaut me-2"></i>Join Now
+              </a>
               <a href="{% url 'pages:contact' %}"
-                 class="comp-button comp-button--outline">Contact Us</a>
+                 class="comp-button comp-button--outline">
+                <i class="fas fa-envelope-open-text me-2"></i>Contact Us
+              </a>
             </div>
           </div>
         </div>

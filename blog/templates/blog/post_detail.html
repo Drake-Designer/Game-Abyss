@@ -10,7 +10,9 @@
     <article>
       <h1 class="page-post-detail__title d-flex align-items-center gap-2">
         {{ post.title }}
-        {% if post.featured %}<span class="comp-badge comp-badge--featured">Featured</span>{% endif %}
+        {% if post.featured %}
+          <span class="comp-badge comp-badge--featured"><i class="fas fa-star"></i>Featured</span>
+        {% endif %}
         {% if user.is_authenticated and post.status != post.STATUS_APPROVED %}
           {% if user.is_staff or user == post.author %}
             <span class="badge {% if post.status == post.STATUS_PENDING %}bg-secondary{% else %}bg-danger{% endif %}">

@@ -380,6 +380,31 @@ hr {
   color: #111;
 }
 
+/* Tag badge for blog cards */
+.comp-tag-badge {
+  background: rgb(255 107 53 / 12%);
+  border: 1px solid rgb(255 107 53 / 35%);
+  color: var(--color-text);
+  font-size: var(--fs-meta);
+  padding: 0.25rem 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition:
+    background 0.3s,
+    color 0.3s,
+    border-color 0.3s,
+    text-shadow 0.3s;
+}
+
+.comp-tag-badge:hover,
+.comp-tag-badge:focus-visible {
+  background: rgb(255 107 53 / 20%);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  text-shadow: 0 0 6px rgb(255 107 53 / 40%);
+}
+
 /* ------------------------- Component: Footer */
 .comp-footer {
   background: var(--gradient-surface);
@@ -748,6 +773,10 @@ select::-ms-expand {
 .page-contact .comp-card__title,
 .page-about .comp-card__title {
   color: var(--color-secondary);
+}
+
+.comp-card__title-about {
+  color: var(--color-primary);
 }
 
 /* ------------------------- Pages: Account */
