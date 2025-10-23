@@ -9,7 +9,9 @@
     <!-- Toolbar -->
     <div class="d-flex align-items-center justify-content-between mb-3">
       <h1 class="page-blog-index__title mb-0">Echoes from the Abyss</h1>
-      <a href="{% url 'blog:new' %}" class="comp-button comp-button--outline">Launch Post</a>
+      {% if request.user.is_authenticated %}
+        <a href="{% url 'blog:new' %}" class="comp-button comp-button--outline">Launch Post</a>
+      {% endif %}
     </div>
     {% include "shared/_messages.html" %}
     {% if posts %}

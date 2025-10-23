@@ -31,6 +31,9 @@
   --color-primary: #ff6b35;
   --color-secondary: #4ecdc4;
   --color-text: #e8e8e8;
+  --color-text-muted: rgb(232 232 232 / 75%);
+  --bs-secondary-color: var(--color-text-muted);
+  --bs-secondary-color-rgb: 232, 232, 232;
 
   /* Layout */
   --radius: 0.8rem;
@@ -454,6 +457,14 @@ hr {
     border-color 0.3s,
     background 0.3s,
     box-shadow 0.3s;
+}
+
+.comp-form [class~='form-text'] {
+  margin-top: 0.35rem;
+  color: var(--color-text-muted);
+  font-size: var(--fs-meta);
+  line-height: 1.5;
+  letter-spacing: 0.2px;
 }
 
 .comp-form input:focus,
