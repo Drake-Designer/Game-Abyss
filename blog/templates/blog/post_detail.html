@@ -2,10 +2,9 @@
 {% load static %}
 {% load cloudinary_extras %}
 {% block title %}
-  Post — Game Abyss
+  Post - Game Abyss
 {% endblock title %}
 {% block content %}
-  <!-- PAGE: Post detail -->
   <section class="container py-4">
     <article>
       <h1 class="page-post-detail__title d-flex align-items-center gap-2">
@@ -24,17 +23,21 @@
         {% endif %}
       </h1>
       {% with post.published_at|default_if_none:post.updated_at as display_date %}
-        <p class="page-post-detail__meta mb-3 d-flex align-items-center flex-wrap gap-3">
-          <span class="d-inline-flex align-items-center gap-1">
+        <!-- META: stacked -->
+        <div class="page-post-detail__meta mb-3">
+          <div class="d-flex align-items-center gap-1 mb-1">
             <i class="fas fa-user-astronaut"></i>
-            <strong class="page-post-detail__author">{{ post.author }}</strong>
-          </span>
-          <span class="opacity-75">·</span>
+            {% with post.author as post_author %}
+              <strong class="page-post-detail__author comp-user-label {% if post_author.is_superuser %}comp-user-label--legendary{% elif post_author.is_staff %}comp-user-label--epic{% else %}comp-user-label--common{% endif %}">
+                <span class="comp-user-label__name">{{ post_author }}</span>
+              </strong>
+            {% endwith %}
+          </div>
           <time datetime="{{ display_date|date:'c' }}"
-                class="d-inline-flex align-items-center gap-1">
+                class="d-flex align-items-center gap-1">
             <i class="fas fa-calendar-alt"></i> {{ display_date|date:"F j, Y" }}
           </time>
-        </p>
+        </div>
       {% endwith %}
       {% if post.image %}
         <div class="page-post-detail__image-wrap mb-4">
@@ -63,17 +66,17 @@
         <ul class="list-unstyled">
           {% for comment in comments %}
             <li class="mb-4">
-              <p class="mb-1 page-post-detail__meta d-flex align-items-center flex-wrap gap-3">
-                <span class="d-inline-flex align-items-center gap-1">
+              <!-- META commento: stacked -->
+              <div class="mb-1 page-post-detail__meta">
+                <div class="d-flex align-items-center gap-1 mb-1">
                   <i class="fas fa-user-astronaut"></i>
                   <strong class="page-post-detail__author">{{ comment.author }}</strong>
-                </span>
-                <span class="opacity-75">·</span>
+                </div>
                 <time datetime="{{ comment.created_at|date:'c' }}"
-                      class="d-inline-flex align-items-center gap-1">
+                      class="d-flex align-items-center gap-1">
                   <i class="fas fa-clock"></i> {{ comment.created_at|date:"F j, Y H:i" }}
                 </time>
-              </p>
+              </div>
               <p class="page-post-detail__comment-body">{{ comment.body|linebreaks }}</p>
             </li>
           {% endfor %}
@@ -104,5 +107,4 @@
       {% endif %}
     </section>
   </section>
-  <!-- END PAGE: Post detail -->
 {% endblock content %}

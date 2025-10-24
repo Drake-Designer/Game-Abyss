@@ -2,7 +2,7 @@
 {% load static %}
 {% load cloudinary_extras %}
 {% block title %}
-  Blog — Game Abyss
+  Blog - Game Abyss
 {% endblock title %}
 {% block content %}
   <section class="container py-4">
@@ -43,17 +43,22 @@
                     </span>
                   {% endif %}
                 </h3>
-                <p class="page-blog-index__meta mb-2 d-flex align-items-center flex-wrap gap-2">
-                  <span class="d-inline-flex align-items-center gap-1">
-                    <i class="fas fa-user-astronaut"></i> {{ post.author }}
-                  </span>
-                  <span class="opacity-75">·</span>
+                <!-- META: autore e data su due righe -->
+                <div class="page-blog-index__meta mb-2">
+                  <div class="d-flex align-items-center gap-1 mb-1">
+                    <i class="fas fa-user-astronaut"></i>
+                    {% with post.author as post_author %}
+                      <span class="comp-user-label {% if post_author.is_superuser %}comp-user-label--legendary{% elif post_author.is_staff %}comp-user-label--epic{% else %}comp-user-label--common{% endif %}">
+                        <span class="comp-user-label__name">{{ post_author }}</span>
+                      </span>
+                    {% endwith %}
+                  </div>
                   <time datetime="{{ post.published_at|default:post.updated_at|date:'c' }}"
-                        class="d-inline-flex align-items-center gap-1">
+                        class="d-flex align-items-center gap-1">
                     <i class="fas fa-calendar-alt"></i>
                     {{ post.published_at|default:post.updated_at|date:"F j, Y" }}
                   </time>
-                </p>
+                </div>
                 <p class="page-blog-index__excerpt mb-3">
                   {% if post.excerpt %}
                     {{ post.excerpt }}

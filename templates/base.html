@@ -30,31 +30,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap"
           rel="stylesheet">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
-    <!-- Favicon -->
     <link rel="icon"
           type="image/svg+xml"
           href="{% static 'favicon/game-abyss-favicon.svg' %}">
+    <!-- Ritocco: autore e data stacked -->
+    <style>
+      .page-blog-index__meta > time,
+      .page-post-detail__meta > time {
+        margin-top: 0.15rem;
+      }
+      .page-blog-index__meta,
+      .page-post-detail__meta {
+        display: block;
+      }
+    </style>
   </head>
   <body class="d-flex flex-column min-vh-100">
-    {# SHARED: Music player #}
-    <div class="comp-music-player">
-      <button id="gaMusicBtn"
-              class="comp-music-toggle"
-              aria-label="Toggle background music">
-        <i class="fas fa-music" id="gaMusicIcon"></i>
-        <span class="comp-music-mute" id="gaMusicMute"></span>
-      </button>
-    </div>
-    <audio id="gaBgMusic" loop preload="auto">
-      <source src="{% static 'audio/audio-theme.mp3' %}" type="audio/mpeg">
-      Your browser does not support the audio element.
-    </audio>
-    {# END SHARED: Music player #}
     {% include "shared/_navbar.html" %}
-    <!-- HERO (optional block) -->
     {% block hero %}
     {% endblock hero %}
-    <!-- MAIN content area -->
     <main class="flex-grow-1 py-4">
       <div class="container">
         {% include "shared/_messages.html" %}
@@ -63,7 +57,6 @@
       </div>
     </main>
     {% include "shared/_footer.html" %}
-    <!-- Bootstrap Toast for music hint -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
       <div id="musicToast"
            class="toast align-items-center text-bg-primary border-0"
@@ -79,8 +72,6 @@
         </div>
       </div>
     </div>
-    <!-- END Bootstrap Toast -->
-    <!-- ASSETS: JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
             crossorigin="anonymous"
             defer></script>
