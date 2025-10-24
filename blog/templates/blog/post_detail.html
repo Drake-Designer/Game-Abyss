@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load cloudinary_extras %}
 {% block title %}
   Post — Game Abyss
 {% endblock title %}
@@ -25,12 +26,20 @@
         <p>By {{ post.author }} — {{ display_date|date:"F j, Y" }}</p>
       {% endwith %}
       {% if post.image %}
-        <img src="{{ post.image.url }}"
-             alt="{{ post.title }}"
-             width="{{ post.image.width|default:600 }}"
-             height="{{ post.image.height|default:400 }}"
-             loading="lazy"
-             class="page-post-detail__image" />
+        <div class="page-post-detail__image-wrap mb-4">
+          <picture>
+            <source media="(max-width: 991.98px)"
+                    srcset="{{ post.image.url|cloudinary_variant:'f_auto,q_auto,c_fill,g_auto:subject,ar_4:3,w_900' }}">
+            <source media="(min-width: 992px)"
+                    srcset="{{ post.image.url|cloudinary_variant:'f_auto,q_auto,c_fill,g_auto:subject,ar_16:9,w_1600' }}">
+            <img class="page-post-detail__image img-fluid rounded"
+                 src="{{ post.image.url|cloudinary_variant:'f_auto,q_auto,c_fill,g_auto:subject,ar_16:9,w_1200' }}"
+                 alt="{{ post.title }}"
+                 loading="lazy"
+                 width="1200"
+                 height="675">
+          </picture>
+        </div>
       {% endif %}
       <div class="page-post-detail__body">{{ post.body|linebreaks }}</div>
     </article>

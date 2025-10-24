@@ -79,7 +79,8 @@ INSTALLED_APPS = [
 ]
 
 if cloudinary is not None:
-    INSTALLED_APPS.append('cloudinary')
+    INSTALLED_APPS.extend(['cloudinary', 'cloudinary_storage'])
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 
 # Django sites framework
@@ -231,6 +232,7 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 
+# Cloudinary configuration
 if cloudinary is not None:
     # Cloudinary configuration for media storage
     cloudinary_url = os.environ.get('CLOUDINARY_URL')
