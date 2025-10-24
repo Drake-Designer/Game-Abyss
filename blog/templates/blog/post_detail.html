@@ -56,6 +56,35 @@
         </div>
       {% endif %}
       <div class="page-post-detail__body">{{ post.body|linebreaks }}</div>
+      <!-- Post reactions -->
+      <section class="mt-4">
+        <h3 class="h6 text-uppercase text-muted d-flex align-items-center gap-2 mb-2">
+          <i class="fas fa-icons"></i> Post Reactions
+        </h3>
+        <div class="d-flex flex-wrap gap-2">
+          {% for option in post_reaction_display %}
+            {% if user.is_authenticated %}
+              <form method="post"
+                    action="{% url 'blog:react_post' post.pk %}"
+                    class="d-inline">
+                {% csrf_token %}
+                <input type="hidden" name="reaction" value="{{ option.value }}">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit"
+                        class="btn btn-sm d-flex align-items-center gap-2 {% if option.active %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                  <i class="fas {{ option.icon }}"></i>
+                  <span>{{ option.count }}</span>
+                </button>
+              </form>
+            {% else %}
+              <span class="badge rounded-pill text-bg-secondary d-inline-flex align-items-center gap-1">
+                <i class="fas {{ option.icon }}"></i> {{ option.count }}
+              </span>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% if not user.is_authenticated %}<p class="small text-muted mt-2">Log in to leave a reaction.</p>{% endif %}
+      </section>
     </article>
     <!-- Comments -->
     <section class="mt-5">
@@ -65,8 +94,8 @@
       {% if comments %}
         <ul class="list-unstyled">
           {% for comment in comments %}
-            <li class="mb-4">
-              <!-- META commento: stacked -->
+            <li class="mb-4" id="comment-{{ comment.pk }}">
+              <!-- META comment: stacked -->
               <div class="mb-1 page-post-detail__meta">
                 <div class="d-flex align-items-center gap-1 mb-1">
                   <i class="fas fa-user-astronaut"></i>
@@ -82,6 +111,60 @@
                 </time>
               </div>
               <p class="page-post-detail__comment-body">{{ comment.body|linebreaks }}</p>
+              <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+                <!-- Comment reactions -->
+                <div class="d-flex flex-wrap gap-2">
+                  {% for option in comment.reaction_display %}
+                    {% if user.is_authenticated %}
+                      <form method="post"
+                            action="{% url 'blog:react_comment' comment.pk %}"
+                            class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="reaction" value="{{ option.value }}">
+                        <input type="hidden"
+                               name="next"
+                               value="{{ request.get_full_path }}#comment-{{ comment.pk }}">
+                        <button type="submit"
+                                class="btn btn-sm d-flex align-items-center gap-2 {% if option.active %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                          <i class="fas {{ option.icon }}"></i>
+                          <span>{{ option.count }}</span>
+                        </button>
+                      </form>
+                    {% else %}
+                      <span class="badge rounded-pill text-bg-secondary d-inline-flex align-items-center gap-1">
+                        <i class="fas {{ option.icon }}"></i> {{ option.count }}
+                      </span>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+                <!-- Comment report -->
+                {% if user.is_authenticated %}
+                  <form method="post"
+                        action="{% url 'blog:report_comment' comment.pk %}"
+                        class="d-flex align-items-center gap-2">
+                    {% csrf_token %}
+                    <input type="hidden"
+                           name="next"
+                           value="{{ request.get_full_path }}#comment-{{ comment.pk }}">
+                    <select name="reason"
+                            class="form-select form-select-sm"
+                            {% if comment.user_reported %}disabled{% endif %}>
+                      <option value="inappropriate">Inappropriate</option>
+                      <option value="spam">Spam</option>
+                    </select>
+                    <button type="submit"
+                            class="btn btn-sm btn-outline-danger"
+                            {% if comment.user_reported %}disabled{% endif %}>
+                      <i class="fas fa-flag"></i>
+                      {% if comment.user_reported %}
+                        Reported
+                      {% else %}
+                        Report
+                      {% endif %}
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
             </li>
           {% endfor %}
         </ul>

@@ -1,11 +1,15 @@
+# blog/forms.py
+import re
+
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from .models import BlogPost, Comment
 
 
 """
-Forms for the blog app — Game-Abyss edition.
+Forms for the blog app - Game-Abyss edition.
 
 - BlogPostForm (admin): reviewers can set status and featured.
 - PublicBlogPostForm: status is set by the system; users just craft the post.
@@ -38,7 +42,7 @@ class BlogPostForm(forms.ModelForm):
             'featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         help_texts = {
-            'tags': 'Separate with commas — keep them tight and relevant.',
+            'tags': 'Separate with commas - keep them tight and relevant.',
             'excerpt': 'Optional. Used on cards and listings. Clean beats long.',
         }
 
@@ -80,7 +84,7 @@ class PublicBlogPostForm(forms.ModelForm):
 
 
 class CommentForm(forms.ModelForm):
-    """Public comment form — be kind to your fellow travelers."""
+    """Public comment form - be kind to your fellow travelers."""
     class Meta:
         model = Comment
         fields = ['body']
@@ -102,4 +106,23 @@ class CommentForm(forms.ModelForm):
         if len(body.strip()) < 5:
             raise ValidationError(
                 'Your comment is too short to register on our scanners.')
+
+        lowered = body.lower()
+        for word in getattr(settings, 'BLOG_COMMENT_BANNED_WORDS', []):
+            if not word:
+                continue
+            pattern = r'\b{}\b'.format(re.escape(word))
+            if re.search(pattern, lowered):
+                raise ValidationError(
+                    'Your comment contains language that is not allowed on Game-Abyss.'
+                )
+
+        max_links = getattr(settings, 'BLOG_COMMENT_MAX_LINKS', 2)
+        if max_links >= 0:
+            link_count = len(re.findall(
+                r'https?://|www\.', body, flags=re.IGNORECASE))
+            if link_count > max_links:
+                raise ValidationError(
+                    f'Please keep the number of links to {max_links} or fewer.'
+                )
         return body

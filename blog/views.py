@@ -1,8 +1,37 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
+from django.views.decorators.http import require_POST
+
 from .forms import PublicBlogPostForm, CommentForm
-from .models import BlogPost, Comment
+from .models import (
+    BlogPost,
+    Comment,
+    CommentReaction,
+    CommentReport,
+    PostReaction,
+    ReactionType,
+)
+
+# Icon map used by the template to render reaction buttons
+REACTION_ICON_MAP = {
+    ReactionType.LIKE.value: 'fa-thumbs-up',
+    ReactionType.LOVE.value: 'fa-heart',
+    ReactionType.DISLIKE.value: 'fa-thumbs-down',
+}
+
+# Options for rendering the reaction choices
+REACTION_OPTIONS = [
+    {
+        'value': choice.value,
+        'label': choice.label,
+        'icon': REACTION_ICON_MAP[choice.value],
+    }
+    for choice in ReactionType
+]
+
+REACTION_VALUES = {opt['value'] for opt in REACTION_OPTIONS}
 
 
 def new_post(request):
@@ -63,12 +92,11 @@ def post_detail(request, year, month, day, slug):
     if (post.status != BlogPost.STATUS_APPROVED) and request.user != post.author:
         return HttpResponse('Not found', status=404)
 
-    # Only comments that escaped moderation orbit appear in the feed.
-    approved_comments = post.comments.approved()
+    # Prepare the comment form (for POST below) and list of approved comments.
     comment_form = CommentForm()
 
-    # Handle new comment transmissions from explorers.
     if request.method == 'POST':
+        # New comment submission
         comment_form = CommentForm(request.POST)
         if not request.user.is_authenticated:
             messages.error(
@@ -85,10 +113,169 @@ def post_detail(request, year, month, day, slug):
                 "Thanks, explorer. Your comment is in orbit and will appear after approval.",
             )
             return redirect(post.get_absolute_url())
+        else:
+            messages.error(
+                request,
+                'We could not accept that comment. Please review the highlighted issues.',
+            )
+
+    # Fetch comments and their related reactions/reports efficiently
+    approved_comments = list(
+        post.comments.approved()
+        .select_related('author')
+        .prefetch_related('reactions__user', 'reports__reported_by')
+    )
+
+    # Compute post reaction totals and current user's reaction
+    post_reactions = list(post.reactions.select_related('user'))
+    post_reaction_totals = {opt['value']: 0 for opt in REACTION_OPTIONS}
+    for r in post_reactions:
+        post_reaction_totals[r.reaction] = post_reaction_totals.get(
+            r.reaction, 0) + 1
+
+    user_post_reaction = None
+    if request.user.is_authenticated:
+        for r in post_reactions:
+            if r.user_id == request.user.id:
+                user_post_reaction = r.reaction
+                break
+
+    post_reaction_display = [
+        {
+            **opt,
+            'count': post_reaction_totals.get(opt['value'], 0),
+            'active': (opt['value'] == user_post_reaction),
+        }
+        for opt in REACTION_OPTIONS
+    ]
+
+    # For each comment, compute reaction totals and whether the current user reported it
+    for c in approved_comments:
+        totals = {opt['value']: 0 for opt in REACTION_OPTIONS}
+        user_comment_reaction = None
+
+        for r in c.reactions.all():
+            totals[r.reaction] = totals.get(r.reaction, 0) + 1
+            if request.user.is_authenticated and r.user_id == request.user.id:
+                user_comment_reaction = r.reaction
+
+        c.reaction_display = [
+            {
+                **opt,
+                'count': totals.get(opt['value'], 0),
+                'active': (opt['value'] == user_comment_reaction),
+            }
+            for opt in REACTION_OPTIONS
+        ]
+
+        c.user_reported = False
+        if request.user.is_authenticated:
+            for rep in c.reports.all():
+                if rep.reported_by_id == request.user.id:
+                    c.user_reported = True
+                    break
 
     context = {
         'post': post,
         'comments': approved_comments,
         'comment_form': comment_form,
+        'post_reaction_display': post_reaction_display,
     }
     return render(request, 'blog/post_detail.html', context)
+
+
+@login_required
+@require_POST
+def react_to_post(request, pk):
+    """Add/replace/remove the current user's reaction on a post."""
+    post = get_object_or_404(BlogPost, pk=pk)
+    reaction_value = request.POST.get('reaction')
+    redirect_url = request.POST.get('next') or post.get_absolute_url()
+
+    if reaction_value not in REACTION_VALUES:
+        messages.error(request, 'Invalid reaction.')
+        return redirect(redirect_url)
+
+    reaction, created = PostReaction.objects.get_or_create(
+        post=post, user=request.user)
+
+    # Toggle: if same reaction posted again, remove it
+    if not created and reaction.reaction == reaction_value:
+        reaction.delete()
+        messages.info(request, 'Reaction removed.')
+    else:
+        reaction.reaction = reaction_value
+        reaction.save(update_fields=['reaction', 'updated_at'])
+        messages.success(request, 'Reaction recorded!')
+
+    return redirect(redirect_url)
+
+
+@login_required
+@require_POST
+def react_to_comment(request, pk):
+    """Add/replace/remove the current user's reaction on a comment."""
+    comment = get_object_or_404(Comment, pk=pk)
+    redirect_url = request.POST.get(
+        'next') or f"{comment.post.get_absolute_url()}#comment-{comment.pk}"
+
+    # Only staff can react to non-approved comments
+    if comment.status != Comment.STATUS_APPROVED and not request.user.is_staff:
+        messages.error(request, 'You cannot react to a non-approved comment.')
+        return redirect(redirect_url)
+
+    reaction_value = request.POST.get('reaction')
+    if reaction_value not in REACTION_VALUES:
+        messages.error(request, 'Invalid reaction.')
+        return redirect(redirect_url)
+
+    reaction, created = CommentReaction.objects.get_or_create(
+        comment=comment, user=request.user)
+
+    # Toggle: if same reaction posted again, remove it
+    if not created and reaction.reaction == reaction_value:
+        reaction.delete()
+        messages.info(request, 'Comment reaction removed.')
+    else:
+        reaction.reaction = reaction_value
+        reaction.save(update_fields=['reaction', 'updated_at'])
+        messages.success(request, 'Comment reaction recorded!')
+
+    return redirect(redirect_url)
+
+
+@login_required
+@require_POST
+def report_comment(request, pk):
+    """Report a comment; if reported, the comment goes back to pending for moderation."""
+    comment = get_object_or_404(Comment, pk=pk)
+    redirect_url = request.POST.get(
+        'next') or f"{comment.post.get_absolute_url()}#comment-{comment.pk}"
+
+    if comment.author_id == request.user.id:
+        messages.error(request, 'You cannot report your own comment.')
+        return redirect(redirect_url)
+
+    reason = request.POST.get('reason')
+    notes = (request.POST.get('notes') or '').strip()
+
+    if reason not in CommentReport.Reason.values:
+        messages.error(request, 'Invalid report reason.')
+        return redirect(redirect_url)
+
+    report, created = CommentReport.objects.get_or_create(
+        comment=comment,
+        reported_by=request.user,
+        defaults={'reason': reason, 'notes': notes},
+    )
+
+    if created:
+        # Put the comment back into moderation
+        comment.status = Comment.STATUS_PENDING
+        comment.save(update_fields=['status', 'updated_at'])
+        messages.success(
+            request, 'Thanks for the report. The moderation team has been notified.')
+    else:
+        messages.info(request, 'You already reported this comment.')
+
+    return redirect(redirect_url)

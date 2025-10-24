@@ -40,7 +40,8 @@ except ImportError:
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError(
-        "SECRET_KEY is not set. Set it in env.py (local) or in Heroku Config Vars.")
+        "SECRET_KEY is not set. Set it in env.py (local) or in Heroku Config Vars."
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG is True by default local, False if I set DEBUG=False on Heroku
@@ -52,35 +53,36 @@ _alh = os.environ.get("ALLOWED_HOSTS", "")
 ALLOWED_HOSTS = _alh.split(",") if _alh else []
 
 # for csrf trusted origins (needed for Heroku forms)
-CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(
-    ",") if os.environ.get("CSRF_TRUSTED_ORIGINS") else []
+CSRF_TRUSTED_ORIGINS = (
+    os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if os.environ.get("CSRF_TRUSTED_ORIGINS")
+    else []
+)
 
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.sites',
-
+    "jazzmin",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.sites",
     # Third-party apps
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'widget_tweaks',
-
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "widget_tweaks",
     # Local apps
-    'pages',
-    'blog',
+    "pages",
+    "blog.apps.BlogConfig",
 ]
 
 if cloudinary is not None:
-    INSTALLED_APPS.extend(['cloudinary', 'cloudinary_storage'])
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    INSTALLED_APPS.extend(["cloudinary", "cloudinary_storage"])
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 
 # Django sites framework
@@ -88,20 +90,19 @@ SITE_ID = int(os.environ.get("SITE_ID", "1"))
 
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
     # Temporarily disabled for Am I Responsive screenshot
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'core.urls'
+ROOT_URLCONF = "core.urls"
 
 TEMPLATES = [
     {
@@ -119,7 +120,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'core.wsgi.application'
+WSGI_APPLICATION = "core.wsgi.application"
 
 
 # Database
@@ -127,17 +128,15 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 # default is sqlite (local dev)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}
 }
 
 # if I set DATABASE_URL, then I use Postgres
 db_url = os.environ.get("DATABASE_URL")
 if db_url:
     DATABASES["default"] = dj_database_url.parse(
-        db_url, conn_max_age=600, ssl_require=True)
+        db_url, conn_max_age=600, ssl_require=True
+    )
 
 
 # Password validation
@@ -145,26 +144,20 @@ if db_url:
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-gb'
+LANGUAGE_CODE = "en-gb"
 
-TIME_ZONE = 'Europe/Dublin'
+TIME_ZONE = "Europe/Dublin"
 
 USE_I18N = True
 
@@ -174,10 +167,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 
 # Local static folders used during development
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # static root is where collectstatic puts all static files for Heroku
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -189,56 +182,71 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Django-allauth configuration
 # https://docs.allauth.org/en/latest/account/configuration.html
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 # Email configuration
 # - DEBUG: print emails to console
 # - PRODUCTION (Heroku): use SMTP settings provided via SendGrid
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DEFAULT_FROM_EMAIL", "Game Abyss <noreply@gameabyss.com>"
+)
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
+PRIMARY_SUPERADMIN_EMAIL = os.environ.get("PRIMARY_SUPERADMIN_EMAIL", "")
+
 if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     EMAIL_BACKEND = os.environ.get(
-        'EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.sendgrid.net')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'apikey')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-    DEFAULT_FROM_EMAIL = os.environ.get(
-        'DEFAULT_FROM_EMAIL', 'Game Abyss <noreply@gameabyss.com>')
-    SERVER_EMAIL = DEFAULT_FROM_EMAIL
+        "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+    )
+    EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.sendgrid.net")
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+    EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "apikey")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Comment moderation defaults
+_banned_words_raw = os.environ.get(
+    "BLOG_COMMENT_BANNED_WORDS", "spam, scam, offensive"
+)
+BLOG_COMMENT_BANNED_WORDS = [
+    word.strip().lower() for word in _banned_words_raw.split(",") if word.strip()
+]
+BLOG_COMMENT_MAX_LINKS = int(os.environ.get("BLOG_COMMENT_MAX_LINKS", "2"))
 
 # Ensure allauth builds absolute URLs with HTTPS in production
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https' if not DEBUG else 'http'
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if not DEBUG else "http"
 
 # Allauth settings (Email is optional, username required, password to confirm twice)
-ACCOUNT_LOGIN_METHODS = {'email', 'username'}
-ACCOUNT_SIGNUP_FIELDS = ['email', 'username*', 'password1*', 'password2*']
-ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_LOGIN_METHODS = {"email", "username"}
+ACCOUNT_SIGNUP_FIELDS = ["email", "username*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "optional"
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
-LOGIN_REDIRECT_URL = '/'
-ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = "/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/"
 
 # X-Frame-Options setting: allow the site to be embedded in iframes for screenshot tools like Am I Responsive
-X_FRAME_OPTIONS = 'SAMEORIGIN'
+X_FRAME_OPTIONS = "SAMEORIGIN"
 
 
 # Cloudinary configuration
 if cloudinary is not None:
     # Cloudinary configuration for media storage
-    cloudinary_url = os.environ.get('CLOUDINARY_URL')
-    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
-    api_key = os.environ.get('CLOUDINARY_API_KEY')
-    api_secret = os.environ.get('CLOUDINARY_API_SECRET')
+    cloudinary_url = os.environ.get("CLOUDINARY_URL")
+    cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME")
+    api_key = os.environ.get("CLOUDINARY_API_KEY")
+    api_secret = os.environ.get("CLOUDINARY_API_SECRET")
 
     if cloudinary_url:
         cloudinary.config(cloudinary_url=cloudinary_url, secure=True)
@@ -251,12 +259,12 @@ if cloudinary is not None:
         )
     else:
         warnings.warn(
-            'Cloudinary credentials are not configured. '
-            'Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET to enable image uploads.',
+            "Cloudinary credentials are not configured. "
+            "Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET to enable image uploads.",
             RuntimeWarning,
         )
 else:
     warnings.warn(
-        'Cloudinary package is not installed. Falling back to default file storage for images.',
+        "Cloudinary package is not installed. Falling back to default file storage for images.",
         RuntimeWarning,
     )

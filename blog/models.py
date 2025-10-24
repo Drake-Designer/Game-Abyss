@@ -1,6 +1,4 @@
-from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.db import models, transaction
 from django.utils import timezone
 from django.utils.text import slugify
@@ -10,7 +8,16 @@ try:
 except ImportError:
     CloudinaryField = None
 
+# Email helpers (use on_commit)
+from .emails import notify_author_post_approved, notify_author_post_rejected
+
 User = get_user_model()
+
+
+class ReactionType(models.TextChoices):
+    LIKE = 'like', 'Like'
+    LOVE = 'love', 'Love'
+    DISLIKE = 'dislike', 'Dislike'
 
 
 class ApprovedManager(models.Manager):
@@ -107,18 +114,27 @@ class BlogPost(models.Model):
     def save(self, *args, **kwargs):
         """Keep published_at in sync with status, generate slug, compute reading time, then save."""
         previous_status = None
-        if self.pk:
-            previous_status = BlogPost.objects.filter(
-                pk=self.pk
-            ).values_list('status', flat=True).first()
+        previous_featured = None
 
-        # Publishing rules: approved posts get a timestamp; others do not surface.
+        if self.pk:
+            previous = BlogPost.objects.filter(
+                pk=self.pk).values('status', 'featured').first()
+            if previous:
+                previous_status = previous['status']
+                previous_featured = previous['featured']
+
+        # Flag for signals: notify when featured flips from False -> True
+        self._notify_featured = bool(
+            previous_featured is not None and not previous_featured and self.featured
+        )
+
+        # Publishing rules
         if self.status == self.STATUS_APPROVED and not self.published_at:
             self.published_at = timezone.now()
         elif self.status in (self.STATUS_PENDING, self.STATUS_REJECTED):
             self.published_at = None
 
-        # Slug generation tied to reference date (published_at if present, otherwise now)
+        # Slug
         if not self.slug:
             slug_field = self._meta.get_field('slug')
             base_slug = slugify(self.title)[:100] or 'post'
@@ -156,49 +172,20 @@ class BlogPost(models.Model):
 
         super().save(*args, **kwargs)
 
-        # Email: approved (copy fixed and themed)
+        # Email notifications via helpers (after commit)
         if (
             previous_status is not None
             and previous_status != self.STATUS_APPROVED
             and self.status == self.STATUS_APPROVED
-            and self.author.email
         ):
-            def _send_approved_email():
-                send_mail(
-                    subject=f"[Game-Abyss] Your post breached the front page",
-                    message=(
-                        "Explorer {username},\n\n"
-                        "The Council has approved your post \"{title}\" and it now echoes across the Abyss, visible on the front page.\n"
-                        "The Abyss has claimed your words as its own.\n\n"
-                        "— Game-Abyss Council\n"
-                    ).format(username=self.author.get_username(), title=self.title),
-                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
-                    recipient_list=[self.author.email],
-                    fail_silently=True,
-                )
-            transaction.on_commit(_send_approved_email)
+            transaction.on_commit(lambda: notify_author_post_approved(self))
 
-        # Email: rejected (copy corrected)
         if (
             previous_status is not None
             and previous_status != self.STATUS_REJECTED
             and self.status == self.STATUS_REJECTED
-            and self.author.email
         ):
-            def _send_rejected_email():
-                send_mail(
-                    subject=f"[Game-Abyss] Your post drifted back into the void",
-                    message=(
-                        "Explorer {username},\n\n"
-                        "The Council has deemed your post \"{title}\" unworthy this round, so it will not be visible on the blog.\n"
-                        "Re-forge your piece and resubmit when ready.\n\n"
-                        "— Game-Abyss Council\n"
-                    ).format(username=self.author.get_username(), title=self.title),
-                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
-                    recipient_list=[self.author.email],
-                    fail_silently=True,
-                )
-            transaction.on_commit(_send_rejected_email)
+            transaction.on_commit(lambda: notify_author_post_rejected(self))
 
     def __str__(self):
         return self.title
@@ -251,3 +238,76 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.author} on {self.post}"
+
+
+class PostReaction(models.Model):
+    """A reaction (like, love, dislike) from a user on a post."""
+    post = models.ForeignKey(
+        'BlogPost', on_delete=models.CASCADE, related_name='reactions')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='post_reactions')
+    reaction = models.CharField(max_length=16, choices=ReactionType.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Post Reaction"
+        verbose_name_plural = "Post Reactions"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['post', 'user'], name='unique_post_reaction_per_user')
+        ]
+
+    def __str__(self):
+        return f"{self.user} reacted {self.reaction} to {self.post}"
+
+
+class CommentReaction(models.Model):
+    """A reaction (like, love, dislike) from a user on a comment."""
+    comment = models.ForeignKey(
+        'Comment', on_delete=models.CASCADE, related_name='reactions')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comment_reactions')
+    reaction = models.CharField(max_length=16, choices=ReactionType.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Comment Reaction"
+        verbose_name_plural = "Comment Reactions"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['comment', 'user'], name='unique_comment_reaction_per_user')
+        ]
+
+    def __str__(self):
+        return f"{self.user} reacted {self.reaction} to comment {self.comment_id}"
+
+
+class CommentReport(models.Model):
+    """A report filed by a user against a comment."""
+
+    class Reason(models.TextChoices):
+        INAPPROPRIATE = 'inappropriate', 'Inappropriate'
+        SPAM = 'spam', 'Spam'
+
+    comment = models.ForeignKey(
+        'Comment', on_delete=models.CASCADE, related_name='reports')
+    reported_by = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comment_reports')
+    reason = models.CharField(max_length=32, choices=Reason.choices)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    resolved = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Comment Report"
+        verbose_name_plural = "Comment Reports"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['comment', 'reported_by'], name='unique_comment_report_per_user'
+            )
+        ]
+
+    def __str__(self):
+        return f"Report on comment {self.comment_id} by {self.reported_by}"
