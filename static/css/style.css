@@ -789,6 +789,10 @@ select::-ms-expand {
   color: var(--color-primary);
 }
 
+.comp-card__title-contact {
+  color: var(--color-primary);
+}
+
 /* ------------------------- Pages: Account */
 .page-account-login .comp-card__title,
 .page-account-logout .comp-card__title,
@@ -1150,6 +1154,23 @@ select::-ms-expand {
     background: linear-gradient(90deg, var(--color-surface) 0%, #0f0f18 100%);
     border-top: 1px solid rgb(255 107 53 / 20%);
     padding: 0.5rem 0;
+  }
+
+  /* Mobile actions inside collapsed navbar */
+  .comp-navbar__action {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .comp-navbar__btn {
+    display: inline-flex;
+    justify-content: center;
+    inline-size: clamp(180px, 60vw, 240px);
+    margin-inline: auto;
+    border-width: 2px;
+  }
+
+  .comp-navbar__action + .comp-navbar__action .comp-navbar__btn {
+    margin-top: 0.4rem;
   }
 }
 

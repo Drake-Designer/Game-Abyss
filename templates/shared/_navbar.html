@@ -45,16 +45,18 @@
             <a class="nav-link comp-navbar__link" href="#">Profile</a>
           </li>
           <!-- Mobile New Post inside menu -->
-          <li class="nav-item d-lg-none">
-            <a class="nav-link comp-navbar__link d-flex align-items-center gap-2"
+          <li class="nav-item d-lg-none comp-navbar__action">
+            <a class="comp-button comp-button--outline comp-button--sm comp-navbar__btn d-inline-flex align-items-center justify-content-center gap-2"
                href="{% url 'blog:new' %}">
-              <i class="fa-solid fa-plus"></i><span>New Post</span>
+              <i class="fa-solid fa-plus"></i>
+              <span>New Post</span>
             </a>
           </li>
-          <li class="nav-item">
+          <!-- Mobile Logout inside menu -->
+          <li class="nav-item comp-navbar__action">
             <form action="{% url 'account_logout' %}" method="post" class="d-inline">
               {% csrf_token %}
-              <button class="comp-button comp-button--outline comp-button--sm"
+              <button class="comp-button comp-button--outline comp-button--sm comp-navbar__btn"
                       type="submit">Logout</button>
             </form>
           </li>
