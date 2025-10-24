@@ -1,0 +1,11 @@
+Hello {{ user.username }},
+
+You’re receiving this email because you registered on Game Abyss with this address.
+
+To confirm your email, please click the link below or copy it into your browser:
+
+{{ activate_url }}
+
+If you did not create an account, you can ignore this message.
+
+Thanks for joining the Game Abyss community!
