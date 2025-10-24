@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load account %}
+{% block title %}
+  Confirm Email — Game Abyss
+{% endblock title %}
+{% block content %}
+  <!-- PAGE: Account / Confirm email -->
+  <section class="container page-account-email-confirm">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="comp-card">
+          <div class="comp-card__body p-4 p-md-5">
+            <h2 class="comp-card__title text-center mb-4">
+              <i class="fas fa-envelope-open-text me-2"></i>Confirm Email
+            </h2>
+            {% if confirmation %}
+              {% user_display confirmation.email_address.user as user_display %}
+              <p class="text-muted mb-3">
+                Please confirm that the email below belongs to
+                <strong class="text-white">{{ user_display }}</strong>.
+              </p>
+              <div class="d-flex align-items-center gap-2 mb-4">
+                <i class="fas fa-at text-muted"></i>
+                <strong>{{ confirmation.email_address.email }}</strong>
+              </div>
+              <form method="post"
+                    action="{% url 'account_confirm_email' confirmation.key %}">
+                {% csrf_token %}
+                <button type="submit" class="comp-button comp-button--outline w-100 mb-3">
+                  <i class="fas fa-check-circle me-2"></i>Confirm
+                </button>
+              </form>
+              <div class="text-center small text-muted">
+                Wrong address? Manage your emails in
+                <a href="{% url 'account_email' %}">Email Settings</a>.
+              </div>
+            {% else %}
+              <!-- Invalid/expired confirmation key -->
+              <div class="alert alert-warning d-flex align-items-center" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                This confirmation link is invalid or has already been used.
+              </div>
+              <p class="text-muted mb-4">
+                You can request a new verification link from your
+                <a href="{% url 'account_email' %}">Email Settings</a>.
+              </p>
+              <a href="{% url 'account_login' %}"
+                 class="comp-button comp-button--outline w-100">
+                <i class="fas fa-sign-in-alt me-2"></i>Back to Login
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="text-center mt-3 small text-muted">
+          If you can’t find the message, check your spam folder or whitelist
+          <code>{{ DEFAULT_FROM_EMAIL|default:"noreply@gameabyss.com" }}</code>.
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- END PAGE: Account / Confirm email -->
+{% endblock content %}
