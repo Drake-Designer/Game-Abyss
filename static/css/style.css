@@ -769,14 +769,38 @@ select::-ms-expand {
   font-weight: bold;
 }
 
+.page-post-detail__meta {
+  color: rgb(231 229 229 / 85%);
+  font-size: var(--fs-meta);
+}
+
+.page-post-detail__body {
+  margin-top: 1rem;
+}
+
 .page-post-detail__image {
   max-width: 100%;
   height: auto;
   display: block;
 }
 
-.page-post-detail__body {
-  margin-top: 1rem;
+.page-post-detail__comments-title {
+  color: var(--color-secondary);
+  font-family: var(--font-headings);
+  font-size: var(--fs-h2);
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.page-post-detail__author {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.page-post-detail__comment-body {
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
 }
 
 /* ------------------------- Pages: Contact & About */

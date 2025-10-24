@@ -7,12 +7,13 @@
 {% block content %}
   <!-- PAGE: Post detail -->
   <section class="container py-4">
-    {% include "shared/_messages.html" %}
     <article>
       <h1 class="page-post-detail__title d-flex align-items-center gap-2">
         {{ post.title }}
         {% if post.featured %}
-          <span class="comp-badge comp-badge--featured"><i class="fas fa-star"></i>Featured</span>
+          <span class="comp-badge comp-badge--featured">
+            <i class="fas fa-star"></i> Featured
+          </span>
         {% endif %}
         {% if user.is_authenticated and post.status != post.STATUS_APPROVED %}
           {% if user.is_staff or user == post.author %}
@@ -23,7 +24,17 @@
         {% endif %}
       </h1>
       {% with post.published_at|default_if_none:post.updated_at as display_date %}
-        <p>By {{ post.author }} — {{ display_date|date:"F j, Y" }}</p>
+        <p class="page-post-detail__meta mb-3 d-flex align-items-center flex-wrap gap-3">
+          <span class="d-inline-flex align-items-center gap-1">
+            <i class="fas fa-user-astronaut"></i>
+            <strong class="page-post-detail__author">{{ post.author }}</strong>
+          </span>
+          <span class="opacity-75">·</span>
+          <time datetime="{{ display_date|date:'c' }}"
+                class="d-inline-flex align-items-center gap-1">
+            <i class="fas fa-calendar-alt"></i> {{ display_date|date:"F j, Y" }}
+          </time>
+        </p>
       {% endwith %}
       {% if post.image %}
         <div class="page-post-detail__image-wrap mb-4">
@@ -45,22 +56,32 @@
     </article>
     <!-- Comments -->
     <section class="mt-5">
-      <h2>Comments</h2>
+      <h2 class="page-post-detail__comments-title d-flex align-items-center gap-2">
+        <i class="fas fa-comments"></i> Comments
+      </h2>
       {% if comments %}
         <ul class="list-unstyled">
           {% for comment in comments %}
             <li class="mb-4">
-              <p class="mb-1">
-                <strong>{{ comment.author }}</strong> — {{ comment.created_at|date:"F j, Y H:i" }}
+              <p class="mb-1 page-post-detail__meta d-flex align-items-center flex-wrap gap-3">
+                <span class="d-inline-flex align-items-center gap-1">
+                  <i class="fas fa-user-astronaut"></i>
+                  <strong class="page-post-detail__author">{{ comment.author }}</strong>
+                </span>
+                <span class="opacity-75">·</span>
+                <time datetime="{{ comment.created_at|date:'c' }}"
+                      class="d-inline-flex align-items-center gap-1">
+                  <i class="fas fa-clock"></i> {{ comment.created_at|date:"F j, Y H:i" }}
+                </time>
               </p>
-              <p class="mb-0">{{ comment.body|linebreaks }}</p>
+              <p class="page-post-detail__comment-body">{{ comment.body|linebreaks }}</p>
             </li>
           {% endfor %}
         </ul>
       {% else %}
-        <p class="text-muted">No approved comments yet — be the first to leave a signal in the Abyss.</p>
+        <p class="text-muted">No approved comments yet. Be the first to leave a signal in the Abyss.</p>
       {% endif %}
-      <div class="alert alert-info" role="alert">Comments enter orbit first and appear after editorial approval.</div>
+      <div class="alert alert-info w-50" role="alert">Comments enter orbit first and appear after editorial approval.</div>
       {% if user.is_authenticated %}
         <form method="post" class="comp-form mt-4">
           {% csrf_token %}
@@ -72,7 +93,9 @@
               <div class="invalid-feedback d-block">{{ comment_form.body.errors|join:" " }}</div>
             {% endif %}
           </div>
-          <button type="submit" class="comp-button comp-button--primary">Submit Comment</button>
+          <button type="submit" class="comp-button comp-button--primary">
+            <i class="fas fa-paper-plane"></i> Submit Comment
+          </button>
         </form>
       {% else %}
         <p>
