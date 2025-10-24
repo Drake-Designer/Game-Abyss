@@ -70,7 +70,11 @@
               <div class="mb-1 page-post-detail__meta">
                 <div class="d-flex align-items-center gap-1 mb-1">
                   <i class="fas fa-user-astronaut"></i>
-                  <strong class="page-post-detail__author">{{ comment.author }}</strong>
+                  {% with comment.author as comment_author %}
+                    <strong class="page-post-detail__author comp-user-label {% if comment_author.is_superuser %}comp-user-label--legendary{% elif comment_author.is_staff %}comp-user-label--epic{% else %}comp-user-label--common{% endif %}">
+                      <span class="comp-user-label__name">{{ comment_author }}</span>
+                    </strong>
+                  {% endwith %}
                 </div>
                 <time datetime="{{ comment.created_at|date:'c' }}"
                       class="d-flex align-items-center gap-1">
