@@ -893,10 +893,13 @@ select::-ms-expand {
    MUSIC PLAYER
    ============================================================ */
 .comp-music-player {
+  display: flex;
   position: fixed;
   bottom: 20px;
   right: 20px;
   z-index: 9999;
+  align-items: center;
+  gap: 12px;
 }
 
 .comp-music-toggle {
