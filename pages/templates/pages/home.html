@@ -11,8 +11,7 @@
         <div class="col-lg-6">
           <h1 class="page-home-hero__title display-4 fw-bold mb-3">Enter the Game Abyss</h1>
           <p class="page-home-hero__subtitle mb-4">
-            Descend into the void of gaming: unfiltered reviews, breaking news,
-            and a community that thrives in the shadows.
+            Descend into the void of gaming: unfiltered reviews, breaking news, and a community that thrives in the shadows.
           </p>
           <div class="d-flex gap-3 flex-wrap">
             <a href="{% url 'pages:about' %}"
@@ -26,12 +25,59 @@
         </div>
         <div class="col-lg-6 text-center">
           <div class="page-home-hero__media">
-            <img src="{% static 'images/game-abyss-hero.webp' %}"
-                 alt="Abyssal Gaming Hero"
-                 class="page-home-hero__image img-fluid"
-                 width="1600"
-                 height="1205"
-                 loading="lazy">
+            {% if hero_gallery_images %}
+              <div id="heroGalleryCarousel"
+                   class="carousel slide page-home-hero__carousel"
+                   data-bs-ride="carousel"
+                   data-bs-interval="6000">
+                <div class="carousel-indicators">
+                  {% for image in hero_gallery_images %}
+                    <button type="button"
+                            data-bs-target="#heroGalleryCarousel"
+                            data-bs-slide-to="{{ forloop.counter0 }}"
+                            {% if forloop.first %}class="active" aria-current="true"{% endif %}
+                            aria-label="Featured image {{ forloop.counter }}"></button>
+                  {% endfor %}
+                </div>
+                <div class="carousel-inner">
+                  {% for image in hero_gallery_images %}
+                    <div class="carousel-item{% if forloop.first %} active{% endif %}">
+                      <img src="{{ image.image.url }}"
+                           class="d-block w-100 comp-hero-carousel__image"
+                           alt="{{ image.title|default:'Featured gallery image' }}"
+                           width="1600"
+                           height="1205"
+                           loading="lazy">
+                      <div class="carousel-caption text-start">
+                        <p class="small mb-1 text-uppercase">Uploaded by {{ image.uploaded_by.get_username }}</p>
+                        <h3 class="h5 mb-0">{{ image.title|default:"Community Highlight" }}</h3>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+                <button class="carousel-control-prev"
+                        type="button"
+                        data-bs-target="#heroGalleryCarousel"
+                        data-bs-slide="prev">
+                  <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next"
+                        type="button"
+                        data-bs-target="#heroGalleryCarousel"
+                        data-bs-slide="next">
+                  <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Next</span>
+                </button>
+              </div>
+            {% else %}
+              <img src="{% static 'images/game-abyss-hero.webp' %}"
+                   alt="Abyssal Gaming Hero"
+                   class="page-home-hero__image img-fluid"
+                   width="1600"
+                   height="1205"
+                   loading="lazy">
+            {% endif %}
           </div>
         </div>
       </div>
@@ -57,8 +103,7 @@
           <div class="comp-card">
             <div class="comp-card__body text-center">
               <h3 class="comp-card__title">
-                <i class="fas fa-hourglass-half me-2 text-secondary"></i>
-                Coming Soon
+                <i class="fas fa-hourglass-half me-2 text-secondary"></i> Coming Soon
               </h3>
               <p class="comp-card__text">New echoes from the abyss will rise here once posts are created.</p>
             </div>

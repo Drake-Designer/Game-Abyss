@@ -23,6 +23,9 @@ urlpatterns = [
 
     # Blog app
     path('blog/', include('blog.urls', namespace='blog')),
+
+    # Gallery app
+    path('gallery/', include('gallery.urls', namespace='gallery')),
 ]
 
 # Serve media files during development

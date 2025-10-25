@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}
+  Gallery — Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="page-gallery-list py-4">
+    <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <h1 class="h2 mb-1 util-text-shadow">
+          <i class="fas fa-images me-2 text-primary"></i>
+          Community Gallery
+        </h1>
+        <p class="text-muted mb-0">Approved uploads from the abyss — curated by staff, shared by you.</p>
+      </div>
+      {% if user.is_authenticated %}
+        <a class="comp-button comp-button--primary"
+           href="{% url 'gallery:upload' %}">
+          <i class="fas fa-cloud-upload-alt me-2"></i> Upload Image
+        </a>
+      {% endif %}
+    </header>
+    <!-- griglia custom CSS grid -->
+    <div class="gallery-grid">
+      {% for image in images %}
+        <figure class="gallery-item">
+          <img src="{{ image.image.url }}"
+               alt="{{ image.title|default:'Gallery image' }}"
+               class="gallery-img"
+               width="2000"
+               height="1333"
+               loading="lazy">
+          <figcaption class="gallery-caption">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <span class="text-white small d-inline-flex align-items-center gap-1">
+                <i class="fas fa-bolt comp-icon--primary"></i>
+                {{ image.title|default:'Untitled upload' }}
+              </span>
+              <span class="text-white-50 small d-inline-flex align-items-center gap-1">
+                <i class="fas fa-user-astronaut"></i>
+                {{ image.uploaded_by.get_username }}
+              </span>
+              <span class="text-white-50 small d-inline-flex align-items-center gap-1">
+                <i class="fas fa-calendar-alt"></i>
+                {{ image.created_at|date:"F j, Y" }}
+              </span>
+              {% if image.is_featured %}
+                <span class="ms-auto comp-badge comp-badge--featured d-inline-flex align-items-center gap-1">
+                  <i class="fas fa-star"></i> Featured
+                </span>
+              {% endif %}
+            </div>
+          </figcaption>
+        </figure>
+      {% empty %}
+        <div class="text-center">
+          <h2 class="h4 mb-2 text-secondary">
+            <i class="fas fa-ghost me-2 text-primary"></i>
+            No images yet
+          </h2>
+          <p class="text-muted mb-0">Be the first to share a glimpse of your adventures.</p>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock content %}

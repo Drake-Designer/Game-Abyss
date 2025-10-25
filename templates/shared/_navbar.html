@@ -38,6 +38,9 @@
         <li class="nav-item">
           <a class="nav-link comp-navbar__link" href="{% url 'blog:index' %}">Blog</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link comp-navbar__link" href="{% url 'gallery:list' %}">Gallery</a>
+        </li>
       </ul>
       <ul class="navbar-nav ms-lg-auto align-items-lg-center">
         {% if user.is_authenticated %}

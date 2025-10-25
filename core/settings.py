@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "pages",
     "accounts",
     "blog",
+    "gallery",
 ]
 
 # Enable Cloudinary storage if available

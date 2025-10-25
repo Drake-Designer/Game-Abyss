@@ -7,8 +7,10 @@ from .forms import HelpRequestForm
 from .models import HelpRequest
 
 from blog.models import BlogPost
+from gallery.models import GalleryImage  # NEW
 
 HOME_FEATURED_POST_LIMIT = 6
+HOME_FEATURED_GALLERY_LIMIT = 10  # NEW
 
 
 class HomeView(TemplateView):
@@ -16,7 +18,7 @@ class HomeView(TemplateView):
     template_name = 'pages/home.html'
 
     def get_context_data(self, **kwargs):
-        """Include the featured posts grid."""
+        """Include the featured posts grid and hero gallery images."""
         context = super().get_context_data(**kwargs)
         context['featured_posts'] = (
             BlogPost.objects.filter(
@@ -25,6 +27,11 @@ class HomeView(TemplateView):
             )
             .select_related('author')
             .order_by('-published_at', '-updated_at')[:HOME_FEATURED_POST_LIMIT]
+        )
+        # NEW: featured & approved images for the hero carousel
+        context['hero_gallery_images'] = (
+            GalleryImage.objects.featured()
+            .select_related('uploaded_by')[:HOME_FEATURED_GALLERY_LIMIT]
         )
         return context
 

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}
+  Upload Image — Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="page-gallery-upload py-4">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-xl-6">
+        <div class="comp-card">
+          <div class="comp-card__body">
+            <h1 class="h3 mb-3 util-text-shadow">
+              <i class="fas fa-upload me-2 text-primary"></i> Share a new image
+            </h1>
+            <p class="text-muted mb-0">
+              <i class="fas fa-shield-alt me-2 text-secondary"></i>
+              Approved images appear instantly for staff and after moderation for community members.
+            </p>
+            <form method="post" enctype="multipart/form-data" class="mt-4 comp-form">
+              {% csrf_token %}
+              {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">{{ form.non_field_errors|join:" " }}</div>
+              {% endif %}
+              <div class="mb-3">
+                <label class="form-label" for="{{ form.image.id_for_label }}">
+                  <i class="fas fa-image me-1 text-primary"></i> Image
+                </label>
+                {{ form.image }}
+                {% if form.image.help_text %}<div class="form-text">{{ form.image.help_text }}</div>{% endif %}
+                {% for error in form.image.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="{{ form.title.id_for_label }}">
+                  <i class="fas fa-heading me-1 text-primary"></i> Title
+                </label>
+                {{ form.title }}
+                {% for error in form.title.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="mb-4">
+                <label class="form-label" for="{{ form.caption.id_for_label }}">
+                  <i class="fas fa-comment-dots me-1 text-primary"></i> Caption
+                </label>
+                {{ form.caption }}
+                {% for error in form.caption.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <a class="comp-button comp-button--outline"
+                   href="{% url 'gallery:list' %}">
+                  <i class="fas fa-arrow-left me-2"></i> Back to Gallery
+                </a>
+                <button type="submit" class="comp-button comp-button--primary">
+                  <i class="fas fa-upload me-2"></i> Upload
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock content %}

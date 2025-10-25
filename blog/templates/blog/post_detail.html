@@ -2,7 +2,7 @@
 {% load static %}
 {% load cloudinary_extras %}
 {% block title %}
-  Post - Game Abyss
+  Post — Game Abyss
 {% endblock title %}
 {% block content %}
   <section class="container py-4">
@@ -10,20 +10,17 @@
       <h1 class="page-post-detail__title d-flex align-items-center gap-2">
         {{ post.title }}
         {% if post.featured %}
-          <span class="comp-badge comp-badge--featured">
-            <i class="fas fa-star"></i> Featured
-          </span>
+          <span class="comp-badge comp-badge--featured"><i class="fas fa-star"></i> Featured</span>
         {% endif %}
         {% if user.is_authenticated and post.status != post.STATUS_APPROVED %}
           {% if user.is_staff or user == post.author %}
-            <span class="badge {% if post.status == post.STATUS_PENDING %}bg-secondary{% else %}bg-danger{% endif %}">
+            <span class="comp-badge comp-badge--status {% if post.status == post.STATUS_PENDING %}comp-badge--pending{% else %}comp-badge--rejected{% endif %}">
               {{ post.get_status_display }}
             </span>
           {% endif %}
         {% endif %}
       </h1>
       {% with post.published_at|default_if_none:post.updated_at as display_date %}
-        <!-- META: stacked -->
         <div class="page-post-detail__meta mb-3">
           <div class="d-flex align-items-center gap-1 mb-1">
             <i class="fas fa-user-astronaut"></i>
@@ -39,24 +36,6 @@
           </time>
         </div>
       {% endwith %}
-      {% if post.can_edit or post.can_delete %}
-        <div class="d-flex gap-2 mt-3 mb-3">
-          {% if post.can_edit %}
-            <a href="{% url 'blog:edit_post' post.pk %}?next={{ request.get_full_path }}"
-               class="btn btn-sm btn-outline-primary">
-              <i class="fas fa-pen-to-square"></i> Edit Post
-            </a>
-          {% endif %}
-          {% if post.can_delete %}
-            <form method="post" action="{% url 'blog:delete_post' post.pk %}">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-sm btn-outline-danger">
-                <i class="fas fa-trash"></i> Delete Post
-              </button>
-            </form>
-          {% endif %}
-        </div>
-      {% endif %}
       {% if post.image %}
         <div class="page-post-detail__image-wrap mb-4">
           <picture>
@@ -74,7 +53,6 @@
         </div>
       {% endif %}
       <div class="page-post-detail__body">{{ post.body|linebreaks }}</div>
-      <!-- Post reactions -->
       <section class="mt-4">
         <h3 class="h6 text-uppercase text-muted d-flex align-items-center gap-2 mb-2">
           <i class="fas fa-icons"></i> Post Reactions
@@ -95,7 +73,7 @@
                 </button>
               </form>
             {% else %}
-              <span class="badge rounded-pill text-bg-secondary d-inline-flex align-items-center gap-1">
+              <span class="comp-badge comp-badge--neutral d-inline-flex align-items-center gap-1">
                 <i class="fas {{ option.icon }}"></i> {{ option.count }}
               </span>
             {% endif %}
@@ -104,7 +82,6 @@
         {% if not user.is_authenticated %}<p class="small text-muted mt-2">Log in to leave a reaction.</p>{% endif %}
       </section>
     </article>
-    <!-- Comments -->
     <section class="mt-5">
       <h2 class="page-post-detail__comments-title d-flex align-items-center gap-2">
         <i class="fas fa-comments"></i> Comments
@@ -113,7 +90,6 @@
         <ul class="list-unstyled">
           {% for comment in comments %}
             <li class="mb-4" id="comment-{{ comment.pk }}">
-              <!-- META comment: stacked -->
               <div class="mb-1 page-post-detail__meta">
                 <div class="d-flex align-items-center gap-1 mb-1">
                   <i class="fas fa-user-astronaut"></i>
@@ -130,7 +106,6 @@
               </div>
               <p class="page-post-detail__comment-body">{{ comment.body|linebreaks }}</p>
               <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
-                <!-- Comment reactions -->
                 <div class="d-flex flex-wrap gap-2">
                   {% for option in comment.reaction_display %}
                     {% if user.is_authenticated %}
@@ -149,13 +124,12 @@
                         </button>
                       </form>
                     {% else %}
-                      <span class="badge rounded-pill text-bg-secondary d-inline-flex align-items-center gap-1">
+                      <span class="comp-badge comp-badge--neutral d-inline-flex align-items-center gap-1">
                         <i class="fas {{ option.icon }}"></i> {{ option.count }}
                       </span>
                     {% endif %}
                   {% endfor %}
                 </div>
-                <!-- Comment moderation controls -->
                 {% if user.is_authenticated %}
                   <div class="d-flex gap-2">
                     {% if comment.can_edit %}
