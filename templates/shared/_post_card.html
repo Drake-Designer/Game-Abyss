@@ -1,0 +1,62 @@
+{% load cloudinary_extras %}
+<article class="comp-card h-100" aria-labelledby="post-{{ post.pk }}-title">
+  {% if post.image %}
+    <div class="comp-card__image-wrap">
+      <picture>
+        <source media="(max-width: 991.98px)"
+                srcset="{{ post.image.url|cloudinary_variant:'f_auto,q_auto,c_fill,g_auto:subject,ar_4:3,w_900' }}">
+        <source media="(min-width: 992px)"
+                srcset="{{ post.image.url|cloudinary_variant:'f_auto,q_auto,c_fill,g_auto:subject,ar_16:9,w_1200' }}">
+        <img class="comp-card__image"
+             src="{{ post.image.url|cloudinary_variant:'f_auto,q_auto,c_fill,g_auto:subject,ar_16:9,w_1200' }}"
+             alt="{{ post.title }}"
+             width="1200"
+             height="675"
+             loading="lazy" />
+      </picture>
+    </div>
+  {% endif %}
+  <div class="comp-card__body d-flex flex-column">
+    <h3 id="post-{{ post.pk }}-title"
+        class="comp-card__title h5 d-flex align-items-center gap-2">
+      <a class="util-no-decoration" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+      <span class="comp-badge comp-badge--featured d-inline-flex align-items-center gap-1">
+        <i class="fas fa-star"></i>
+        Featured
+      </span>
+    </h3>
+    <div class="page-blog-index__meta mb-2">
+      <div class="d-flex align-items-center gap-1 mb-1">
+        <i class="fas fa-user-astronaut"></i>
+        {% with post.author as post_author %}
+          <span class="comp-user-label {% if post_author.is_superuser %}comp-user-label--legendary{% elif post_author.is_staff %}comp-user-label--epic{% else %}comp-user-label--common{% endif %}">
+            <span class="comp-user-label__name">{{ post_author }}</span>
+          </span>
+        {% endwith %}
+      </div>
+      <time datetime="{{ post.published_at|default:post.updated_at|date:'c' }}"
+            class="d-flex align-items-center gap-1">
+        <i class="fas fa-calendar-alt"></i>
+        {{ post.published_at|default:post.updated_at|date:"F j, Y" }}
+      </time>
+    </div>
+    <p class="page-blog-index__excerpt mb-3">
+      {% if post.excerpt %}
+        {{ post.excerpt }}
+      {% else %}
+        {{ post.body|striptags|truncatechars:120 }}
+      {% endif %}
+    </p>
+    <div class="mt-auto d-flex justify-content-between align-items-center">
+      <a class="comp-button comp-button--primary"
+         href="{{ post.get_absolute_url }}">
+        <i class="fas fa-book-open me-2"></i>Read
+      </a>
+      {% if post.read_time %}
+        <span class="small d-inline-flex align-items-center gap-1 opacity-75">
+          <i class="fas fa-hourglass-half"></i> {{ post.read_time }} min
+        </span>
+      {% endif %}
+    </div>
+  </div>
+</article>

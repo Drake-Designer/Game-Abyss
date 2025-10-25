@@ -39,16 +39,23 @@
           </time>
         </div>
       {% endwith %}
-      {% if post.can_delete %}
-        <form method="post"
-              action="{% url 'blog:delete_post' post.pk %}"
-              class="mt-3 mb-3">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-sm btn-outline-danger">
-            <i class="fas fa-trash"></i>
-            Delete Post
-          </button>
-        </form>
+      {% if post.can_edit or post.can_delete %}
+        <div class="d-flex gap-2 mt-3 mb-3">
+          {% if post.can_edit %}
+            <a href="{% url 'blog:edit_post' post.pk %}?next={{ request.get_full_path }}"
+               class="btn btn-sm btn-outline-primary">
+              <i class="fas fa-pen-to-square"></i> Edit Post
+            </a>
+          {% endif %}
+          {% if post.can_delete %}
+            <form method="post" action="{% url 'blog:delete_post' post.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-trash"></i> Delete Post
+              </button>
+            </form>
+          {% endif %}
+        </div>
       {% endif %}
       {% if post.image %}
         <div class="page-post-detail__image-wrap mb-4">
@@ -150,43 +157,48 @@
                 </div>
                 <!-- Comment moderation controls -->
                 {% if user.is_authenticated %}
-                  {% if comment.can_delete %}
-                    <form method="post"
-                          action="{% url 'blog:delete_comment' comment.pk %}"
-                          class="d-flex align-items-center">
-                      {% csrf_token %}
-                      <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                      <button type="submit" class="btn btn-sm btn-outline-danger">
-                        <i class="fas fa-trash"></i>
-                        Delete
-                      </button>
-                    </form>
-                  {% elif comment.can_report %}
-                    <form method="post"
-                          action="{% url 'blog:report_comment' comment.pk %}"
-                          class="d-flex align-items-center gap-2">
-                      {% csrf_token %}
-                      <input type="hidden"
-                             name="next"
-                             value="{{ request.get_full_path }}#comment-{{ comment.pk }}">
-                      <select name="reason"
-                              class="form-select form-select-sm"
-                              {% if comment.user_reported %}disabled{% endif %}>
-                        <option value="inappropriate">Inappropriate</option>
-                        <option value="spam">Spam</option>
-                      </select>
-                      <button type="submit"
-                              class="btn btn-sm btn-outline-danger"
-                              {% if comment.user_reported %}disabled{% endif %}>
-                        <i class="fas fa-flag"></i>
-                        {% if comment.user_reported %}
-                          Reported
-                        {% else %}
-                          Report
-                        {% endif %}
-                      </button>
-                    </form>
-                  {% endif %}
+                  <div class="d-flex gap-2">
+                    {% if comment.can_edit %}
+                      <a href="{% url 'blog:edit_comment' comment.pk %}?next={{ request.get_full_path }}#comment-{{ comment.pk }}"
+                         class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-pen"></i> Edit
+                      </a>
+                    {% endif %}
+                    {% if comment.can_delete %}
+                      <form method="post" action="{% url 'blog:delete_comment' comment.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                          <i class="fas fa-trash"></i> Delete
+                        </button>
+                      </form>
+                    {% elif comment.can_report %}
+                      <form method="post"
+                            action="{% url 'blog:report_comment' comment.pk %}"
+                            class="d-flex align-items-center gap-2">
+                        {% csrf_token %}
+                        <input type="hidden"
+                               name="next"
+                               value="{{ request.get_full_path }}#comment-{{ comment.pk }}">
+                        <select name="reason"
+                                class="form-select form-select-sm"
+                                {% if comment.user_reported %}disabled{% endif %}>
+                          <option value="inappropriate">Inappropriate</option>
+                          <option value="spam">Spam</option>
+                        </select>
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-danger"
+                                {% if comment.user_reported %}disabled{% endif %}>
+                          <i class="fas fa-flag"></i>
+                          {% if comment.user_reported %}
+                            Reported
+                          {% else %}
+                            Report
+                          {% endif %}
+                        </button>
+                      </form>
+                    {% endif %}
+                  </div>
                 {% endif %}
               </div>
             </li>

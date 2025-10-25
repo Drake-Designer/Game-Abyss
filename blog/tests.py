@@ -468,3 +468,119 @@ class PostDeletionTests(TestCase):
                     self.assertContains(response, delete_url)
                 else:
                     self.assertNotContains(response, delete_url)
+
+
+class PostCommentEditPermissionsTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.author = User.objects.create_user(
+            username="author", email="author@example.com", password="pass"
+        )
+        self.other = User.objects.create_user(
+            username="other", email="other@example.com", password="pass"
+        )
+        self.staff = User.objects.create_user(
+            username="staff", email="staff@example.com", password="pass", is_staff=True
+        )
+        self.superuser = User.objects.create_superuser(
+            username="admin", email="admin@example.com", password="pass"
+        )
+        self.post = BlogPost.objects.create(
+            author=self.author,
+            title="Editable Post",
+            body="Content",
+            status=BlogPost.STATUS_APPROVED,
+        )
+        self.comment = Comment.objects.create(
+            post=self.post,
+            author=self.author,
+            body="Editable Comment",
+            status=Comment.STATUS_APPROVED,
+        )
+
+    def test_author_can_edit_own_post(self):
+        self.client.login(username="author", password="pass")
+        response = self.client.post(
+            reverse("blog:edit_post", args=[self.post.pk]),
+            {
+                "title": "Updated Title",
+                "excerpt": "Excerpt",
+                "body": "Updated content",
+                "tags": "rpg",
+                "next": reverse("blog:index"),
+            },
+        )
+        self.assertRedirects(response, reverse("blog:index"))
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.title, "Updated Title")
+
+    def test_other_user_cannot_edit_post(self):
+        self.client.login(username="other", password="pass")
+        response = self.client.get(
+            reverse("blog:edit_post", args=[self.post.pk]))
+        self.assertEqual(response.status_code, 403)
+
+    def test_author_can_edit_own_comment(self):
+        self.client.login(username="author", password="pass")
+        response = self.client.post(
+            reverse("blog:edit_comment", args=[self.comment.pk]),
+            {
+                "body": "Updated comment body",
+                "next": self.post.get_absolute_url(),
+            },
+        )
+        self.assertRedirects(response, self.post.get_absolute_url())
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.body, "Updated comment body")
+
+    def test_other_user_cannot_edit_comment(self):
+        self.client.login(username="other", password="pass")
+        response = self.client.get(
+            reverse("blog:edit_comment", args=[self.comment.pk]))
+        self.assertEqual(response.status_code, 403)
+
+    def test_staff_and_superuser_can_edit_their_own_posts_and_comments(self):
+        # Staff edits own post
+        staff_post = BlogPost.objects.create(
+            author=self.staff,
+            title="Staff Post",
+            body="Body",
+            status=BlogPost.STATUS_APPROVED,
+        )
+        self.client.login(username="staff", password="pass")
+        response = self.client.post(
+            reverse("blog:edit_post", args=[staff_post.pk]),
+            {
+                "title": "Staff Updated",
+                "body": "Updated body",
+                "tags": "",
+                "status": BlogPost.STATUS_APPROVED,
+                "next": reverse("blog:index"),
+            },
+        )
+        self.assertRedirects(response, reverse("blog:index"))
+        staff_post.refresh_from_db()
+        self.assertEqual(staff_post.title, "Staff Updated")
+
+        # Superuser edits own comment
+        super_post = BlogPost.objects.create(
+            author=self.superuser,
+            title="Super Post",
+            body="Body",
+            status=BlogPost.STATUS_APPROVED,
+        )
+        super_comment = Comment.objects.create(
+            post=super_post,
+            author=self.superuser,
+            body="Super comment",
+            status=Comment.STATUS_APPROVED,
+        )
+        self.client.logout()
+        self.client.login(username="admin", password="pass")
+        response = self.client.post(
+            reverse("blog:edit_comment", args=[super_comment.pk]),
+            {"body": "Super updated", "next": super_post.get_absolute_url()},
+        )
+        self.assertRedirects(response, super_post.get_absolute_url())
+        super_comment.refresh_from_db()
+        self.assertEqual(super_comment.body, "Super updated")

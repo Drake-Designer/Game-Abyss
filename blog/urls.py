@@ -1,6 +1,5 @@
 """
 URL configuration for the blog app.
-
 """
 
 from django.urls import path
@@ -16,10 +15,12 @@ urlpatterns = [
     path("new/", views.new_post, name="new"),
 
     # Post actions
+    path("posts/<int:pk>/edit/", views.edit_post, name="edit_post"),
     path("posts/<int:pk>/delete/", views.delete_post, name="delete_post"),
     path("posts/<int:pk>/react/", views.react_to_post, name="react_post"),
 
     # Comment actions
+    path("comments/<int:pk>/edit/", views.edit_comment, name="edit_comment"),
     path("comments/<int:pk>/react/", views.react_to_comment, name="react_comment"),
     path("comments/<int:pk>/report/", views.report_comment, name="report_comment"),
     path("comments/<int:pk>/delete/", views.delete_comment, name="delete_comment"),

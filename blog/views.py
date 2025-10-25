@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
 
-from .forms import PublicBlogPostForm, CommentForm
+from .forms import BlogPostForm, PublicBlogPostForm, CommentForm
 from .models import (
     BlogPost,
     Comment,
@@ -141,12 +141,14 @@ def post_detail(request, year, month, day, slug):
         for opt in REACTION_OPTIONS
     ]
 
-    # Flag UI permission for post deletion
+    # Flags for UI permissions
     if request.user.is_authenticated:
+        post.can_edit = request.user == post.author
         post.can_delete = (
             (request.user == post.author) or request.user.is_staff or request.user.is_superuser
         )
     else:
+        post.can_edit = False
         post.can_delete = False
 
     # For each comment, compute reaction totals and whether the current user reported it
@@ -168,9 +170,10 @@ def post_detail(request, year, month, day, slug):
         c.can_delete = False
         c.can_report = False
         c.user_reported = False
+        c.can_edit = False
         if request.user.is_authenticated:
-            can_delete = request.user.is_staff or request.user == c.author
-            c.can_delete = can_delete
+            c.can_delete = request.user.is_staff or request.user == c.author
+            c.can_edit = request.user == c.author
             can_report = (not request.user.is_staff) and (
                 request.user != c.author)
             c.can_report = can_report
@@ -187,6 +190,75 @@ def post_detail(request, year, month, day, slug):
         'post_reaction_display': post_reaction_display,
     }
     return render(request, 'blog/post_detail.html', context)
+
+
+@login_required
+def edit_post(request, pk):
+    """Allow post authors to update their own posts."""
+    post = get_object_or_404(BlogPost, pk=pk)
+
+    if post.author != request.user:
+        raise PermissionDenied('You cannot edit this post.')
+
+    redirect_url = (
+        request.POST.get('next') or request.GET.get(
+            'next') or post.get_absolute_url()
+    )
+
+    # Staff/superuser can use full form; regular users limited form
+    form_class = BlogPostForm if (
+        request.user.is_staff or request.user.is_superuser) else PublicBlogPostForm
+
+    if request.method == 'POST':
+        form = form_class(request.POST, request.FILES, instance=post)
+        original_status = post.status
+        original_featured = getattr(post, 'featured', False)
+        if isinstance(form, BlogPostForm):
+            form.fields['author'].disabled = True
+        if form.is_valid():
+            updated_post = form.save(commit=False)
+            updated_post.author = post.author
+            # Non-staff can’t change status/featured
+            if not (request.user.is_staff or request.user.is_superuser):
+                updated_post.status = original_status
+                if hasattr(updated_post, 'featured'):
+                    updated_post.featured = original_featured
+            updated_post.save()
+            messages.success(request, 'Post updated.')
+            return redirect(redirect_url)
+    else:
+        form = form_class(instance=post)
+        if isinstance(form, BlogPostForm):
+            form.fields['author'].disabled = True
+
+    return render(request, 'blog/edit_post.html', {'form': form, 'post': post, 'next_url': redirect_url})
+
+
+@login_required
+def edit_comment(request, pk):
+    """Allow comment authors to update their own comments."""
+    comment = get_object_or_404(Comment, pk=pk)
+
+    if comment.author != request.user:
+        raise PermissionDenied('You cannot edit this comment.')
+
+    redirect_url = (
+        request.POST.get('next')
+        or request.GET.get('next')
+        or f"{comment.post.get_absolute_url()}#comment-{comment.pk}"
+    )
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST, instance=comment)
+        if form.is_valid():
+            comment.body = form.cleaned_data['body']
+            comment.save(update_fields=['body', 'updated_at'])
+            messages.success(request, 'Comment updated.')
+            return redirect(redirect_url)
+    else:
+        form = CommentForm(instance=comment)
+
+    return render(request, 'blog/edit_comment.html', {'form': form, 'comment': comment, 'next_url': redirect_url})
 
 
 @login_required

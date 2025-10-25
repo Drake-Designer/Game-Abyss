@@ -6,10 +6,27 @@ from django.contrib import messages
 from .forms import HelpRequestForm
 from .models import HelpRequest
 
+from blog.models import BlogPost
+
+HOME_FEATURED_POST_LIMIT = 6
+
 
 class HomeView(TemplateView):
     """Render the homepage."""
     template_name = 'pages/home.html'
+
+    def get_context_data(self, **kwargs):
+        """Include the featured posts grid."""
+        context = super().get_context_data(**kwargs)
+        context['featured_posts'] = (
+            BlogPost.objects.filter(
+                featured=True,
+                status=BlogPost.STATUS_APPROVED,
+            )
+            .select_related('author')
+            .order_by('-published_at', '-updated_at')[:HOME_FEATURED_POST_LIMIT]
+        )
+        return context
 
 
 class AboutView(TemplateView):
@@ -49,7 +66,6 @@ class ContactView(View):
 
             if request.user.is_authenticated:
                 help_request.user = request.user
-                # Auto-fill missing details from the authenticated user
                 if not help_request.name:
                     help_request.name = request.user.get_full_name() or request.user.get_username()
                 if not help_request.email:

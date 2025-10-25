@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  Edit Comment · Game Abyss
+{% endblock title %}
+{% block content %}
+  <!-- PAGE: Blog / Edit comment -->
+  <section class="container page-blog-edit-comment">
+    <div class="row justify-content-center">
+      <div class="col-md-7 col-lg-6">
+        <div class="comp-card">
+          <div class="comp-card__body p-4">
+            <h2 class="comp-card__title mb-4 text-center">
+              <i class="fa-solid fa-pen me-2"></i>Edit Comment
+            </h2>
+            <form method="post" class="comp-form" novalidate>
+              {% csrf_token %}
+              {{ form.as_p }}
+              <div class="d-flex justify-content-between mt-3">
+                <a class="btn btn-outline-secondary" href="{{ next_url }}">Cancel</a>
+                <button type="submit" class="comp-button comp-button--outline">
+                  <i class="fa-solid fa-save me-2"></i>Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- END PAGE: Blog / Edit comment -->
+{% endblock content %}
