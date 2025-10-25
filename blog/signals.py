@@ -1,21 +1,35 @@
 """
 Signals for the blog app.
 
-Currently empty — add your signal receivers here when needed.
-Examples:
-- Notify when a post is approved or featured
-- Auto-update counters or profiles
+- on_comment_created: notify superadmins when a new comment is created (pending)
+- on_comment_report_created: notify staff when a comment is reported
 """
 
-# from django.db.models.signals import post_save
-# from django.dispatch import receiver
-# from .models import BlogPost
+from __future__ import annotations
+
+from django.db import transaction
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from .emails import (
+    notify_staff_comment_report,
+    notify_superadmins_new_comment,
+)
+from .models import Comment, CommentReport
 
 
-# Example template (commented):
-#
-# @receiver(post_save, sender=BlogPost)
-# def post_approved_notification(sender, instance, created, **kwargs):
-#     if not created and instance.status == BlogPost.STATUS_APPROVED:
-#         # send email or trigger notification
-#         pass
+@receiver(post_save, sender=Comment)
+def on_comment_created(sender, instance: Comment, created: bool, **kwargs):
+    """Send notification to superadmins when a new comment is submitted."""
+    if not created:
+        return
+    # Delay sending until after DB transaction is committed
+    transaction.on_commit(lambda: notify_superadmins_new_comment(instance))
+
+
+@receiver(post_save, sender=CommentReport)
+def on_comment_report_created(sender, instance: CommentReport, created: bool, **kwargs):
+    """Send notification to staff when a comment is reported."""
+    if not created:
+        return
+    transaction.on_commit(lambda: notify_staff_comment_report(instance))
