@@ -10,11 +10,14 @@
         <div>
           <h1 class="mb-1">{{ profile_user.username }}</h1>
           <div class="d-flex flex-wrap align-items-center gap-2">
-            <span class="comp-badge bg-primary text-dark fw-bold">{{ rarity }}</span>
-            {% if profile_user.is_staff and not profile_user.is_superuser %}
-              <span class="comp-badge bg-info text-dark">Staff</span>
+            {# Superuser: mostra solo SUPERUSER #}
+            {% if profile_user.is_superuser %}
+              <span class="comp-badge bg-warning text-dark">SUPERUSER</span>
+              {# Staff non superuser: mostra solo STAFF #}
+            {% elif profile_user.is_staff %}
+              <span class="comp-badge bg-info text-dark">STAFF</span>
             {% endif %}
-            {% if profile_user.is_superuser %}<span class="comp-badge bg-warning text-dark">Superuser</span>{% endif %}
+            {# Utente normale: nessun badge #}
           </div>
         </div>
         <div class="ms-md-auto d-flex flex-wrap gap-2">
