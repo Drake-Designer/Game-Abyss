@@ -57,6 +57,23 @@
       </div>
     </main>
     {% include "shared/_footer.html" %}
+    <div class="comp-music-player"
+         role="region"
+         aria-label="Background music player">
+      <button id="gaMusicBtn"
+              class="comp-music-toggle util-is-paused"
+              type="button"
+              aria-label="Play background music">
+        <span id="gaMusicMute" class="comp-music-mute" aria-hidden="true"></span>
+        <i class="fa-solid fa-play" aria-hidden="true"></i>
+        <span class="visually-hidden">Toggle background music</span>
+      </button>
+      <audio id="gaBgMusic"
+             src="{% static 'audio/audio-theme.mp3' %}"
+             preload="auto"
+             loop
+             aria-hidden="true"></audio>
+    </div>
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
       <div id="musicToast"
            class="toast align-items-center text-bg-primary border-0"

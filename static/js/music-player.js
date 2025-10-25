@@ -8,8 +8,9 @@
   const musicBtn = document.getElementById('gaMusicBtn')
   const musicMute = document.getElementById('gaMusicMute')
   const toastEl = document.getElementById('musicToast')
+  const iconEl = musicBtn ? musicBtn.querySelector('i') : null
 
-  if (!music || !musicBtn || !musicMute) return
+  if (!music || !musicBtn || !musicMute || !iconEl) return
 
   const KEY_TIME = 'gaMusicTime'
   const KEY_PLAYING = 'gaMusicPlaying'
@@ -71,6 +72,13 @@
     musicBtn.classList.toggle('util-is-playing', !isMuted)
     musicBtn.classList.toggle('util-is-paused', isMuted)
     musicMute.classList.toggle('util-visible', isMuted)
+    musicBtn.setAttribute('aria-pressed', (!isMuted).toString())
+    musicBtn.setAttribute(
+      'aria-label',
+      isMuted ? 'Play background music' : 'Pause background music',
+    )
+    iconEl.classList.toggle('fa-play', isMuted)
+    iconEl.classList.toggle('fa-pause', !isMuted)
   }
 
   function showToastOnce() {
