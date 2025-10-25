@@ -137,32 +137,45 @@
                     {% endif %}
                   {% endfor %}
                 </div>
-                <!-- Comment report -->
+                <!-- Comment moderation controls -->
                 {% if user.is_authenticated %}
-                  <form method="post"
-                        action="{% url 'blog:report_comment' comment.pk %}"
-                        class="d-flex align-items-center gap-2">
-                    {% csrf_token %}
-                    <input type="hidden"
-                           name="next"
-                           value="{{ request.get_full_path }}#comment-{{ comment.pk }}">
-                    <select name="reason"
-                            class="form-select form-select-sm"
-                            {% if comment.user_reported %}disabled{% endif %}>
-                      <option value="inappropriate">Inappropriate</option>
-                      <option value="spam">Spam</option>
-                    </select>
-                    <button type="submit"
-                            class="btn btn-sm btn-outline-danger"
-                            {% if comment.user_reported %}disabled{% endif %}>
-                      <i class="fas fa-flag"></i>
-                      {% if comment.user_reported %}
-                        Reported
-                      {% else %}
-                        Report
-                      {% endif %}
-                    </button>
-                  </form>
+                  {% if comment.can_delete %}
+                    <form method="post"
+                          action="{% url 'blog:delete_comment' comment.pk %}"
+                          class="d-flex align-items-center">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-trash"></i>
+                        Delete
+                      </button>
+                    </form>
+                  {% elif comment.can_report %}
+                    <form method="post"
+                          action="{% url 'blog:report_comment' comment.pk %}"
+                          class="d-flex align-items-center gap-2">
+                      {% csrf_token %}
+                      <input type="hidden"
+                             name="next"
+                             value="{{ request.get_full_path }}#comment-{{ comment.pk }}">
+                      <select name="reason"
+                              class="form-select form-select-sm"
+                              {% if comment.user_reported %}disabled{% endif %}>
+                        <option value="inappropriate">Inappropriate</option>
+                        <option value="spam">Spam</option>
+                      </select>
+                      <button type="submit"
+                              class="btn btn-sm btn-outline-danger"
+                              {% if comment.user_reported %}disabled{% endif %}>
+                        <i class="fas fa-flag"></i>
+                        {% if comment.user_reported %}
+                          Reported
+                        {% else %}
+                          Report
+                        {% endif %}
+                      </button>
+                    </form>
+                  {% endif %}
                 {% endif %}
               </div>
             </li>
@@ -171,7 +184,9 @@
       {% else %}
         <p class="text-muted">No approved comments yet. Be the first to leave a signal in the Abyss.</p>
       {% endif %}
-      <div class="alert alert-info w-50" role="alert">Comments enter orbit first and appear after editorial approval.</div>
+      {% if not user.is_staff %}
+        <div class="alert alert-info w-50" role="alert">Comments enter orbit first and appear after editorial approval.</div>
+      {% endif %}
       {% if user.is_authenticated %}
         <form method="post" class="comp-form mt-4">
           {% csrf_token %}

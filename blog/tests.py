@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
+from django.urls import reverse
 
 from .models import BlogPost, Comment, CommentReport
 
@@ -197,3 +198,201 @@ class NotificationEmailTests(TestCase):
         email = mail.outbox[0]
         self.assertIn("team.gameabyss@gmail.com", email.to)
         self.assertIn("Comment reported", email.subject)
+
+
+class CommentReportFlowTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.staff = User.objects.create_user(
+            username="staff", email="staff@example.com", password="pass", is_staff=True
+        )
+        self.reporter = User.objects.create_user(
+            username="reporter", email="reporter@example.com", password="pass"
+        )
+        self.comment_author = User.objects.create_user(
+            username="comment_author", email="commenter@example.com", password="pass"
+        )
+
+        self.post = BlogPost.objects.create(
+            author=self.comment_author,
+            title="Reportable Post",
+            body="Content",
+            status=BlogPost.STATUS_APPROVED,
+        )
+        self.comment = Comment.objects.create(
+            post=self.post,
+            author=self.comment_author,
+            body="Problematic comment",
+            status=Comment.STATUS_APPROVED,
+        )
+
+    def test_report_creates_single_record_and_single_email(self):
+        self.client.login(username="reporter", password="pass")
+        report_url = reverse("blog:report_comment", args=[self.comment.pk])
+        payload = {
+            "reason": CommentReport.Reason.SPAM,
+            "next": self.post.get_absolute_url(),
+        }
+
+        mail.outbox = []
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(report_url, payload)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(CommentReport.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
+
+        # Second attempt should not create a duplicate report or new email
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(report_url, payload)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(CommentReport.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
+
+
+class AutoApprovalTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.staff = User.objects.create_user(
+            username="staff", email="staff@example.com", password="pass", is_staff=True
+        )
+        self.superuser = User.objects.create_superuser(
+            username="overlord", email="overlord@example.com", password="pass"
+        )
+
+    def test_staff_post_and_comment_auto_approved(self):
+        self.client.login(username="staff", password="pass")
+        response = self.client.post(
+            reverse("blog:new"),
+            {"title": "Staff Signal", "body": "Approved content"},
+        )
+        self.assertEqual(response.status_code, 302)
+        post = BlogPost.objects.latest("id")
+        self.assertEqual(post.status, BlogPost.STATUS_APPROVED)
+
+        response = self.client.post(
+            post.get_absolute_url(),
+            {"body": "Staff moderation skip"},
+        )
+        self.assertEqual(response.status_code, 302)
+        comment = Comment.objects.latest("id")
+        self.assertEqual(comment.status, Comment.STATUS_APPROVED)
+        self.assertEqual(comment.author, self.staff)
+
+    def test_superuser_post_and_comment_auto_approved(self):
+        self.client.login(username="overlord", password="pass")
+        response = self.client.post(
+            reverse("blog:new"),
+            {"title": "Overlord Signal", "body": "Approved immediately"},
+        )
+        self.assertEqual(response.status_code, 302)
+        post = BlogPost.objects.latest("id")
+        self.assertEqual(post.status, BlogPost.STATUS_APPROVED)
+
+        response = self.client.post(
+            post.get_absolute_url(),
+            {"body": "Overlord comment"},
+        )
+        self.assertEqual(response.status_code, 302)
+        comment = Comment.objects.latest("id")
+        self.assertEqual(comment.status, Comment.STATUS_APPROVED)
+        self.assertEqual(comment.author, self.superuser)
+
+
+class CommentModerationUITests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.staff = User.objects.create_user(
+            username="staff", email="staff@example.com", password="pass", is_staff=True
+        )
+        self.post_author = User.objects.create_user(
+            username="poster", email="poster@example.com", password="pass"
+        )
+        self.comment_author = User.objects.create_user(
+            username="commenter", email="commenter@example.com", password="pass"
+        )
+
+        self.post = BlogPost.objects.create(
+            author=self.post_author,
+            title="UI Test Post",
+            body="Content",
+            status=BlogPost.STATUS_APPROVED,
+        )
+        self.comment = Comment.objects.create(
+            post=self.post,
+            author=self.comment_author,
+            body="Hello there",
+            status=Comment.STATUS_APPROVED,
+        )
+
+    def test_staff_see_delete_action_instead_of_report(self):
+        self.client.login(username="staff", password="pass")
+        response = self.client.get(self.post.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse("blog:delete_comment", args=[self.comment.pk]),
+        )
+        self.assertNotContains(
+            response,
+            reverse("blog:report_comment", args=[self.comment.pk]),
+        )
+
+
+class CommentDeletionPermissionsTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.staff = User.objects.create_user(
+            username="staff", email="staff@example.com", password="pass", is_staff=True
+        )
+        self.user_one = User.objects.create_user(
+            username="userone", email="userone@example.com", password="pass"
+        )
+        self.user_two = User.objects.create_user(
+            username="usertwo", email="usertwo@example.com", password="pass"
+        )
+
+        self.post = BlogPost.objects.create(
+            author=self.staff,
+            title="Deletion Test Post",
+            body="Content",
+            status=BlogPost.STATUS_APPROVED,
+        )
+        self.comment_one = Comment.objects.create(
+            post=self.post,
+            author=self.user_one,
+            body="First comment",
+            status=Comment.STATUS_APPROVED,
+        )
+        self.comment_two = Comment.objects.create(
+            post=self.post,
+            author=self.user_two,
+            body="Second comment",
+            status=Comment.STATUS_APPROVED,
+        )
+
+    def test_regular_user_can_delete_only_own_comment(self):
+        self.client.login(username="userone", password="pass")
+        other_delete_url = reverse(
+            "blog:delete_comment", args=[self.comment_two.pk])
+        response = self.client.post(
+            other_delete_url, {"next": self.post.get_absolute_url()})
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Comment.objects.filter(
+            pk=self.comment_two.pk).exists())
+
+        own_delete_url = reverse("blog:delete_comment", args=[
+                                 self.comment_one.pk])
+        response = self.client.post(
+            own_delete_url, {"next": self.post.get_absolute_url()})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Comment.objects.filter(
+            pk=self.comment_one.pk).exists())
+
+    def test_staff_can_delete_any_comment(self):
+        self.client.login(username="staff", password="pass")
+        delete_url = reverse("blog:delete_comment", args=[self.comment_two.pk])
+        response = self.client.post(
+            delete_url, {"next": self.post.get_absolute_url()})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Comment.objects.filter(
+            pk=self.comment_two.pk).exists())

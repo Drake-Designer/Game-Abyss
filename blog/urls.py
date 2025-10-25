@@ -16,6 +16,7 @@ urlpatterns = [
     path('posts/<int:pk>/react/', views.react_to_post, name='react_post'),
     path('comments/<int:pk>/react/', views.react_to_comment, name='react_comment'),
     path('comments/<int:pk>/report/', views.report_comment, name='report_comment'),
+    path('comments/<int:pk>/delete/', views.delete_comment, name='delete_comment'),
 
     # Post detail
     path('<int:year>/<int:month>/<int:day>/<slug:slug>/',

@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 
 from .forms import PublicBlogPostForm, CommentForm
@@ -48,7 +48,7 @@ def new_post(request):
             post.author = request.user
 
             # Staff captains skip the orbit and land on the front page.
-            if request.user.is_staff:
+            if request.user.is_staff or request.user.is_superuser:
                 post.status = BlogPost.STATUS_APPROVED
                 messages.success(
                     request, "Deployed. Your post is live on the front page.")
@@ -106,12 +106,20 @@ def post_detail(request, year, month, day, slug):
             comment = comment_form.save(commit=False)
             comment.post = post
             comment.author = request.user
-            comment.status = Comment.STATUS_PENDING
-            comment.save()
-            messages.success(
-                request,
-                "Thanks, explorer. Your comment is in orbit and will appear after approval.",
-            )
+            if request.user.is_staff or request.user.is_superuser:
+                comment.status = Comment.STATUS_APPROVED
+                comment.save()
+                messages.success(
+                    request,
+                    "Comment deployed. It's live for all explorers.",
+                )
+            else:
+                comment.status = Comment.STATUS_PENDING
+                comment.save()
+                messages.success(
+                    request,
+                    "Thanks, explorer. Your comment is in orbit and will appear after approval.",
+                )
             return redirect(post.get_absolute_url())
         else:
             messages.error(
@@ -168,12 +176,20 @@ def post_detail(request, year, month, day, slug):
             for opt in REACTION_OPTIONS
         ]
 
+        c.can_delete = False
+        c.can_report = False
         c.user_reported = False
         if request.user.is_authenticated:
-            for rep in c.reports.all():
-                if rep.reported_by_id == request.user.id:
-                    c.user_reported = True
-                    break
+            can_delete = request.user.is_staff or request.user == c.author
+            c.can_delete = can_delete
+            can_report = (not request.user.is_staff) and (
+                request.user != c.author)
+            c.can_report = can_report
+            if can_report:
+                for rep in c.reports.all():
+                    if rep.reported_by_id == request.user.id:
+                        c.user_reported = True
+                        break
 
     context = {
         'post': post,
@@ -252,6 +268,9 @@ def report_comment(request, pk):
     redirect_url = request.POST.get(
         'next') or f"{comment.post.get_absolute_url()}#comment-{comment.pk}"
 
+    if request.user.is_staff or request.user.is_superuser:
+        return HttpResponseForbidden('Staff members cannot report comments.')
+
     if comment.author_id == request.user.id:
         messages.error(request, 'You cannot report your own comment.')
         return redirect(redirect_url)
@@ -278,4 +297,19 @@ def report_comment(request, pk):
     else:
         messages.info(request, 'You already reported this comment.')
 
+    return redirect(redirect_url)
+
+
+@login_required
+@require_POST
+def delete_comment(request, pk):
+    """Allow comment authors or staff to delete a comment."""
+    comment = get_object_or_404(Comment, pk=pk)
+    redirect_url = request.POST.get('next') or comment.post.get_absolute_url()
+
+    if not (request.user.is_staff or request.user == comment.author):
+        return HttpResponseForbidden('You cannot delete this comment.')
+
+    comment.delete()
+    messages.success(request, 'Comment deleted.')
     return redirect(redirect_url)
