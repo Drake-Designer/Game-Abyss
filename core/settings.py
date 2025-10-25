@@ -197,10 +197,12 @@ AUTHENTICATION_BACKENDS = [
 # - DEBUG: print emails to console
 # - PRODUCTION (Heroku): use SMTP settings provided via SendGrid
 DEFAULT_FROM_EMAIL = os.environ.get(
-    "DEFAULT_FROM_EMAIL", "Game Abyss <noreply@gameabyss.com>"
+    "DEFAULT_FROM_EMAIL", "Game Abyss <team.gameabyss@gmail.com>"
 )
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
-PRIMARY_SUPERADMIN_EMAIL = os.environ.get("PRIMARY_SUPERADMIN_EMAIL", "")
+PRIMARY_SUPERADMIN_EMAIL = os.environ.get(
+    "PRIMARY_SUPERADMIN_EMAIL", "team.gameabyss@gmail.com"
+)
 
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
