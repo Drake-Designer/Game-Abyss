@@ -213,25 +213,27 @@
                   </li>
                 {% endfor %}
               </ul>
-              <nav aria-label="Post navigation" class="mt-3">
-                <ul class="pagination pagination-sm mb-0">
-                  {% if posts_page.has_previous %}
-                    <li class="page-item">
-                      <a class="page-link"
-                         href="?post_page={{ posts_page.previous_page_number }}&comment_page={{ comments_page.number }}">Previous</a>
+              {% if posts_page.paginator.num_pages > 1 %}
+                <nav aria-label="Post navigation" class="mt-3">
+                  <ul class="pagination pagination-sm mb-0">
+                    {% if posts_page.has_previous %}
+                      <li class="page-item">
+                        <a class="page-link"
+                           href="?post_page={{ posts_page.previous_page_number }}&comment_page={{ comments_page.number }}">Previous</a>
+                      </li>
+                    {% endif %}
+                    <li class="page-item disabled">
+                      <span class="page-link">Page {{ posts_page.number }} of {{ posts_page.paginator.num_pages }}</span>
                     </li>
-                  {% endif %}
-                  <li class="page-item disabled">
-                    <span class="page-link">Page {{ posts_page.number }} of {{ posts_page.paginator.num_pages }}</span>
-                  </li>
-                  {% if posts_page.has_next %}
-                    <li class="page-item">
-                      <a class="page-link"
-                         href="?post_page={{ posts_page.next_page_number }}&comment_page={{ comments_page.number }}">Next</a>
-                    </li>
-                  {% endif %}
-                </ul>
-              </nav>
+                    {% if posts_page.has_next %}
+                      <li class="page-item">
+                        <a class="page-link"
+                           href="?post_page={{ posts_page.next_page_number }}&comment_page={{ comments_page.number }}">Next</a>
+                      </li>
+                    {% endif %}
+                  </ul>
+                </nav>
+              {% endif %}
             {% else %}
               <p class="text-muted mb-0">No posts to show.</p>
             {% endif %}
@@ -267,25 +269,27 @@
                   </li>
                 {% endfor %}
               </ul>
-              <nav aria-label="Comment navigation" class="mt-3">
-                <ul class="pagination pagination-sm mb-0">
-                  {% if comments_page.has_previous %}
-                    <li class="page-item">
-                      <a class="page-link"
-                         href="?post_page={{ posts_page.number }}&comment_page={{ comments_page.previous_page_number }}">Previous</a>
+              {% if comments_page.paginator.num_pages > 1 %}
+                <nav aria-label="Comment navigation" class="mt-3">
+                  <ul class="pagination pagination-sm mb-0">
+                    {% if comments_page.has_previous %}
+                      <li class="page-item">
+                        <a class="page-link"
+                           href="?post_page={{ posts_page.number }}&comment_page={{ comments_page.previous_page_number }}">Previous</a>
+                      </li>
+                    {% endif %}
+                    <li class="page-item disabled">
+                      <span class="page-link">Page {{ comments_page.number }} of {{ comments_page.paginator.num_pages }}</span>
                     </li>
-                  {% endif %}
-                  <li class="page-item disabled">
-                    <span class="page-link">Page {{ comments_page.number }} of {{ comments_page.paginator.num_pages }}</span>
-                  </li>
-                  {% if comments_page.has_next %}
-                    <li class="page-item">
-                      <a class="page-link"
-                         href="?post_page={{ posts_page.number }}&comment_page={{ comments_page.next_page_number }}">Next</a>
-                    </li>
-                  {% endif %}
-                </ul>
-              </nav>
+                    {% if comments_page.has_next %}
+                      <li class="page-item">
+                        <a class="page-link"
+                           href="?post_page={{ posts_page.number }}&comment_page={{ comments_page.next_page_number }}">Next</a>
+                      </li>
+                    {% endif %}
+                  </ul>
+                </nav>
+              {% endif %}
             {% else %}
               <p class="text-muted mb-0">No comments to show.</p>
             {% endif %}
