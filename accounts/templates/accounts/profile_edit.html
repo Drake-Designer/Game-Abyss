@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block title %}
+  Edit profile · Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="page-profile-edit">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-xl-6">
+        <div class="comp-card">
+          <div class="comp-card__body p-4">
+            <h1 class="mb-3 text-center">Edit your profile</h1>
+            <form method="post" novalidate>
+              {% csrf_token %}
+              {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+              <div class="mb-3">
+                <label for="{{ form.first_name.id_for_label }}" class="form-label">First name</label>
+                {% render_field form.first_name class+="form-control" %}
+                {% for error in form.first_name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="mb-3">
+                <label for="{{ form.last_name.id_for_label }}" class="form-label">Last name</label>
+                {% render_field form.last_name class+="form-control" %}
+                {% for error in form.last_name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="mb-3">
+                <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of birth</label>
+                {% render_field form.date_of_birth class+="form-control" %}
+                {% for error in form.date_of_birth.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="mb-3">
+                <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label>
+                {% render_field form.bio class+="form-control" %}
+                {% for error in form.bio.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="d-flex justify-content-between gap-2">
+                <a class="comp-button comp-button--outline"
+                   href="{% url 'accounts:profile' request.user.username %}">Cancel</a>
+                <button class="comp-button comp-button--primary" type="submit">Save changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock content %}

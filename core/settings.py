@@ -70,14 +70,17 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+
     # Third-party apps
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "widget_tweaks",
+
     # Local apps
     "pages",
-    "blog.apps.BlogConfig",
+    "accounts",
+    "blog",
 ]
 
 if cloudinary is not None:

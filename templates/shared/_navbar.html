@@ -42,7 +42,8 @@
       <ul class="navbar-nav ms-lg-auto align-items-lg-center">
         {% if user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link comp-navbar__link" href="#">Profile</a>
+            <a class="nav-link comp-navbar__link"
+               href="{% url 'accounts:profile' request.user.username %}">Profile</a>
           </li>
           <!-- Mobile New Post inside menu -->
           <li class="nav-item d-lg-none comp-navbar__action">

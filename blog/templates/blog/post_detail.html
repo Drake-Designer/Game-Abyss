@@ -42,7 +42,7 @@
       {% if post.can_delete %}
         <form method="post"
               action="{% url 'blog:delete_post' post.pk %}"
-              class="mt-3">
+              class="mt-3 mb-3">
           {% csrf_token %}
           <button type="submit" class="btn btn-sm btn-outline-danger">
             <i class="fas fa-trash"></i>

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}
+  Delete account · Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="page-profile-delete">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-xl-5">
+        <div class="comp-card border-danger">
+          <div class="comp-card__body p-4">
+            <h1 class="mb-3 text-center text-danger">Delete your account</h1>
+            <p class="text-muted">
+              This action will permanently remove your account and all content you've created. To confirm, type your username below.
+            </p>
+            <form method="post" class="mt-4">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="confirm_username" class="form-label">Confirm username</label>
+                <input type="text"
+                       class="form-control"
+                       id="confirm_username"
+                       name="confirm_username"
+                       required>
+              </div>
+              <div class="d-flex justify-content-between gap-2">
+                <a class="comp-button comp-button--outline"
+                   href="{% url 'accounts:profile' request.user.username %}">Cancel</a>
+                <button class="comp-button comp-button--primary bg-danger border-danger"
+                        type="submit">
+                  <i class="fa-solid fa-skull-crossbones me-1"></i>
+                  Delete account
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock content %}

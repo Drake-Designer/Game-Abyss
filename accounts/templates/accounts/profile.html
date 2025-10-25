@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  Profile · {{ profile_user.username }} · Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="page-profile">
+    <header class="mb-4">
+      <div class="d-flex flex-column flex-md-row gap-3 align-items-md-center">
+        <div>
+          <h1 class="mb-1">{{ profile_user.username }}</h1>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="comp-badge bg-primary text-dark fw-bold">{{ rarity }}</span>
+            {% if profile_user.is_staff and not profile_user.is_superuser %}
+              <span class="comp-badge bg-info text-dark">Staff</span>
+            {% endif %}
+            {% if profile_user.is_superuser %}<span class="comp-badge bg-warning text-dark">Superuser</span>{% endif %}
+          </div>
+        </div>
+        <div class="ms-md-auto d-flex flex-wrap gap-2">
+          {% if is_self %}
+            <a class="comp-button comp-button--outline"
+               href="{% url 'accounts:profile_edit' %}">
+              <i class="fa-solid fa-pen-to-square"></i>
+              <span>Edit profile</span>
+            </a>
+            <a class="comp-button comp-button--outline"
+               href="{% url 'account_change_password' %}">
+              <i class="fa-solid fa-key"></i>
+              <span>Change password</span>
+            </a>
+            <a class="comp-button comp-button--outline text-danger border-danger"
+               href="{% url 'accounts:profile_delete' %}">
+              <i class="fa-solid fa-user-slash"></i>
+              <span>Delete account</span>
+            </a>
+          {% elif request.user.is_authenticated %}
+            <a class="comp-button comp-button--outline" href="{% url 'blog:new' %}">
+              <i class="fa-solid fa-plus"></i>
+              <span>New Post</span>
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+    <div class="row g-4 mb-5">
+      <div class="col-lg-7">
+        <div class="comp-card h-100">
+          <div class="comp-card__body">
+            <h2 class="comp-card__title">About</h2>
+            {% if show_private and profile_user.get_full_name %}
+              <p class="mb-2">
+                <strong>Name:</strong> {{ profile_user.get_full_name }}
+              </p>
+            {% endif %}
+            {% if show_private and profile.date_of_birth %}
+              <p class="mb-2">
+                <strong>Date of birth:</strong> {{ profile.date_of_birth|date:"j F Y" }}
+              </p>
+            {% endif %}
+            {% if show_private %}
+              <p class="mb-2">
+                <strong>Email:</strong> {{ profile_user.email|default:"Not set" }}
+              </p>
+            {% endif %}
+            <p class="mb-0">{{ profile.bio|default:"This explorer has not written a bio yet." }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="comp-card h-100">
+          <div class="comp-card__body">
+            <h2 class="comp-card__title">Activity stats</h2>
+            <ul class="list-unstyled mb-0">
+              <li class="mb-2">
+                <strong>Total posts:</strong> {{ stats.total_posts }}
+              </li>
+              <li class="mb-2">
+                <strong>Total comments:</strong> {{ stats.total_comments }}
+              </li>
+              <li class="mb-2">
+                <strong>Approved posts:</strong> {{ stats.approved_posts }}
+              </li>
+              <li class="mb-2">
+                <strong>Approved comments:</strong> {{ stats.approved_comments }}
+              </li>
+              <li class="mb-2">
+                <strong>Approval rate:</strong> {{ stats.approval_rate }}%
+              </li>
+              {% if viewer_is_superuser %}
+                <li class="mb-2">
+                  <strong>Reports made:</strong> {{ stats.reports_made }}
+                </li>
+              {% endif %}
+              {% if can_moderate or viewer_is_superuser %}
+                <li class="mb-0">
+                  <strong>Reports received:</strong> {{ stats.reports_received }}
+                </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% if can_moderate %}
+      <div class="comp-card mb-5">
+        <div class="comp-card__body">
+          <h2 class="comp-card__title">Quick moderation</h2>
+          <div class="row g-4">
+            <div class="col-md-6">
+              <h3 class="h5">Recent posts</h3>
+              {% if quick_posts %}
+                <ul class="list-unstyled mb-0">
+                  {% for post in quick_posts %}
+                    <li class="mb-2 d-flex justify-content-between align-items-center gap-2">
+                      <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                      <form action="{% url 'blog:delete_post' post.pk %}"
+                            method="post"
+                            class="d-inline">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-danger">Delete</button>
+                      </form>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-muted mb-0">No posts yet.</p>
+              {% endif %}
+            </div>
+            <div class="col-md-6">
+              <h3 class="h5">Recent comments</h3>
+              {% if quick_comments %}
+                <ul class="list-unstyled mb-0">
+                  {% for comment in quick_comments %}
+                    <li class="mb-2">
+                      <div class="d-flex justify-content-between align-items-center gap-2">
+                        <a href="{{ comment.post.get_absolute_url }}#comment-{{ comment.pk }}">{{ comment.body|truncatewords:12 }}</a>
+                        <form action="{% url 'blog:delete_comment' comment.pk %}"
+                              method="post"
+                              class="d-inline">
+                          {% csrf_token %}
+                          <input type="hidden"
+                                 name="next"
+                                 value="{% url 'accounts:profile' profile_user.username %}">
+                          <button class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-muted mb-0">No comments yet.</p>
+              {% endif %}
+            </div>
+          </div>
+          <div class="mt-3">
+            <a class="comp-button comp-button--outline"
+               href="{% url 'admin:blog_blogpost_changelist' %}?author__id__exact={{ profile_user.pk }}">
+              Manage posts in Admin
+            </a>
+            <a class="comp-button comp-button--outline"
+               href="{% url 'admin:blog_comment_changelist' %}?author__id__exact={{ profile_user.pk }}">
+              Manage comments in Admin
+            </a>
+            <a class="comp-button comp-button--outline"
+               href="{% url 'admin:blog_commentreport_changelist' %}?comment__author__id__exact={{ profile_user.pk }}">
+              Reports on this user
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    {% if viewer_is_superuser and admin_links %}
+      <div class="comp-card mb-5">
+        <div class="comp-card__body">
+          <h2 class="comp-card__title">Admin shortcuts</h2>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="comp-button comp-button--outline"
+               href="{{ admin_links.users }}">Users</a>
+            <a class="comp-button comp-button--outline"
+               href="{{ admin_links.posts }}">Blog posts</a>
+            <a class="comp-button comp-button--outline"
+               href="{{ admin_links.comments }}">Comments</a>
+            <a class="comp-button comp-button--outline"
+               href="{% url 'admin:blog_commentreport_changelist' %}?reported_by__id__exact={{ profile_user.pk }}">
+              Reports made by this user
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="comp-card h-100">
+          <div class="comp-card__body">
+            <h2 class="comp-card__title">Posts</h2>
+            {% if posts_page.object_list %}
+              <ul class="list-unstyled">
+                {% for post in posts_page.object_list %}
+                  <li class="mb-3 border-bottom pb-2">
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+                      <div>
+                        <a class="fw-semibold" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                        <div class="text-muted small">Status: {{ post.get_status_display }}</div>
+                      </div>
+                      {% if is_self or can_moderate or viewer_is_superuser %}
+                        <form action="{% url 'blog:delete_post' post.pk %}" method="post">
+                          {% csrf_token %}
+                          <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+              <nav aria-label="Post navigation" class="mt-3">
+                <ul class="pagination pagination-sm mb-0">
+                  {% if posts_page.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link"
+                         href="?post_page={{ posts_page.previous_page_number }}&comment_page={{ comments_page.number }}">Previous</a>
+                    </li>
+                  {% endif %}
+                  <li class="page-item disabled">
+                    <span class="page-link">Page {{ posts_page.number }} of {{ posts_page.paginator.num_pages }}</span>
+                  </li>
+                  {% if posts_page.has_next %}
+                    <li class="page-item">
+                      <a class="page-link"
+                         href="?post_page={{ posts_page.next_page_number }}&comment_page={{ comments_page.number }}">Next</a>
+                    </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            {% else %}
+              <p class="text-muted mb-0">No posts to show.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="comp-card h-100">
+          <div class="comp-card__body">
+            <h2 class="comp-card__title">Comments</h2>
+            {% if comments_page.object_list %}
+              <ul class="list-unstyled">
+                {% for comment in comments_page.object_list %}
+                  <li class="mb-3 border-bottom pb-2">
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+                      <div>
+                        <a class="fw-semibold"
+                           href="{{ comment.post.get_absolute_url }}#comment-{{ comment.pk }}">
+                          {{ comment.body|truncatewords:16 }}
+                        </a>
+                        <div class="text-muted small">Status: {{ comment.get_status_display }}</div>
+                      </div>
+                      {% if is_self or can_moderate or viewer_is_superuser %}
+                        <form action="{% url 'blog:delete_comment' comment.pk %}" method="post">
+                          {% csrf_token %}
+                          <input type="hidden"
+                                 name="next"
+                                 value="{% url 'accounts:profile' profile_user.username %}">
+                          <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+              <nav aria-label="Comment navigation" class="mt-3">
+                <ul class="pagination pagination-sm mb-0">
+                  {% if comments_page.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link"
+                         href="?post_page={{ posts_page.number }}&comment_page={{ comments_page.previous_page_number }}">Previous</a>
+                    </li>
+                  {% endif %}
+                  <li class="page-item disabled">
+                    <span class="page-link">Page {{ comments_page.number }} of {{ comments_page.paginator.num_pages }}</span>
+                  </li>
+                  {% if comments_page.has_next %}
+                    <li class="page-item">
+                      <a class="page-link"
+                         href="?post_page={{ posts_page.number }}&comment_page={{ comments_page.next_page_number }}">Next</a>
+                    </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            {% else %}
+              <p class="text-muted mb-0">No comments to show.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock content %}
