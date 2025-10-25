@@ -1,16 +1,18 @@
 """
 URL configuration for core project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
+For more information see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Auth system (django-allauth)
+    # Authentication system (django-allauth)
     path('accounts/', include('allauth.urls')),
 
     # Custom user profiles
@@ -22,6 +24,11 @@ urlpatterns = [
     # Blog app
     path('blog/', include('blog.urls', namespace='blog')),
 ]
+
+# Serve media files during development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)
 
 # Custom error handlers
 handler403 = "core.views.permission_denied_view"

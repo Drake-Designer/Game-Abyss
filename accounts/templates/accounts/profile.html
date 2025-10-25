@@ -7,6 +7,13 @@
   <section class="page-profile">
     <header class="mb-4">
       <div class="d-flex flex-column flex-md-row gap-3 align-items-md-center">
+        <div class="flex-shrink-0 text-center text-md-start">
+          <img src="{{ profile.get_avatar_url }}"
+               alt="Avatar of {{ profile_user.username }}"
+               class="rounded-circle border util-avatar-img"
+               width="120"
+               height="120">
+        </div>
         <div>
           <h1 class="mb-1">{{ profile_user.username }}</h1>
           <div class="d-flex flex-wrap align-items-center gap-2">

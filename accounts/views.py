@@ -129,12 +129,16 @@ def profile(request, username):
 
 @login_required
 def profile_edit(request):
-    """Edit the current user's profile (names, birth date, bio)."""
+    """Edit the current user's profile (names, birth date, bio, avatar)."""
     profile_obj = _get_profile(request.user)
 
     if request.method == "POST":
         form = ProfileForm(
-            request.POST, instance=profile_obj, user=request.user)
+            request.POST,
+            request.FILES,
+            instance=profile_obj,
+            user=request.user,
+        )
         if form.is_valid():
             form.save()
             messages.success(request, "Profile updated.")
