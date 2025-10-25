@@ -39,6 +39,17 @@
           </time>
         </div>
       {% endwith %}
+      {% if post.can_delete %}
+        <form method="post"
+              action="{% url 'blog:delete_post' post.pk %}"
+              class="mt-3">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-danger">
+            <i class="fas fa-trash"></i>
+            Delete Post
+          </button>
+        </form>
+      {% endif %}
       {% if post.image %}
         <div class="page-post-detail__image-wrap mb-4">
           <picture>

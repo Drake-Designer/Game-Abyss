@@ -377,6 +377,7 @@ class CommentDeletionPermissionsTests(TestCase):
         response = self.client.post(
             other_delete_url, {"next": self.post.get_absolute_url()})
         self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "errors/403.html")
         self.assertTrue(Comment.objects.filter(
             pk=self.comment_two.pk).exists())
 
@@ -396,3 +397,74 @@ class CommentDeletionPermissionsTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Comment.objects.filter(
             pk=self.comment_two.pk).exists())
+
+
+class PostDeletionTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.author = User.objects.create_user(
+            username="author", email="author@example.com", password="pass"
+        )
+        self.regular = User.objects.create_user(
+            username="regular", email="regular@example.com", password="pass"
+        )
+        self.staff = User.objects.create_user(
+            username="staff", email="staff@example.com", password="pass", is_staff=True
+        )
+        self.superuser = User.objects.create_superuser(
+            username="admin", email="admin@example.com", password="pass"
+        )
+
+        self.post = BlogPost.objects.create(
+            author=self.author,
+            title="Delete Me",
+            body="Content",
+            status=BlogPost.STATUS_APPROVED,
+        )
+
+    def test_author_can_delete_own_post(self):
+        self.client.login(username="author", password="pass")
+        response = self.client.post(
+            reverse("blog:delete_post", args=[self.post.pk])
+        )
+        self.assertRedirects(response, reverse("blog:index"))
+        self.assertFalse(BlogPost.objects.filter(pk=self.post.pk).exists())
+
+    def test_regular_user_cannot_delete_others_post(self):
+        self.client.login(username="regular", password="pass")
+        response = self.client.post(
+            reverse("blog:delete_post", args=[self.post.pk])
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "errors/403.html")
+        self.assertTrue(BlogPost.objects.filter(pk=self.post.pk).exists())
+
+    def test_staff_can_delete_any_post(self):
+        self.client.login(username="staff", password="pass")
+        response = self.client.post(
+            reverse("blog:delete_post", args=[self.post.pk])
+        )
+        self.assertRedirects(response, reverse("blog:index"))
+        self.assertFalse(BlogPost.objects.filter(pk=self.post.pk).exists())
+
+    def test_delete_button_visibility(self):
+        detail_url = self.post.get_absolute_url()
+        delete_url = reverse("blog:delete_post", args=[self.post.pk])
+        scenarios = [
+            ("author", True),
+            ("staff", True),
+            ("admin", True),
+            ("regular", False),
+            (None, False),
+        ]
+
+        for username, should_see in scenarios:
+            with self.subTest(user=username):
+                self.client.logout()
+                if username:
+                    self.client.login(username=username, password="pass")
+                response = self.client.get(detail_url)
+                if should_see:
+                    self.assertContains(response, delete_url)
+                else:
+                    self.assertNotContains(response, delete_url)

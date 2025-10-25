@@ -1,7 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse
 from django.views.decorators.http import require_POST
 
 from .forms import PublicBlogPostForm, CommentForm
@@ -36,35 +37,29 @@ REACTION_VALUES = {opt['value'] for opt in REACTION_OPTIONS}
 
 def new_post(request):
     """Launch a new signal into the Abyss: staff goes live, explorers queue in orbit (pending)."""
-    # Gatekeeper: no ghosts past this point.
     if not request.user.is_authenticated:
         return HttpResponse('Unauthorized', status=401)
 
     if request.method == 'POST':
         form = PublicBlogPostForm(request.POST, request.FILES)
         if form.is_valid():
-            # Forge the payload without committing it to the void yet.
             post = form.save(commit=False)
             post.author = request.user
 
-            # Staff captains skip the orbit and land on the front page.
             if request.user.is_staff or request.user.is_superuser:
                 post.status = BlogPost.STATUS_APPROVED
                 messages.success(
                     request, "Deployed. Your post is live on the front page.")
             else:
-                # Regular explorers drift in review orbit until cleared by the Council.
                 post.status = BlogPost.STATUS_PENDING
                 messages.info(
                     request,
                     "Transmission received. Your post is in review and will surface once approved.",
                 )
 
-            # Release the capsule into the Abyss.
             post.save()
             return redirect('blog:index')
     else:
-        # Empty hull for a fresh launch sequence.
         form = PublicBlogPostForm()
 
     return render(request, 'blog/new_post.html', {'form': form})
@@ -72,27 +67,22 @@ def new_post(request):
 
 def post_list(request):
     """Surface-level index: only signals approved by the Council breach the Abyss."""
-    # Pull only approved echoes, sorted by most recently surfaced.
     posts = BlogPost.approved.order_by('-published_at', '-updated_at')
     return render(request, 'blog/index.html', {'posts': posts})
 
 
 def post_detail(request, year, month, day, slug):
     """Deep-scan a single signal; only stable (approved) transmissions are public."""
-    # Lock onto a specific echo in spacetime.
-    qs = BlogPost.objects.filter(slug=slug)
-    qs = qs.filter(
+    qs = BlogPost.objects.filter(slug=slug).filter(
         published_at__year=year,
         published_at__month=month,
         published_at__day=day,
     )
     post = get_object_or_404(qs)
 
-    # If the signal isn't cleared for the public, only the owner can view it.
     if (post.status != BlogPost.STATUS_APPROVED) and request.user != post.author:
         return HttpResponse('Not found', status=404)
 
-    # Prepare the comment form (for POST below) and list of approved comments.
     comment_form = CommentForm()
 
     if request.method == 'POST':
@@ -102,7 +92,6 @@ def post_detail(request, year, month, day, slug):
             messages.error(
                 request, 'Log in to add your signal to the constellation.')
         elif comment_form.is_valid():
-            # Stage the comment for orbit: pending by default until cleared.
             comment = comment_form.save(commit=False)
             comment.post = post
             comment.author = request.user
@@ -110,9 +99,7 @@ def post_detail(request, year, month, day, slug):
                 comment.status = Comment.STATUS_APPROVED
                 comment.save()
                 messages.success(
-                    request,
-                    "Comment deployed. It's live for all explorers.",
-                )
+                    request, "Comment deployed. It's live for all explorers.")
             else:
                 comment.status = Comment.STATUS_PENDING
                 comment.save()
@@ -149,13 +136,18 @@ def post_detail(request, year, month, day, slug):
                 break
 
     post_reaction_display = [
-        {
-            **opt,
-            'count': post_reaction_totals.get(opt['value'], 0),
-            'active': (opt['value'] == user_post_reaction),
-        }
+        {**opt, 'count': post_reaction_totals.get(
+            opt['value'], 0), 'active': (opt['value'] == user_post_reaction)}
         for opt in REACTION_OPTIONS
     ]
+
+    # Flag UI permission for post deletion
+    if request.user.is_authenticated:
+        post.can_delete = (
+            (request.user == post.author) or request.user.is_staff or request.user.is_superuser
+        )
+    else:
+        post.can_delete = False
 
     # For each comment, compute reaction totals and whether the current user reported it
     for c in approved_comments:
@@ -168,11 +160,8 @@ def post_detail(request, year, month, day, slug):
                 user_comment_reaction = r.reaction
 
         c.reaction_display = [
-            {
-                **opt,
-                'count': totals.get(opt['value'], 0),
-                'active': (opt['value'] == user_comment_reaction),
-            }
+            {**opt, 'count': totals.get(opt['value'], 0),
+             'active': (opt['value'] == user_comment_reaction)}
             for opt in REACTION_OPTIONS
         ]
 
@@ -269,7 +258,7 @@ def report_comment(request, pk):
         'next') or f"{comment.post.get_absolute_url()}#comment-{comment.pk}"
 
     if request.user.is_staff or request.user.is_superuser:
-        return HttpResponseForbidden('Staff members cannot report comments.')
+        raise PermissionDenied('Staff members cannot report comments.')
 
     if comment.author_id == request.user.id:
         messages.error(request, 'You cannot report your own comment.')
@@ -308,8 +297,22 @@ def delete_comment(request, pk):
     redirect_url = request.POST.get('next') or comment.post.get_absolute_url()
 
     if not (request.user.is_staff or request.user == comment.author):
-        return HttpResponseForbidden('You cannot delete this comment.')
+        raise PermissionDenied('You cannot delete this comment.')
 
     comment.delete()
     messages.success(request, 'Comment deleted.')
     return redirect(redirect_url)
+
+
+@login_required
+@require_POST
+def delete_post(request, pk):
+    """Allow post authors or staff to delete a post."""
+    post = get_object_or_404(BlogPost, pk=pk)
+
+    if not (request.user == post.author or request.user.is_staff or request.user.is_superuser):
+        raise PermissionDenied('You cannot delete this post.')
+
+    post.delete()
+    messages.success(request, 'Post deleted.')
+    return redirect('blog:index')
