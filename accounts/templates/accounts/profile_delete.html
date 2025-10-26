@@ -10,16 +10,17 @@
           <div class="comp-card__body p-4">
             <h1 class="mb-3 text-center text-danger">Delete your account</h1>
             <p class="text-muted">
-              This action will permanently remove your account and all content you've created. To confirm, type your username below.
+              This action will permanently remove your account and everything you've created (posts, comments, reactions, etc.). To confirm, enter your password below.
             </p>
             <form method="post" class="mt-4">
               {% csrf_token %}
               <div class="mb-3">
-                <label for="confirm_username" class="form-label">Confirm username</label>
-                <input type="text"
+                <label for="confirm_password" class="form-label">Confirm password</label>
+                <input type="password"
                        class="form-control"
-                       id="confirm_username"
-                       name="confirm_username"
+                       id="confirm_password"
+                       name="confirm_password"
+                       autocomplete="current-password"
                        required>
               </div>
               <div class="d-flex justify-content-between gap-2">

@@ -153,10 +153,12 @@ def profile_edit(request):
 def profile_delete(request):
     """Delete the current account and all related content after confirmation."""
     if request.method == "POST":
-        confirmation = (request.POST.get("confirm_username") or "").strip()
-        if confirmation != request.user.username:
+        password = (request.POST.get("confirm_password") or "").strip()
+        if not request.user.check_password(password):
             messages.error(
-                request, "Confirmation did not match your username.")
+                request,
+                "Incorrect password. Your account was not deleted.",
+            )
             return redirect("accounts:profile_delete")
 
         user = request.user
