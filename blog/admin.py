@@ -43,8 +43,12 @@ class BlogPostAdmin(admin.ModelAdmin):
     form = BlogPostForm
 
     def save_model(self, request, obj, form, change):
-        """Force author to be operator; assign default status depending on role."""
-        obj.author = request.user
+        """Assign author only on creation; keep original author on edits. Also apply default status on creation."""
+        # Set author automatically only when the object is first created and author is not already set
+        if not obj.pk and not obj.author_id:
+            obj.author = request.user
+
+        # Preserve existing status behavior: set default status on creation based on operator role
         if not change:
             if request.user.is_staff:
                 obj.status = BlogPost.STATUS_APPROVED
