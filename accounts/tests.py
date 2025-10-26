@@ -1,9 +1,9 @@
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.urls import reverse
-
-# Create your tests here.
 
 from blog.models import BlogPost, Comment, PostReaction, ReactionType
 
@@ -16,6 +16,82 @@ def _verify_email(user):
         email=user.email,
         defaults={"verified": True, "primary": True},
     )
+
+
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+class ProfileEditEmailTests(TestCase):
+    def setUp(self):
+        mail.outbox.clear()
+
+    def _post_profile_form(self, user, email):
+        self.client.force_login(user)
+        response = self.client.post(
+            reverse("accounts:profile_edit"),
+            {
+                "first_name": "",
+                "last_name": "",
+                "email": email,
+                "date_of_birth": "",
+                "bio": "",
+            },
+        )
+        return response
+
+    def test_user_without_email_can_add_one_and_requires_verification(self):
+        user = get_user_model().objects.create_user(
+            username="noemail", password="test-pass"
+        )
+
+        response = self._post_profile_form(user, "new@example.com")
+
+        self.assertRedirects(
+            response,
+            reverse("accounts:profile", args=[user.username]),
+        )
+
+        user.refresh_from_db()
+        self.assertEqual(user.email, "new@example.com")
+
+        email_record = EmailAddress.objects.get(user=user)
+        self.assertEqual(email_record.email, "new@example.com")
+        self.assertFalse(email_record.verified)
+        self.assertTrue(email_record.primary)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("new@example.com", mail.outbox[0].to)
+
+    def test_email_change_requires_reverification(self):
+        user = get_user_model().objects.create_user(
+            username="withmail",
+            email="old@example.com",
+            password="test-pass",
+        )
+        EmailAddress.objects.create(
+            user=user,
+            email="old@example.com",
+            primary=True,
+            verified=True,
+        )
+
+        response = self._post_profile_form(user, "updated@example.com")
+
+        self.assertRedirects(
+            response,
+            reverse("accounts:profile", args=[user.username]),
+        )
+
+        user.refresh_from_db()
+        self.assertEqual(user.email, "updated@example.com")
+
+        email_records = EmailAddress.objects.filter(user=user)
+        self.assertEqual(email_records.count(), 1)
+        email_record = email_records.get()
+        self.assertEqual(email_record.email, "updated@example.com")
+        self.assertFalse(email_record.verified)
+        self.assertTrue(email_record.primary)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("updated@example.com", mail.outbox[0].to)
 
 
 class ProfileDeleteViewTests(TestCase):

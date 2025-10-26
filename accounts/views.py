@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import login_required
+from allauth.account.models import EmailAddress
 from allauth.account.views import PasswordChangeView
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
@@ -19,6 +20,53 @@ def _get_profile(user):
     """Return the user's profile, creating it if missing."""
     profile, _ = UserProfile.objects.get_or_create(user=user)
     return profile
+
+
+def _process_email_change(request, user, new_email: str):
+    """Update EmailAddress records and trigger verification if needed."""
+    normalized_email = new_email or ""
+
+    if not normalized_email:
+        EmailAddress.objects.filter(user=user).delete()
+        return
+
+    EmailAddress.objects.filter(user=user).exclude(
+        email__iexact=normalized_email
+    ).delete()
+
+    email_qs = EmailAddress.objects.filter(
+        user=user, email__iexact=normalized_email)
+    email_address = email_qs.first()
+
+    if email_address:
+        email_qs.exclude(pk=email_address.pk).delete()
+    else:
+        email_address = EmailAddress(user=user)
+
+    changed_fields: list[str] = []
+
+    if email_address.email != normalized_email:
+        email_address.email = normalized_email
+        changed_fields.append("email")
+
+    if not email_address.primary:
+        email_address.primary = True
+        changed_fields.append("primary")
+
+    if email_address.verified:
+        email_address.verified = False
+        changed_fields.append("verified")
+
+    if email_address.pk is None:
+        email_address.save()
+    elif changed_fields:
+        email_address.save(update_fields=changed_fields)
+
+    email_address.send_confirmation(request=request)
+    messages.info(
+        request,
+        "We've sent a confirmation email. Please verify the new address to activate it.",
+    )
 
 
 def _rarity_for_user(user):
@@ -71,7 +119,6 @@ def profile(request, username):
         request.user.is_staff or request.user.is_superuser
     )
 
-    # Private fields visible to self or superuser
     show_private = is_self or viewer_is_superuser
 
     base_posts = profile_user.blog_posts.select_related("author")
@@ -143,6 +190,8 @@ def profile_edit(request):
         )
         if form.is_valid():
             form.save()
+            if form.email_changed:
+                _process_email_change(request, request.user, form.new_email)
             messages.success(request, "Profile updated.")
             return redirect("accounts:profile", request.user.username)
     else:
