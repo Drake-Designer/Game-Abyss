@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 
 from pathlib import Path
 import os
+import sys
 import warnings
 
 import dj_database_url  # For Postgres when DATABASE_URL is set
@@ -39,6 +40,8 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG is True by default locally, False when DEBUG=False in Heroku
 DEBUG = os.environ.get("DEBUG", "True") == "True"
+
+RUNNING_TESTS = len(sys.argv) > 1 and sys.argv[1] == "test"
 
 # Allowed hosts
 _alh = os.environ.get("ALLOWED_HOSTS", "")
@@ -77,9 +80,9 @@ INSTALLED_APPS = [
 ]
 
 # Enable Cloudinary storage if available
+USE_CLOUDINARY_STORAGE = False
 if cloudinary is not None:
     INSTALLED_APPS.extend(["cloudinary", "cloudinary_storage"])
-    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 
 # Django sites framework
@@ -166,6 +169,22 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Whitenoise storage for serving static files in production
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+WHITENOISE_MANIFEST_STRICT = False
+WHITENOISE_USE_FINDERS = True
+
+# Storage backends (Django 5+ API)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": (
+            STATICFILES_STORAGE
+            if not RUNNING_TESTS
+            else "django.contrib.staticfiles.storage.StaticFilesStorage"
+        ),
+    },
+}
 
 # Media files (user uploads)
 MEDIA_URL = "/media/"
@@ -246,6 +265,7 @@ if cloudinary is not None:
 
     if cloudinary_url:
         cloudinary.config(cloudinary_url=cloudinary_url, secure=True)
+        USE_CLOUDINARY_STORAGE = True
     elif cloud_name and api_key and api_secret:
         cloudinary.config(
             cloud_name=cloud_name,
@@ -253,6 +273,7 @@ if cloudinary is not None:
             api_secret=api_secret,
             secure=True,
         )
+        USE_CLOUDINARY_STORAGE = True
     else:
         warnings.warn(
             "Cloudinary credentials are not configured. "
@@ -265,3 +286,8 @@ else:
         "Cloudinary package is not installed. Falling back to default file storage for images.",
         RuntimeWarning,
     )
+
+if USE_CLOUDINARY_STORAGE:
+    STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    # Preserve legacy Django setting for compatibility with third-party packages
+    DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
