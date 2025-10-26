@@ -35,10 +35,9 @@ REACTION_OPTIONS = [
 REACTION_VALUES = {opt['value'] for opt in REACTION_OPTIONS}
 
 
+@login_required
 def new_post(request):
     """Launch a new signal into the Abyss: staff goes live, explorers queue in orbit (pending)."""
-    if not request.user.is_authenticated:
-        return HttpResponse('Unauthorized', status=401)
 
     if request.method == 'POST':
         form = PublicBlogPostForm(request.POST, request.FILES)
@@ -172,7 +171,11 @@ def post_detail(request, year, month, day, slug):
         c.user_reported = False
         c.can_edit = False
         if request.user.is_authenticated:
-            c.can_delete = request.user.is_staff or request.user == c.author
+            c.can_delete = (
+                request.user.is_staff
+                or request.user.is_superuser
+                or request.user == c.author
+            )
             c.can_edit = request.user == c.author
             can_report = (not request.user.is_staff) and (
                 request.user != c.author)
@@ -368,7 +371,11 @@ def delete_comment(request, pk):
     comment = get_object_or_404(Comment, pk=pk)
     redirect_url = request.POST.get('next') or comment.post.get_absolute_url()
 
-    if not (request.user.is_staff or request.user == comment.author):
+    if not (
+        request.user.is_staff
+        or request.user.is_superuser
+        or request.user == comment.author
+    ):
         raise PermissionDenied('You cannot delete this comment.')
 
     comment.delete()

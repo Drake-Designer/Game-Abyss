@@ -520,6 +520,20 @@ class PostCommentEditPermissionsTests(TestCase):
             reverse("blog:edit_post", args=[self.post.pk]))
         self.assertEqual(response.status_code, 403)
 
+    def test_staff_cannot_edit_other_users_post(self):
+        self.client.login(username="staff", password="pass")
+        response = self.client.get(
+            reverse("blog:edit_post", args=[self.post.pk])
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_superuser_cannot_edit_other_users_post(self):
+        self.client.login(username="admin", password="pass")
+        response = self.client.get(
+            reverse("blog:edit_post", args=[self.post.pk])
+        )
+        self.assertEqual(response.status_code, 403)
+
     def test_author_can_edit_own_comment(self):
         self.client.login(username="author", password="pass")
         response = self.client.post(
@@ -537,6 +551,20 @@ class PostCommentEditPermissionsTests(TestCase):
         self.client.login(username="other", password="pass")
         response = self.client.get(
             reverse("blog:edit_comment", args=[self.comment.pk]))
+        self.assertEqual(response.status_code, 403)
+
+    def test_staff_cannot_edit_other_users_comment(self):
+        self.client.login(username="staff", password="pass")
+        response = self.client.get(
+            reverse("blog:edit_comment", args=[self.comment.pk])
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_superuser_cannot_edit_other_users_comment(self):
+        self.client.login(username="admin", password="pass")
+        response = self.client.get(
+            reverse("blog:edit_comment", args=[self.comment.pk])
+        )
         self.assertEqual(response.status_code, 403)
 
     def test_staff_and_superuser_can_edit_their_own_posts_and_comments(self):
@@ -584,3 +612,22 @@ class PostCommentEditPermissionsTests(TestCase):
         self.assertRedirects(response, super_post.get_absolute_url())
         super_comment.refresh_from_db()
         self.assertEqual(super_comment.body, "Super updated")
+
+
+class ContentCreationAccessTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username="creator", email="creator@example.com", password="pass"
+        )
+
+    def test_new_post_requires_authentication(self):
+        new_url = reverse("blog:new")
+        response = self.client.get(new_url)
+        login_url = reverse("account_login")
+        self.assertRedirects(response, f"{login_url}?next={new_url}")
+
+    def test_authenticated_user_can_access_new_post(self):
+        self.client.login(username="creator", password="pass")
+        response = self.client.get(reverse("blog:new"))
+        self.assertEqual(response.status_code, 200)
