@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import login_required
+from allauth.account.views import PasswordChangeView
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -9,6 +10,7 @@ from blog.models import BlogPost, Comment, CommentReport
 
 from .forms import ProfileForm
 from .models import UserProfile
+from .utils import ensure_verified_email, verified_email_required
 
 User = get_user_model()
 
@@ -150,6 +152,7 @@ def profile_edit(request):
 
 
 @login_required
+@verified_email_required
 def profile_delete(request):
     """Delete the current account and all related content after confirmation."""
     if request.method == "POST":
@@ -175,3 +178,13 @@ def profile_delete(request):
 def my_profile_redirect(request):
     """Shortcut: /profile/ -> /profile/<username>/ for the logged-in user."""
     return redirect("accounts:profile", request.user.username)
+
+
+class VerifiedEmailPasswordChangeView(PasswordChangeView):
+    """Require a verified email before allowing password changes."""
+
+    def dispatch(self, request, *args, **kwargs):
+        response = ensure_verified_email(request)
+        if response is not None:
+            return response
+        return super().dispatch(request, *args, **kwargs)

@@ -1,10 +1,23 @@
+from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
 
-from .models import BlogPost, Comment, CommentReport
+from .models import BlogPost, Comment, CommentReport, PostReaction, ReactionType
+
+
+def verify_users(*users):
+    for user in users:
+        email = getattr(user, "email", "") or ""
+        if not email:
+            continue
+        EmailAddress.objects.update_or_create(
+            user=user,
+            email=email,
+            defaults={"verified": True, "primary": True},
+        )
 
 
 class BlogPostModelTests(TestCase):
@@ -139,6 +152,7 @@ class NotificationEmailTests(TestCase):
         self.commenter = User.objects.create_user(
             username="commenter", email="commenter@example.com", password="pass"
         )
+        verify_users(self.team, self.author, self.commenter)
 
     def test_post_creation_sends_notification_email(self):
         mail.outbox = []
@@ -212,6 +226,7 @@ class CommentReportFlowTests(TestCase):
         self.comment_author = User.objects.create_user(
             username="comment_author", email="commenter@example.com", password="pass"
         )
+        verify_users(self.staff, self.reporter, self.comment_author)
 
         self.post = BlogPost.objects.create(
             author=self.comment_author,
@@ -258,6 +273,7 @@ class AutoApprovalTests(TestCase):
         self.superuser = User.objects.create_superuser(
             username="overlord", email="overlord@example.com", password="pass"
         )
+        verify_users(self.staff, self.superuser)
 
     def test_staff_post_and_comment_auto_approved(self):
         self.client.login(username="staff", password="pass")
@@ -310,6 +326,7 @@ class CommentModerationUITests(TestCase):
         self.comment_author = User.objects.create_user(
             username="commenter", email="commenter@example.com", password="pass"
         )
+        verify_users(self.staff, self.post_author, self.comment_author)
 
         self.post = BlogPost.objects.create(
             author=self.post_author,
@@ -350,6 +367,7 @@ class CommentDeletionPermissionsTests(TestCase):
         self.user_two = User.objects.create_user(
             username="usertwo", email="usertwo@example.com", password="pass"
         )
+        verify_users(self.staff, self.user_one, self.user_two)
 
         self.post = BlogPost.objects.create(
             author=self.staff,
@@ -414,6 +432,7 @@ class PostDeletionTests(TestCase):
         self.superuser = User.objects.create_superuser(
             username="admin", email="admin@example.com", password="pass"
         )
+        verify_users(self.author, self.regular, self.staff, self.superuser)
 
         self.post = BlogPost.objects.create(
             author=self.author,
@@ -485,6 +504,7 @@ class PostCommentEditPermissionsTests(TestCase):
         self.superuser = User.objects.create_superuser(
             username="admin", email="admin@example.com", password="pass"
         )
+        verify_users(self.author, self.other, self.staff, self.superuser)
         self.post = BlogPost.objects.create(
             author=self.author,
             title="Editable Post",
@@ -620,6 +640,7 @@ class ContentCreationAccessTests(TestCase):
         self.user = User.objects.create_user(
             username="creator", email="creator@example.com", password="pass"
         )
+        verify_users(self.user)
 
     def test_new_post_requires_authentication(self):
         new_url = reverse("blog:new")
@@ -631,3 +652,76 @@ class ContentCreationAccessTests(TestCase):
         self.client.login(username="creator", password="pass")
         response = self.client.get(reverse("blog:new"))
         self.assertEqual(response.status_code, 200)
+
+
+class EmailVerificationEnforcementTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username="verifier", email="verifier@example.com", password="pass"
+        )
+        self.other = User.objects.create_user(
+            username="author", email="author@example.com", password="pass"
+        )
+        verify_users(self.other)
+
+        self.post = BlogPost.objects.create(
+            author=self.other,
+            title="Verification Post",
+            body="Content",
+            status=BlogPost.STATUS_APPROVED,
+        )
+
+        EmailAddress.objects.create(
+            user=self.user,
+            email=self.user.email,
+            primary=True,
+            verified=False,
+        )
+        self.client.force_login(self.user)
+
+    def test_unverified_user_redirected_from_new_post(self):
+        response = self.client.get(reverse("blog:new"))
+        self.assertRedirects(response, reverse("account_email"))
+
+    def test_unverified_user_cannot_comment(self):
+        response = self.client.post(
+            self.post.get_absolute_url(), {"body": "Hi"})
+        self.assertRedirects(response, reverse("account_email"))
+        self.assertFalse(Comment.objects.filter(body="Hi").exists())
+
+    def test_unverified_user_cannot_react(self):
+        react_url = reverse("blog:react_post", args=[self.post.pk])
+        response = self.client.post(
+            react_url,
+            {"reaction": ReactionType.LIKE.value,
+                "next": self.post.get_absolute_url()},
+        )
+        self.assertRedirects(response, reverse("account_email"))
+        self.assertFalse(PostReaction.objects.filter(
+            user=self.user, post=self.post).exists())
+
+    def test_actions_allowed_after_email_verified(self):
+        EmailAddress.objects.filter(user=self.user).update(verified=True)
+
+        response = self.client.get(reverse("blog:new"))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(
+            self.post.get_absolute_url(),
+            {"body": "Verified comment"},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Comment.objects.filter(
+            body="Verified comment").exists())
+
+        react_url = reverse("blog:react_post", args=[self.post.pk])
+        response = self.client.post(
+            react_url,
+            {"reaction": ReactionType.LIKE.value,
+                "next": self.post.get_absolute_url()},
+        )
+        self.assertRedirects(response, self.post.get_absolute_url())
+        self.assertTrue(PostReaction.objects.filter(
+            user=self.user, post=self.post).exists())

@@ -5,6 +5,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
 
+from accounts.utils import ensure_verified_email, verified_email_required
+
 from .forms import BlogPostForm, PublicBlogPostForm, CommentForm
 from .models import (
     BlogPost,
@@ -36,6 +38,7 @@ REACTION_VALUES = {opt['value'] for opt in REACTION_OPTIONS}
 
 
 @login_required
+@verified_email_required
 def new_post(request):
     """Launch a new signal into the Abyss: staff goes live, explorers queue in orbit (pending)."""
 
@@ -90,7 +93,12 @@ def post_detail(request, year, month, day, slug):
         if not request.user.is_authenticated:
             messages.error(
                 request, 'Log in to add your signal to the constellation.')
-        elif comment_form.is_valid():
+        else:
+            redirect_response = ensure_verified_email(request)
+            if redirect_response is not None:
+                return redirect_response
+
+        if request.user.is_authenticated and comment_form.is_valid():
             comment = comment_form.save(commit=False)
             comment.post = post
             comment.author = request.user
@@ -265,6 +273,7 @@ def edit_comment(request, pk):
 
 
 @login_required
+@verified_email_required
 @require_POST
 def react_to_post(request, pk):
     """Add/replace/remove the current user's reaction on a post."""
@@ -292,6 +301,7 @@ def react_to_post(request, pk):
 
 
 @login_required
+@verified_email_required
 @require_POST
 def react_to_comment(request, pk):
     """Add/replace/remove the current user's reaction on a comment."""

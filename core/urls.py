@@ -9,10 +9,17 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from accounts.views import VerifiedEmailPasswordChangeView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Authentication system (django-allauth)
+    path(
+        'accounts/password/change/',
+        VerifiedEmailPasswordChangeView.as_view(),
+        name='account_change_password',
+    ),
     path('accounts/', include('allauth.urls')),
 
     # Custom user profiles
