@@ -547,8 +547,7 @@ hr {
 }
 
 /* Dark select styling */
-.comp-form select,
-.comp-form__select {
+.comp-form select {
   appearance: none;
   background-color: rgb(255 255 255 / 6%);
   background-image:
@@ -574,8 +573,7 @@ hr {
   width: 100%;
 }
 
-.comp-form select:focus,
-.comp-form__select:focus {
+.comp-form select:focus {
   background-color: rgb(255 255 255 / 10%);
   border-color: var(--color-primary);
   box-shadow: 0 0 0 0.2rem rgb(255 107 53 / 25%);
@@ -658,12 +656,6 @@ select::-ms-expand {
   resize: vertical;
 }
 
-.comp-form .comp-feedback {
-  display: block;
-  font-size: var(--fs-meta);
-  margin-top: 0.4rem;
-}
-
 /* ============================================================
    PAGES
    ============================================================ */
@@ -703,7 +695,6 @@ select::-ms-expand {
 }
 
 .page-home-hero__image:hover {
-  border-radius: var(--hero-radius);
   filter: drop-shadow(0 2px 20px rgb(255 107 53 / 60%));
   transform: scale(1.05);
 }
@@ -771,50 +762,7 @@ select::-ms-expand {
   text-transform: uppercase;
 }
 
-/* Gallery card images */
-.comp-gallery-card__image {
-  border-radius: var(--radius);
-  display: block;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s ease;
-  width: 100%;
-}
-
-.comp-gallery-card__image:hover {
-  transform: scale(1.05);
-}
-
-/* ============================================================
-   BLOG META (stacked autore / data)
-   ============================================================ */
-
-.page-blog-index__meta,
-.page-post-detail__meta {
-  display: block;
-}
-
-.page-blog-index__meta > time,
-.page-post-detail__meta > time {
-  margin-top: 0.15rem;
-}
-
-/* ============================================================
-   GALLERY – LIST PAGE (Abyss look)
-   ============================================================ */
-
-.page-gallery-list__title {
-  color: var(--color-primary);
-  filter: var(--filter-glow-soft);
-  letter-spacing: 2px;
-  text-shadow: 0 0 12px rgb(255 107 53 / 45%);
-}
-
-.page-gallery-list__subtitle {
-  color: var(--color-text-muted);
-  font-size: var(--fs-meta);
-}
-
+/* Gallery card styles within gallery list */
 .page-gallery-list .comp-card {
   --comp-card-border: rgb(255 107 53 / 22%);
 
@@ -833,20 +781,22 @@ select::-ms-expand {
   gap: 0.5rem;
 }
 
-.page-gallery-list .comp-gallery-card__image {
-  filter: drop-shadow(0 2px 8px rgb(0 0 0 / 35%));
-  transition:
-    filter 0.4s ease,
-    transform 0.4s ease;
+/* ============================================================
+   BLOG META (stacked author and date)
+   ============================================================ */
+
+.page-blog-index__meta,
+.page-post-detail__meta {
+  display: block;
 }
 
-.page-gallery-list .comp-gallery-card__image:hover {
-  filter: drop-shadow(0 4px 14px rgb(255 107 53 / 35%));
-  transform: scale(1.03);
+.page-blog-index__meta > time,
+.page-post-detail__meta > time {
+  margin-top: 0.15rem;
 }
 
 /* ============================================================
-   GALLERY – UPLOAD PAGE (Abyss look)
+   GALLERY - UPLOAD PAGE (Abyss look)
    ============================================================ */
 
 .page-gallery-upload .comp-card {
@@ -860,18 +810,6 @@ select::-ms-expand {
 .page-gallery-upload .comp-card:hover {
   border-color: var(--color-primary);
   box-shadow: var(--shadow-lg);
-}
-
-.page-gallery-upload__title {
-  color: var(--color-primary);
-  filter: var(--filter-glow-soft);
-  letter-spacing: 2px;
-  text-shadow: 0 0 14px rgb(255 107 53 / 50%);
-}
-
-.page-gallery-upload__subtitle {
-  color: var(--color-secondary);
-  font-weight: 500;
 }
 
 .page-gallery-upload [class~='form-label'] {
@@ -1212,28 +1150,9 @@ select::-ms-expand {
   text-shadow: 0 2px 10px rgb(0 0 0 / 50%);
 }
 
-.util-glow {
-  box-shadow: 0 0 20px rgb(255 107 53 / 50%);
-}
-
 /* Icon utilities */
 .comp-icon--primary {
   color: var(--color-primary);
-}
-
-.comp-icon--secondary {
-  color: var(--color-secondary);
-}
-
-/* Neon helpers */
-.util-neon-primary {
-  filter: drop-shadow(0 0 8px rgb(255 107 53 / 55%))
-    drop-shadow(0 0 16px rgb(255 107 53 / 35%));
-}
-
-.util-neon-secondary {
-  filter: drop-shadow(0 0 8px rgb(78 205 196 / 55%))
-    drop-shadow(0 0 16px rgb(78 205 196 / 35%));
 }
 
 /* Avatar default image */
@@ -1327,7 +1246,6 @@ select::-ms-expand {
 /* Phones */
 @media (width <= 576px) {
   .page-home-hero__image {
-    border-radius: var(--hero-radius);
     max-height: 250px;
   }
 
@@ -1380,13 +1298,6 @@ select::-ms-expand {
     margin-top: -17.5px;
   }
 
-  .comp-navbar__collapse {
-    background: linear-gradient(90deg, var(--color-surface) 0%, #0f0f18 100%);
-    border-top: 1px solid rgb(255 107 53 / 20%);
-    margin-top: 0.25rem;
-    padding: 0.5rem 0;
-  }
-
   .comp-navbar__action {
     padding: 0.25rem 0.5rem;
   }
@@ -1412,23 +1323,12 @@ select::-ms-expand {
 /* Tablets and up */
 @media (width >= 768px) {
   .page-home-hero__image {
-    border-radius: var(--hero-radius);
     max-height: 350px;
-  }
-
-  .page-error-404,
-  .page-error-500 {
-    min-height: 70vh;
   }
 }
 
 /* Desktops */
 @media (width >= 992px) {
-  .page-home-hero__image {
-    border-radius: var(--hero-radius);
-    max-height: 400px;
-  }
-
   .comp-navbar__toggler {
     display: none;
   }
