@@ -11,6 +11,9 @@ urlpatterns = [
     # Blog homepage (list of approved posts)
     path("", views.post_list, name="index"),
 
+    # Tag filter page (e.g. /blog/tag/rpg/)
+    path("tag/<slug:tag_slug>/", views.post_list, name="tag"),
+
     # Create a new post
     path("new/", views.new_post, name="new"),
 

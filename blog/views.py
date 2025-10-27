@@ -1,9 +1,12 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 from django.db.models import Q
-from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.text import slugify
 from django.views.decorators.http import require_POST
 
 from accounts.utils import ensure_verified_email, verified_email_required
@@ -36,6 +39,8 @@ REACTION_OPTIONS = [
 ]
 
 REACTION_VALUES = {opt['value'] for opt in REACTION_OPTIONS}
+
+DEFAULT_BLOG_INDEX_PAGE_SIZE = 9
 
 
 @login_required
@@ -78,14 +83,64 @@ def new_post(request):
     return render(request, 'blog/new_post.html', {'form': form})
 
 
-def post_list(request):
-    """Surface-level index: only signals approved by the Council breach the Abyss."""
-    posts = BlogPost.approved.order_by('-published_at', '-updated_at')
-    return render(request, 'blog/index.html', {'posts': posts})
+def post_list(request, tag_slug=None):
+    """Homepage: approved posts with optional search, tag filter and pagination."""
+
+    search_query = (request.GET.get('q') or '').strip()
+    raw_tag = (tag_slug or request.GET.get('tag') or '').strip()
+    active_tag_slug = slugify(raw_tag) if raw_tag else ''
+
+    posts_qs = (
+        BlogPost.approved
+        .select_related('author')
+        .order_by('-published_at', '-updated_at')
+    )
+
+    if search_query:
+        posts_qs = posts_qs.filter(
+            Q(title__icontains=search_query)
+            | Q(excerpt__icontains=search_query)
+            | Q(body__icontains=search_query)
+            | Q(tags__icontains=search_query)
+        )
+
+    posts = list(posts_qs)
+
+    active_tag_label = raw_tag if raw_tag else ''
+    if active_tag_slug:
+        filtered_posts = []
+        for post in posts:
+            for tag in post.tag_list:
+                if tag['slug'] == active_tag_slug:
+                    filtered_posts.append(post)
+                    # Prefer canonical casing from stored tag
+                    active_tag_label = tag['name']
+                    break
+        posts = filtered_posts
+
+    page_size = getattr(settings, 'BLOG_INDEX_PAGE_SIZE',
+                        DEFAULT_BLOG_INDEX_PAGE_SIZE)
+    paginator = Paginator(posts, page_size)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    preserved_querydict = request.GET.copy()
+    preserved_querydict.pop('page', None)
+    paginator_querystring = preserved_querydict.urlencode()
+
+    context = {
+        'posts': page_obj.object_list,
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'active_tag_slug': active_tag_slug,
+        'active_tag_label': active_tag_label,
+        'paginator_querystring': paginator_querystring,
+    }
+    return render(request, 'blog/index.html', context)
 
 
 def post_detail(request, year, month, day, slug):
-    """Deep-scan a single signal; only stable (approved) transmissions are public."""
+    """View a single post; drafts/pending visible only to author/staff."""
     qs = BlogPost.objects.filter(slug=slug).filter(
         Q(
             published_at__year=year,
@@ -134,30 +189,23 @@ def post_detail(request, year, month, day, slug):
             if request.user.is_staff or request.user.is_superuser:
                 comment.status = Comment.STATUS_APPROVED
                 comment.save()
-                messages.success(
-                    request, "Comment deployed. It's live for all explorers.")
+                messages.success(request, "Comment live.")
             else:
                 comment.status = Comment.STATUS_PENDING
                 comment.save()
-                messages.success(
-                    request,
-                    "Thanks, explorer. Your comment is in orbit and will appear after approval.",
-                )
+                messages.success(request, "Your comment is pending approval.")
             return redirect(post.get_absolute_url())
         else:
-            messages.error(
-                request,
-                'We could not accept that comment. Please review the highlighted issues.',
-            )
+            messages.error(request, 'We could not accept that comment.')
 
-    # Fetch comments and their related reactions/reports efficiently
+    # Comments (approved only for public)
     approved_comments = list(
         post.comments.approved()
         .select_related('author')
         .prefetch_related('reactions__user', 'reports__reported_by')
     )
 
-    # Compute post reaction totals and current user's reaction
+    # Post reactions
     post_reactions = list(post.reactions.select_related('user'))
     post_reaction_totals = {opt['value']: 0 for opt in REACTION_OPTIONS}
     for r in post_reactions:
@@ -172,22 +220,27 @@ def post_detail(request, year, month, day, slug):
                 break
 
     post_reaction_display = [
-        {**opt, 'count': post_reaction_totals.get(
-            opt['value'], 0), 'active': (opt['value'] == user_post_reaction)}
+        {
+            **opt,
+            'count': post_reaction_totals.get(opt['value'], 0),
+            'active': (opt['value'] == user_post_reaction),
+        }
         for opt in REACTION_OPTIONS
     ]
 
-    # Flags for UI permissions
+    # Permissions for UI actions on the post
     if request.user.is_authenticated:
-        post.can_edit = request.user == post.author
+        post.can_edit = (request.user == post.author)
         post.can_delete = (
-            (request.user == post.author) or request.user.is_staff or request.user.is_superuser
+            request.user == post.author
+            or request.user.is_staff
+            or request.user.is_superuser
         )
     else:
         post.can_edit = False
         post.can_delete = False
 
-    # For each comment, compute reaction totals and whether the current user reported it
+    # Comment reactions + permissions
     for c in approved_comments:
         totals = {opt['value']: 0 for opt in REACTION_OPTIONS}
         user_comment_reaction = None
@@ -198,8 +251,11 @@ def post_detail(request, year, month, day, slug):
                 user_comment_reaction = r.reaction
 
         c.reaction_display = [
-            {**opt, 'count': totals.get(opt['value'], 0),
-             'active': (opt['value'] == user_comment_reaction)}
+            {
+                **opt,
+                'count': totals.get(opt['value'], 0),
+                'active': (opt['value'] == user_comment_reaction),
+            }
             for opt in REACTION_OPTIONS
         ]
 

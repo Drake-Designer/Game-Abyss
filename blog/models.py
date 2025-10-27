@@ -8,7 +8,7 @@ try:
 except ImportError:
     CloudinaryField = None
 
-# Email helpers (use on_commit)
+# Email helpers
 from .emails import notify_author_post_approved, notify_author_post_rejected
 
 User = get_user_model()
@@ -39,6 +39,27 @@ class ApprovedCommentManager(models.Manager.from_queryset(CommentQuerySet)):
 
     def get_queryset(self):
         return super().get_queryset().approved()
+
+
+def _parse_tag_string(raw_value):
+    """Return a list of dicts describing unique tags (name + slug)."""
+    tags = []
+    seen_slugs = set()
+    for fragment in (raw_value or "").split(","):
+        name = fragment.strip()
+        if not name:
+            continue
+        s = slugify(name)
+        if not s or s in seen_slugs:
+            continue
+        seen_slugs.add(s)
+        tags.append({"name": name, "slug": s})
+    return tags
+
+
+def _normalize_tag_string(raw_value):
+    """Return a cleaned, comma-separated representation of the tags."""
+    return ", ".join(tag["name"] for tag in _parse_tag_string(raw_value))
 
 
 class BlogPost(models.Model):
@@ -114,7 +135,7 @@ class BlogPost(models.Model):
         verbose_name_plural = 'Blog Posts'
 
     def save(self, *args, **kwargs):
-        """Keep published_at in sync with status, generate slug, compute reading time, then save."""
+        """Keep published_at in sync with status, generate slug, compute reading time, normalize tags, then save."""
         previous_status = None
         previous_featured = None
 
@@ -170,6 +191,12 @@ class BlogPost(models.Model):
 
             self.slug = unique_slug
 
+        # Tags (normalize/clean duplicates)
+        if self.tags:
+            self.tags = _normalize_tag_string(self.tags)
+        else:
+            self.tags = ''
+
         # Reading time (~200 wpm)
         if self.body:
             words = len(self.body.split())
@@ -194,6 +221,16 @@ class BlogPost(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def tag_list(self):
+        """Parsed representation of ``self.tags``."""
+        return _parse_tag_string(self.tags)
+
+    @staticmethod
+    def normalize_tags(value):
+        """Expose tag normalization to forms/other callers."""
+        return _normalize_tag_string(value)
 
     def get_absolute_url(self):
         """Canonical URL like /blog/YYYY/MM/DD/slug/."""
@@ -253,7 +290,7 @@ class PostReaction(models.Model):
         User, on_delete=models.CASCADE, related_name='post_reactions')
     reaction = models.CharField(max_length=16, choices=ReactionType.choices)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Post Reaction"
@@ -275,7 +312,7 @@ class CommentReaction(models.Model):
         User, on_delete=models.CASCADE, related_name='comment_reactions')
     reaction = models.CharField(max_length=16, choices=ReactionType.choices)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Comment Reaction"

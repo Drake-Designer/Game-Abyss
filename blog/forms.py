@@ -1,4 +1,3 @@
-# blog/forms.py
 import re
 
 from django import forms
@@ -46,6 +45,13 @@ class BlogPostForm(forms.ModelForm):
             'excerpt': 'Optional. Used on cards and listings. Clean beats long.',
         }
 
+    def clean_tags(self):
+        """Ensure tags are normalized for the canonical CharField storage."""
+        value = self.cleaned_data.get('tags')
+        if not value:
+            return ''
+        return BlogPost.normalize_tags(value)
+
 
 class PublicBlogPostForm(forms.ModelForm):
     """
@@ -67,13 +73,11 @@ class PublicBlogPostForm(forms.ModelForm):
         }
 
     def clean_tags(self):
-        """Trim and deduplicate user tag input."""
+        """Trim/dedupe, then normalize via model helper."""
         value = self.cleaned_data.get('tags')
         if not value:
-            return value
-        normalized = ', '.join([t.strip()
-                               for t in str(value).split(',') if t.strip()])
-        return normalized
+            return ''
+        return BlogPost.normalize_tags(value)
 
     def save(self, commit=True):
         """Status is assigned in the view; this just builds the instance."""

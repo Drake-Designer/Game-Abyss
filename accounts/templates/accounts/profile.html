@@ -213,6 +213,18 @@
                       <div>
                         <a class="fw-semibold" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
                         <div class="text-muted small">Status: {{ post.get_status_display }}</div>
+                        {% with tags=post.tag_list %}
+                          {% if tags %}
+                            <div class="small d-flex flex-wrap gap-2 mt-1">
+                              {% for tag in tags %}
+                                <a href="{% url 'blog:tag' tag.slug %}"
+                                   class="badge rounded-pill text-decoration-none comp-tag-badge">
+                                  <i class="fas fa-hashtag me-1"></i>{{ tag.name }}
+                                </a>
+                              {% endfor %}
+                            </div>
+                          {% endif %}
+                        {% endwith %}
                       </div>
                       {% if is_self or can_moderate or viewer_is_superuser %}
                         <form action="{% url 'blog:delete_post' post.pk %}" method="post">
@@ -259,6 +271,17 @@
                         <div>
                           <span class="fw-semibold">{{ draft.title }}</span>
                           <div class="small text-muted">Draft · Last updated {{ draft.updated_at|date:"j M Y H:i" }}</div>
+                          {% with tags=draft.tag_list %}
+                            {% if tags %}
+                              <div class="small d-flex flex-wrap gap-2 mt-1">
+                                {% for tag in tags %}
+                                  <span class="badge rounded-pill text-decoration-none comp-tag-badge">
+                                    <i class="fas fa-hashtag me-1"></i>{{ tag.name }}
+                                  </span>
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                          {% endwith %}
                         </div>
                         <a class="btn btn-sm btn-outline-primary"
                            href="{% url 'blog:edit_post' draft.pk %}">Continue editing</a>
