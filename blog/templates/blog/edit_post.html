@@ -20,7 +20,9 @@
               {% csrf_token %}
               {{ form.as_p }}
               <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mt-3">
-                <a class="btn btn-outline-secondary" href="{{ next_url }}">Cancel</a>
+                <a class="comp-button comp-button--outline" href="{{ next_url }}">
+                  <i class="fa-solid fa-arrow-left me-2"></i>Cancel
+                </a>
                 <div class="d-flex flex-wrap gap-2 justify-content-end">
                   <button type="submit"
                           name="action"
