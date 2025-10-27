@@ -405,3 +405,39 @@ class ProfilePublicViewTests(TestCase):
         response = self.client.get(reverse("accounts:profile", args=["ghost"]))
 
         self.assertEqual(response.status_code, 404)
+
+
+class ProfileFavoritesTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username="favuser",
+            email="fav@example.com",
+            password="secret",
+        )
+        self.profile = UserProfile.objects.create(
+            user=self.user,
+            favorite_games="Half-Life, Dark Souls",
+            favorite_genres="RPG, Horror"
+        )
+
+    def test_favorites_render_in_profile(self):
+        response = self.client.get(
+            reverse("accounts:profile", args=[self.user.username]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Favorites")
+        self.assertContains(response, "Half-Life")
+        self.assertContains(response, "RPG")
+
+    def test_favorites_section_hidden_if_empty(self):
+        empty_user = get_user_model().objects.create_user(
+            username="nofav",
+            email="nofav@example.com",
+            password="secret",
+        )
+        UserProfile.objects.create(user=empty_user)
+
+        response = self.client.get(
+            reverse("accounts:profile", args=[empty_user.username]))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Favorites")

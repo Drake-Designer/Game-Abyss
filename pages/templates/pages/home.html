@@ -113,7 +113,7 @@
       {% endif %}
     </div>
   </section>
-  <!-- Latest: other featured posts (no duplicates), paginated -->
+  <!-- Latest: approved, non-featured posts (no overlap with featured), paginated -->
   <section id="latest-posts" class="py-5">
     <div class="row mb-4">
       <div class="col">
@@ -123,8 +123,8 @@
       </div>
     </div>
     <div class="row gy-4">
-      {% if other_posts_page and other_posts_page.object_list %}
-        {% for post in other_posts_page %}
+      {% if latest_posts_page and latest_posts_page.object_list %}
+        {% for post in latest_posts_page %}
           <div class="col-md-6 col-lg-4">{% include "shared/_post_card.html" with post=post %}</div>
         {% endfor %}
       {% else %}
@@ -140,13 +140,13 @@
         </div>
       {% endif %}
     </div>
-    {% if other_posts_page and other_posts_page.paginator.num_pages > 1 %}
+    {% if latest_posts_page and latest_posts_page.paginator.num_pages > 1 %}
       <nav aria-label="Latest posts pagination" class="mt-4">
         <ul class="pagination justify-content-center">
-          <li class="page-item{% if not other_posts_page.has_previous %} disabled{% endif %}">
-            {% if other_posts_page.has_previous %}
+          <li class="page-item{% if not latest_posts_page.has_previous %} disabled{% endif %}">
+            {% if latest_posts_page.has_previous %}
               <a class="page-link"
-                 href="?page={{ other_posts_page.previous_page_number }}"
+                 href="?page={{ latest_posts_page.previous_page_number }}"
                  aria-label="Previous">
                 <span aria-hidden="true">« Previous</span>
               </a>
@@ -155,12 +155,12 @@
             {% endif %}
           </li>
           <li class="page-item disabled">
-            <span class="page-link">Page {{ other_posts_page.number }} of {{ other_posts_page.paginator.num_pages }}</span>
+            <span class="page-link">Page {{ latest_posts_page.number }} of {{ latest_posts_page.paginator.num_pages }}</span>
           </li>
-          <li class="page-item{% if not other_posts_page.has_next %} disabled{% endif %}">
-            {% if other_posts_page.has_next %}
+          <li class="page-item{% if not latest_posts_page.has_next %} disabled{% endif %}">
+            {% if latest_posts_page.has_next %}
               <a class="page-link"
-                 href="?page={{ other_posts_page.next_page_number }}"
+                 href="?page={{ latest_posts_page.next_page_number }}"
                  aria-label="Next">
                 <span aria-hidden="true">Next »</span>
               </a>

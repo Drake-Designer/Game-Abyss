@@ -52,16 +52,25 @@ class HomeViewTests(TestCase):
         defaults.update(overrides)
         return BlogPost.objects.create(**defaults)
 
-    def test_home_shows_featured_posts_only(self):
-        featured_post = self._create_post(title='Featured Signal')
-        self._create_post(title='Hidden Signal', featured=False)
+    def test_home_separates_featured_and_latest_posts(self):
+        featured_post = self._create_post(
+            title='Featured Signal', featured=True)
+        latest_post = self._create_post(title='Latest Signal', featured=False)
         self._create_post(title='Pending Signal',
                           status=BlogPost.STATUS_PENDING)
 
         response = self.client.get(reverse('pages:home'))
 
-        self.assertContains(response, featured_post.title)
-        self.assertNotContains(response, 'Hidden Signal')
+        featured_titles = [
+            post.title for post in response.context['featured_posts']]
+        latest_titles = [
+            post.title for post in response.context['latest_posts_page'].object_list
+        ]
+
+        self.assertIn(featured_post.title, featured_titles)
+        self.assertIn(latest_post.title, latest_titles)
+        self.assertNotIn(latest_post.title, featured_titles)
+        self.assertNotIn(featured_post.title, latest_titles)
         self.assertNotContains(response, 'Pending Signal')
 
     def test_home_orders_featured_by_published_at_desc(self):
@@ -91,6 +100,41 @@ class HomeViewTests(TestCase):
         ]
         self.assertEqual(
             [post.title for post in featured_posts], expected_order)
+
+    def test_home_orders_latest_posts_by_published_at_desc(self):
+        newer = self._create_post(
+            title='Newer Latest', featured=False, published_at=timezone.now()
+        )
+        older = self._create_post(
+            title='Older Latest',
+            featured=False,
+            published_at=timezone.now() - timezone.timedelta(days=1),
+        )
+        fallback_recent = self._create_post(
+            title='Fallback Latest Recent', featured=False
+        )
+        BlogPost.objects.filter(
+            pk=fallback_recent.pk
+        ).update(published_at=None)
+        fallback_older = self._create_post(
+            title='Fallback Latest Older', featured=False
+        )
+        BlogPost.objects.filter(pk=fallback_older.pk).update(
+            published_at=None,
+            updated_at=timezone.now() - timezone.timedelta(hours=1),
+        )
+
+        response = self.client.get(reverse('pages:home'))
+        latest_posts = list(response.context['latest_posts_page'].object_list)
+
+        expected_order = [
+            newer.title,
+            older.title,
+            fallback_recent.title,
+            fallback_older.title,
+        ]
+        self.assertEqual(
+            [post.title for post in latest_posts], expected_order)
 
     def test_home_shows_placeholder_when_no_featured(self):
         response = self.client.get(reverse('pages:home'))

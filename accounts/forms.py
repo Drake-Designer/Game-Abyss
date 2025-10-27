@@ -7,23 +7,30 @@ from .models import UserProfile
 
 class ProfileForm(forms.ModelForm):
     """
-    A form that allows a user to edit their profile information.
-    It combines User model fields (first_name, last_name, email)
-    with additional fields stored in UserProfile (date_of_birth, bio, avatar).
+    Profile edit form combining:
+    - User fields: first_name, last_name, email
+    - Profile fields: avatar, date_of_birth, bio, favorites
     """
 
-    # These belong to the main User model
     first_name = forms.CharField(max_length=150, required=False)
     last_name = forms.CharField(max_length=150, required=False)
     email = forms.EmailField(required=False)
 
     class Meta:
         model = UserProfile
-        fields = ["avatar", "date_of_birth", "bio"]
+        fields = [
+            "avatar",
+            "date_of_birth",
+            "bio",
+            "favorite_games",
+            "favorite_genres",
+        ]
         widgets = {
             "avatar": forms.ClearableFileInput(attrs={"class": "form-control"}),
-            "date_of_birth": forms.DateInput(attrs={"type": "date"}),
-            "bio": forms.Textarea(attrs={"rows": 4}),
+            "date_of_birth": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "bio": forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
+            "favorite_games": forms.Textarea(attrs={"rows": 2, "class": "form-control"}),
+            "favorite_genres": forms.Textarea(attrs={"rows": 2, "class": "form-control"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -38,46 +45,52 @@ class ProfileForm(forms.ModelForm):
 
     @staticmethod
     def _normalize_email(email: str | None) -> str:
-        if not email:
-            return ""
-        return str(email).strip().lower()
+        return str(email).strip().lower() if email else ""
 
     def clean_email(self):
+        """Check uniqueness in User and EmailAddress."""
         email = self.cleaned_data.get("email")
         if not email:
             return ""
-
         email = self._normalize_email(email)
         User = get_user_model()
         if User.objects.filter(email__iexact=email).exclude(pk=self.user.pk).exists():
             raise forms.ValidationError(
                 "This email address is already in use.")
-
         if EmailAddress.objects.filter(email__iexact=email).exclude(user=self.user).exists():
             raise forms.ValidationError(
                 "This email address is already in use.")
-
         return email
 
+    def clean_favorite_games(self):
+        return self.cleaned_data.get("favorite_games", "").strip()
+
+    def clean_favorite_genres(self):
+        return self.cleaned_data.get("favorite_genres", "").strip()
+
     def save(self, commit=True):
-        profile = super().save(commit=False)
+        """Save profile + sync User fields."""
+        profile: UserProfile = super().save(commit=False)
         profile.user = self.user
+
         User = get_user_model()
         if isinstance(self.user, User):
-            self.user.first_name = self.cleaned_data.get("first_name", "")
-            self.user.last_name = self.cleaned_data.get("last_name", "")
-            user_update_fields = ["first_name", "last_name"]
+            self.user.first_name = self.cleaned_data.get(
+                "first_name", "") or ""
+            self.user.last_name = self.cleaned_data.get("last_name", "") or ""
+            update_fields = ["first_name", "last_name"]
 
             new_email = self.cleaned_data.get("email", "") or ""
-            self.new_email = new_email
-            self.email_changed = new_email != self._initial_email
+            self.new_email = self._normalize_email(new_email)
+            self.email_changed = self.new_email != self._initial_email
 
             if self.email_changed:
-                self.user.email = new_email
-                user_update_fields.append("email")
+                self.user.email = self.new_email
+                update_fields.append("email")
 
             if commit:
-                self.user.save(update_fields=user_update_fields)
+                self.user.save(update_fields=update_fields)
+
         if commit:
             profile.save()
         return profile

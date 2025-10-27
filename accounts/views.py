@@ -7,7 +7,6 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 from blog.models import BlogPost, Comment
-
 from .forms import ProfileForm
 from .models import UserProfile
 from .utils import ensure_verified_email, verified_email_required
@@ -16,15 +15,14 @@ User = get_user_model()
 
 
 def _get_profile(user):
-    """Return the user's profile, creating it if missing."""
+    """Return or create a user profile."""
     profile, _ = UserProfile.objects.get_or_create(user=user)
     return profile
 
 
 def _process_email_change(request, user, new_email: str):
-    """Update EmailAddress records and trigger verification if needed."""
+    """Update EmailAddress records and send verification if needed."""
     normalized_email = new_email or ""
-
     if not normalized_email:
         EmailAddress.objects.filter(user=user).delete()
         return
@@ -35,23 +33,15 @@ def _process_email_change(request, user, new_email: str):
 
     email_qs = EmailAddress.objects.filter(
         user=user, email__iexact=normalized_email)
-    email_address = email_qs.first()
-
-    if email_address:
-        email_qs.exclude(pk=email_address.pk).delete()
-    else:
-        email_address = EmailAddress(user=user)
+    email_address = email_qs.first() or EmailAddress(user=user)
 
     changed_fields: list[str] = []
-
     if email_address.email != normalized_email:
         email_address.email = normalized_email
         changed_fields.append("email")
-
     if not email_address.primary:
         email_address.primary = True
         changed_fields.append("primary")
-
     if email_address.verified:
         email_address.verified = False
         changed_fields.append("verified")
@@ -69,13 +59,12 @@ def _process_email_change(request, user, new_email: str):
 
 
 def profile(request, username):
-    """Public profile page showing a user's activity."""
+    """Public profile page with activity and metadata."""
     profile_user = get_object_or_404(
         User.objects.select_related("profile"),
         username=username,
     )
     profile_obj = _get_profile(profile_user)
-
     is_self = request.user.is_authenticated and request.user.pk == profile_user.pk
 
     public_posts_qs = (
@@ -83,7 +72,6 @@ def profile(request, username):
         .select_related("author")
         .order_by("-published_at", "-created_at")
     )
-
     approved_comments_qs = (
         profile_user.comments.filter(status=Comment.STATUS_APPROVED)
         .select_related("post", "post__author", "author")
@@ -98,30 +86,23 @@ def profile(request, username):
             .order_by("-updated_at")
         )
 
-    post_paginator = Paginator(public_posts_qs, 5)
-    comment_paginator = Paginator(approved_comments_qs, 5)
-
-    posts_page = post_paginator.get_page(request.GET.get("post_page"))
-    comments_page = comment_paginator.get_page(request.GET.get("comment_page"))
+    posts_page = Paginator(public_posts_qs, 5).get_page(
+        request.GET.get("post_page"))
+    comments_page = Paginator(approved_comments_qs, 5).get_page(
+        request.GET.get("comment_page")
+    )
 
     stats = {
         "public_posts": public_posts_qs.count(),
         "approved_comments": approved_comments_qs.count(),
     }
-
     full_name = (profile_user.get_full_name() or "").strip() or None
 
     role_badge: dict[str, str] | None = None
     if profile_user.is_superuser:
-        role_badge = {
-            "label": "Admin",
-            "css_class": "comp-badge--admin",
-        }
+        role_badge = {"label": "Admin", "css_class": "comp-badge--admin"}
     elif profile_user.is_staff:
-        role_badge = {
-            "label": "Staff",
-            "css_class": "comp-badge--staff",
-        }
+        role_badge = {"label": "Staff", "css_class": "comp-badge--staff"}
 
     context = {
         "profile_user": profile_user,
@@ -133,13 +114,14 @@ def profile(request, username):
         "draft_posts": draft_posts,
         "stats": stats,
         "role_badge": role_badge,
+        "has_favorites": bool(profile_obj.favorite_games or profile_obj.favorite_genres),
     }
     return render(request, "accounts/profile.html", context)
 
 
 @login_required
 def profile_edit(request):
-    """Edit the current user's profile (names, birth date, bio, avatar)."""
+    """Edit the current user's profile data."""
     profile_obj = _get_profile(request.user)
 
     if request.method == "POST":
@@ -164,14 +146,12 @@ def profile_edit(request):
 @login_required
 @verified_email_required
 def profile_delete(request):
-    """Delete the current account and all related content after confirmation."""
+    """Delete the account and related content after password confirmation."""
     if request.method == "POST":
         password = (request.POST.get("confirm_password") or "").strip()
         if not request.user.check_password(password):
             messages.error(
-                request,
-                "Incorrect password. Your account was not deleted.",
-            )
+                request, "Incorrect password. Your account was not deleted.")
             return redirect("accounts:profile_delete")
 
         user = request.user
@@ -186,12 +166,12 @@ def profile_delete(request):
 
 @login_required
 def my_profile_redirect(request):
-    """Shortcut: /profile/ -> /u/<username>/ for the logged-in user."""
+    """Shortcut: redirect /profile/ to /u/<username>/."""
     return redirect("accounts:profile", request.user.username)
 
 
 class VerifiedEmailPasswordChangeView(PasswordChangeView):
-    """Require a verified email before allowing password changes."""
+    """Require verified email before password change."""
 
     def dispatch(self, request, *args, **kwargs):
         response = ensure_verified_email(request)

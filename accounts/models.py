@@ -4,7 +4,7 @@ from django.templatetags.static import static
 
 
 class UserProfile(models.Model):
-    """Additional profile data for a user."""
+    """Extra profile data."""
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -13,6 +13,8 @@ class UserProfile(models.Model):
     )
     date_of_birth = models.DateField(blank=True, null=True)
     bio = models.TextField(blank=True)
+    favorite_games = models.TextField(blank=True)   # optional
+    favorite_genres = models.TextField(blank=True)  # optional
     avatar = models.ImageField(
         "Profile avatar",
         upload_to="avatars/",
@@ -29,11 +31,11 @@ class UserProfile(models.Model):
 
     @property
     def has_avatar(self):
-        """Return True when a custom avatar is uploaded."""
+        """True if a custom avatar exists."""
         return bool(self.avatar)
 
     def get_avatar_url(self):
-        """Return the avatar URL or a static fallback image."""
+        """Avatar URL or fallback."""
         if self.avatar:
             return self.avatar.url
         return static("images/default-avatar.png")

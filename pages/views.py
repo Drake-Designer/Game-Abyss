@@ -36,23 +36,20 @@ class HomeView(TemplateView):
         featured_posts = list(featured_qs[:HOME_FEATURED_POST_LIMIT])
         context["featured_posts"] = featured_posts
 
-        # "Latest posts" section should only include approved + featured posts
-        # Exclude any duplicates already shown in the featured grid
-        featured_ids = [p.id for p in featured_posts]
-        other_posts_qs = (
+        # "Latest posts" section: approved, non-featured posts ordered newest first
+        latest_posts_qs = (
             BlogPost.objects.filter(
-                featured=True,
+                featured=False,
                 status=BlogPost.STATUS_APPROVED,
             )
-            .exclude(id__in=featured_ids)
             .select_related("author")
             .order_by("-published_at", "-updated_at")
         )
 
         # Paginate the "latest" posts
         page_number = self.request.GET.get("page")
-        paginator = Paginator(other_posts_qs, HOME_OTHER_POSTS_PER_PAGE)
-        context["other_posts_page"] = paginator.get_page(page_number)
+        paginator = Paginator(latest_posts_qs, HOME_OTHER_POSTS_PER_PAGE)
+        context["latest_posts_page"] = paginator.get_page(page_number)
 
         # Hero carousel: only featured and approved gallery images
         context["hero_gallery_images"] = (
@@ -115,7 +112,7 @@ class ContactView(View):
             )
             return redirect("pages:contact")
 
-        # Show error message if form is invalid
+            # Show error message if form is invalid
         messages.error(
             request,
             "We couldn't send your request. Please review the errors below and try again."
