@@ -10,7 +10,7 @@
           content="Game Abyss, notifications, account, updates, alerts" />
     <meta name="color-scheme" content="dark" />
     <meta name="supported-color-schemes" content="dark" />
-    <!-- Il CSS viene iniettato inline da core/emailing.py (premailer) -->
+    <!-- CSS is applied from static/css/email.css during delivery -->
   </head>
   <body class="comp-email comp-email--dark">
     <table role="presentation"
@@ -37,7 +37,7 @@
                 </table>
                 <table role="presentation" class="comp-email__content" width="100%">
                   <tr>
-                    <td>
+                    <td class="comp-email__content-inner">
                       {% block content %}
                       {% endblock content %}
                     </td>
@@ -45,8 +45,8 @@
                 </table>
                 <table role="presentation" class="comp-email__footer" align="center">
                   <tr>
-                    <td>
-                      <p class="comp-email__support">
+                    <td class="comp-email__support">
+                      <p>
                         Need a hand? Reach the council at
                         <a href="mailto:{{ support_email }}" class="comp-email__link">{{ support_email }}</a>
                       </p>
@@ -59,10 +59,10 @@
                     </td>
                   </tr>
                 </table>
-                <p class="comp-email__legal">© {{ current_year }} {{ site_name }}. All transmissions reserved.</p>
               </td>
             </tr>
           </table>
+          <p class="comp-email__legal">© {{ current_year }} {{ site_name }}. All transmissions reserved.</p>
         </td>
       </tr>
     </table>

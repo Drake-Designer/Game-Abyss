@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
+from pathlib import Path
 from typing import Iterable, Sequence
 from urllib.parse import urljoin
 
@@ -25,6 +27,12 @@ try:  # pragma: no cover - best effort
     from django.contrib.sites.models import Site  # type: ignore
 except Exception:  # pragma: no cover
     Site = None  # type: ignore
+
+# Optional: access to the Django staticfiles finders for loading CSS
+try:  # pragma: no cover - optional dependency
+    from django.contrib.staticfiles import finders  # type: ignore
+except Exception:  # pragma: no cover
+    finders = None  # type: ignore
 
 # Optional: premailer for CSS inlining
 try:  # pragma: no cover - optional dependency
@@ -84,20 +92,85 @@ def build_absolute_uri(path: str | None) -> str | None:
     return urljoin(base_url.rstrip("/") + "/", path.lstrip("/"))
 
 
-def _inline_css_if_possible(html: str) -> str:
+@lru_cache(maxsize=1)
+def _load_email_stylesheet() -> str | None:
+    """Return the contents of the email stylesheet if available."""
+    stylesheet_setting = getattr(
+        settings, "EMAIL_STYLESHEET_PATH", "css/email.css")
+
+    candidate_paths: list[Path] = []
+
+    # Try staticfiles finders first (if available)
+    if finders is not None:  # pragma: no cover - not easily testable
+        try:
+            resolved = finders.find(stylesheet_setting)
+        except Exception:
+            resolved = None
+            logger.exception("Staticfiles finder failed for email stylesheet")
+        if resolved:
+            if isinstance(resolved, (list, tuple)):
+                candidate_paths.extend(Path(p) for p in resolved if p)
+            else:
+                candidate_paths.append(Path(resolved))
+
+    # Then STATIC_ROOT
+    static_root = getattr(settings, "STATIC_ROOT", None)
+    if static_root:
+        candidate_paths.append(Path(static_root) / stylesheet_setting)
+
+    # Then STATICFILES_DIRS
+    for directory in getattr(settings, "STATICFILES_DIRS", []):
+        candidate_paths.append(Path(directory) / stylesheet_setting)
+
+    # Finally BASE_DIR/static
+    base_dir = getattr(settings, "BASE_DIR", None)
+    if base_dir:
+        candidate_paths.append(Path(base_dir) / "static" / stylesheet_setting)
+
+    for path in candidate_paths:
+        try:
+            if path.is_file():
+                return path.read_text(encoding="utf-8")
+        except Exception:
+            logger.exception("Unable to read email stylesheet from %s", path)
+
+    logger.warning("Email stylesheet '%s' could not be located",
+                   stylesheet_setting)
+    return None
+
+
+def _inject_css(html: str, css_text: str | None) -> str:
+    """Embed CSS inside the HTML <head> for clients without inlining support."""
+    if not css_text:
+        return html
+
+    style_block = '<style type="text/css">\n' + css_text + "\n</style>"
+    head_close = "</head>"
+    if head_close in html:
+        return html.replace(head_close, f"{style_block}\n{head_close}", 1)
+    return f"{style_block}\n{html}"
+
+
+def _inline_css_if_possible(
+    html: str, *, base_url: str | None = None, css_text: str | None = None
+) -> str:
     """
     Inline styles for better email client compatibility using premailer
-    if available; otherwise return the original HTML.
+    if available; otherwise return the original HTML with an embedded <style>.
     """
+    html_with_css = _inject_css(html, css_text)
+
     if transform is None:
-        return html
+        return html_with_css
     try:
-        # keep class names for tests
-        return transform(html, remove_classes=False)
+        transform_kwargs = {"remove_classes": False}
+        if base_url:
+            transform_kwargs["base_url"] = base_url
+        return transform(html_with_css, **transform_kwargs)
     except Exception:
         logger.exception(
             "Premailer failed; sending email without CSS inlining.")
-        return html
+        return html_with_css
 
 
 def send_styled_email(
@@ -120,11 +193,13 @@ def send_styled_email(
         getattr(settings, "PRIMARY_SUPERADMIN_EMAIL",
                 "team.gameabyss@gmail.com"),
     )
+    site_url = build_absolute_uri("/") or ""
+
     base_context = {
         "subject": subject,
         "site_name": "Game Abyss",
         "support_email": support_email,
-        "site_url": build_absolute_uri("/") or "",
+        "site_url": site_url,
         "accent_color": "#ff6b35",
         "surface_color": "#1a1a24",
         "dark_color": "#0a0a0f",
@@ -153,7 +228,10 @@ def send_styled_email(
 
     # Render HTML and plain text
     html_body_raw = render_to_string(template_name, final_context)
-    html_body = _inline_css_if_possible(html_body_raw)
+    css_text = _load_email_stylesheet()
+    html_body = _inline_css_if_possible(
+        html_body_raw, base_url=site_url or None, css_text=css_text
+    )
     if text_template:
         text_body = render_to_string(text_template, final_context)
     else:
@@ -179,9 +257,10 @@ def send_styled_email(
             )
             SendGridAPIClient(api_key).send(message)
             return
-        except Exception:
+        except Exception:  # pragma: no cover - optional backend failure
             logger.exception("SendGrid error while sending '%s'", subject)
 
+    # Fallback: Django email backend
     email = EmailMultiAlternatives(
         subject=subject,
         body=text_body,
