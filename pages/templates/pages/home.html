@@ -2,7 +2,7 @@
 {% load static %}
 {% load cloudinary_extras %}
 {% block title %}
-  Home — Game Abyss
+  Home - Game Abyss
 {% endblock title %}
 {% block hero %}
   <section class="page-home-hero">
@@ -85,11 +85,11 @@
   </section>
 {% endblock hero %}
 {% block content %}
-  <section id="latest-posts" class="py-5">
+  <section id="featured-posts" class="py-5">
     <div class="row mb-4">
       <div class="col">
         <h2 class="text-center mb-4">
-          <i class="fas fa-fire me-2 text-primary"></i>Latest Posts
+          <i class="fas fa-fire me-2 text-primary"></i>Featured Posts
         </h2>
       </div>
     </div>
@@ -99,7 +99,7 @@
           <div class="col-md-6 col-lg-4">{% include "shared/_post_card.html" with post=post %}</div>
         {% endfor %}
       {% else %}
-        <div class="col-md-6 col-lg-4">
+        <div class="col-md-6 col-lg-4 mx-auto">
           <div class="comp-card">
             <div class="comp-card__body text-center">
               <h3 class="comp-card__title">
@@ -111,5 +111,63 @@
         </div>
       {% endif %}
     </div>
+  </section>
+  <section id="latest-posts" class="py-5">
+    <div class="row mb-4">
+      <div class="col">
+        <h2 class="text-center mb-4">
+          <i class="fas fa-scroll me-2 text-primary"></i>Latest Posts
+        </h2>
+      </div>
+    </div>
+    <div class="row gy-4">
+      {% if other_posts_page and other_posts_page.object_list %}
+        {% for post in other_posts_page %}
+          <div class="col-md-6 col-lg-4">{% include "shared/_post_card.html" with post=post %}</div>
+        {% endfor %}
+      {% else %}
+        <div class="col-md-6 col-lg-4 mx-auto">
+          <div class="comp-card">
+            <div class="comp-card__body text-center">
+              <h3 class="comp-card__title">
+                <i class="fas fa-ghost me-2 text-secondary"></i> No Posts Yet
+              </h3>
+              <p class="comp-card__text">Once new tales emerge from the abyss, they will appear here.</p>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+    {% if other_posts_page and other_posts_page.paginator.num_pages > 1 %}
+      <nav aria-label="Latest posts pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+          <li class="page-item{% if not other_posts_page.has_previous %} disabled{% endif %}">
+            {% if other_posts_page.has_previous %}
+              <a class="page-link"
+                 href="?page={{ other_posts_page.previous_page_number }}"
+                 aria-label="Previous">
+                <span aria-hidden="true">« Previous</span>
+              </a>
+            {% else %}
+              <span class="page-link">« Previous</span>
+            {% endif %}
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">Page {{ other_posts_page.number }} of {{ other_posts_page.paginator.num_pages }}</span>
+          </li>
+          <li class="page-item{% if not other_posts_page.has_next %} disabled{% endif %}">
+            {% if other_posts_page.has_next %}
+              <a class="page-link"
+                 href="?page={{ other_posts_page.next_page_number }}"
+                 aria-label="Next">
+                <span aria-hidden="true">Next »</span>
+              </a>
+            {% else %}
+              <span class="page-link">Next »</span>
+            {% endif %}
+          </li>
+        </ul>
+      </nav>
+    {% endif %}
   </section>
 {% endblock content %}

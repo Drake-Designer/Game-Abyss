@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from django.views import View
@@ -11,6 +12,7 @@ from gallery.models import GalleryImage  # NEW
 
 HOME_FEATURED_POST_LIMIT = 6
 HOME_FEATURED_GALLERY_LIMIT = 10  # NEW
+HOME_OTHER_POSTS_PER_PAGE = 6
 
 
 class HomeView(TemplateView):
@@ -28,6 +30,19 @@ class HomeView(TemplateView):
             .select_related('author')
             .order_by('-published_at', '-updated_at')[:HOME_FEATURED_POST_LIMIT]
         )
+
+        other_posts_qs = (
+            BlogPost.objects.filter(
+                featured=False,
+                status=BlogPost.STATUS_APPROVED,
+            )
+            .select_related('author')
+            .order_by('-published_at', '-updated_at')
+        )
+        page_number = self.request.GET.get('page')
+        paginator = Paginator(other_posts_qs, HOME_OTHER_POSTS_PER_PAGE)
+        context['other_posts_page'] = paginator.get_page(page_number)
+
         # NEW: featured & approved images for the hero carousel
         context['hero_gallery_images'] = (
             GalleryImage.objects.featured()
