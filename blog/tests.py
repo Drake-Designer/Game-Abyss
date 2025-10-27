@@ -68,7 +68,7 @@ class BlogPostModelTests(TestCase):
         self.assertNotEqual(post_one.slug, post_two.slug)
 
     def test_published_at_updates_with_status_transitions(self):
-        """published_at is set when APPROVED and cleared when moved back to PENDING or REJECTED."""
+        """published_at follows the moderation status, including the new draft state."""
         post = BlogPost.objects.create(
             author=self.user,
             title="Workflow Post",
@@ -93,10 +93,118 @@ class BlogPostModelTests(TestCase):
         post.save()
         self.assertIsNotNone(post.published_at)
 
+        # Draft -> published_at cleared
+        post.status = BlogPost.STATUS_DRAFT
+        post.save()
+        self.assertIsNone(post.published_at)
+
+        # Approve again -> published_at set again
+        post.status = BlogPost.STATUS_APPROVED
+        post.save()
+        self.assertIsNotNone(post.published_at)
+
         # Reject -> published_at cleared
         post.status = BlogPost.STATUS_REJECTED
         post.save()
         self.assertIsNone(post.published_at)
+
+
+class DraftWorkflowViewTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username="drafty",
+            email="drafty@example.com",
+            password="pass",
+        )
+        self.staff = User.objects.create_user(
+            username="draft_staff",
+            email="draft-staff@example.com",
+            password="pass",
+            is_staff=True,
+        )
+        self.other = User.objects.create_user(
+            username="lurker",
+            email="lurker@example.com",
+            password="pass",
+        )
+        verify_users(self.user, self.staff)
+
+    def test_new_post_can_be_saved_as_draft(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("blog:new"),
+            {
+                "title": "Draft Title",
+                "body": "Draft body",
+                "excerpt": "",
+                "tags": "",
+                "action": "save_draft",
+            },
+        )
+        post = BlogPost.objects.get(title="Draft Title")
+        self.assertEqual(post.status, BlogPost.STATUS_DRAFT)
+        self.assertRedirects(
+            response, reverse("blog:edit_post", args=[post.pk])
+        )
+
+    def test_new_post_publish_sets_pending_for_regular_user(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("blog:new"),
+            {
+                "title": "Pending Title",
+                "body": "Pending body",
+                "excerpt": "",
+                "tags": "",
+                "action": "publish",
+            },
+        )
+        post = BlogPost.objects.get(title="Pending Title")
+        self.assertEqual(post.status, BlogPost.STATUS_PENDING)
+        self.assertRedirects(response, reverse("blog:index"))
+
+    def test_new_post_publish_sets_approved_for_staff(self):
+        self.client.force_login(self.staff)
+        response = self.client.post(
+            reverse("blog:new"),
+            {
+                "title": "Staff Title",
+                "body": "Staff body",
+                "excerpt": "",
+                "tags": "",
+                "action": "publish",
+            },
+        )
+        post = BlogPost.objects.get(title="Staff Title")
+        self.assertEqual(post.status, BlogPost.STATUS_APPROVED)
+        self.assertRedirects(response, reverse("blog:index"))
+
+    def test_draft_post_visibility(self):
+        post = BlogPost.objects.create(
+            author=self.user,
+            title="Hidden Draft",
+            body="Top secret",
+            status=BlogPost.STATUS_DRAFT,
+        )
+        detail_url = post.get_absolute_url()
+
+        # Author can view their draft
+        self.client.force_login(self.user)
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, 200)
+        self.client.logout()
+
+        # Other regular users cannot see the draft
+        self.client.force_login(self.other)
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, 404)
+        self.client.logout()
+
+        # Staff can view the draft
+        self.client.force_login(self.staff)
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, 200)
 
 
 class CommentModelTests(TestCase):
@@ -565,6 +673,7 @@ class PostCommentEditPermissionsTests(TestCase):
         )
         self.assertRedirects(response, self.post.get_absolute_url())
         self.comment.refresh_from_db()
+        we = self.comment.body
         self.assertEqual(self.comment.body, "Updated comment body")
 
     def test_other_user_cannot_edit_comment(self):

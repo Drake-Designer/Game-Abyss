@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
@@ -45,8 +46,18 @@ def new_post(request):
     if request.method == 'POST':
         form = PublicBlogPostForm(request.POST, request.FILES)
         if form.is_valid():
+            action = request.POST.get('action') or 'publish'
             post = form.save(commit=False)
             post.author = request.user
+
+            if action == 'save_draft':
+                post.status = BlogPost.STATUS_DRAFT
+                messages.success(
+                    request,
+                    "Draft saved. Only you can see it for now.",
+                )
+                post.save()
+                return redirect('blog:edit_post', pk=post.pk)
 
             if request.user.is_staff or request.user.is_superuser:
                 post.status = BlogPost.STATUS_APPROVED
@@ -76,13 +87,31 @@ def post_list(request):
 def post_detail(request, year, month, day, slug):
     """Deep-scan a single signal; only stable (approved) transmissions are public."""
     qs = BlogPost.objects.filter(slug=slug).filter(
-        published_at__year=year,
-        published_at__month=month,
-        published_at__day=day,
+        Q(
+            published_at__year=year,
+            published_at__month=month,
+            published_at__day=day,
+        )
+        | Q(
+            published_at__isnull=True,
+            created_at__year=year,
+            created_at__month=month,
+            created_at__day=day,
+        )
     )
     post = get_object_or_404(qs)
 
-    if (post.status != BlogPost.STATUS_APPROVED) and request.user != post.author:
+    if (
+        post.status != BlogPost.STATUS_APPROVED
+        and not (
+            request.user.is_authenticated
+            and (
+                request.user == post.author
+                or request.user.is_staff
+                or request.user.is_superuser
+            )
+        )
+    ):
         return HttpResponse('Not found', status=404)
 
     comment_form = CommentForm()
@@ -229,13 +258,39 @@ def edit_post(request, pk):
         if form.is_valid():
             updated_post = form.save(commit=False)
             updated_post.author = post.author
-            # Non-staff can’t change status/featured
-            if not (request.user.is_staff or request.user.is_superuser):
-                updated_post.status = original_status
+            action = request.POST.get('action') or 'save'
+            message_text = 'Post updated.'
+            message_level = messages.success
+            if request.user.is_staff or request.user.is_superuser:
+                if action == 'save_draft':
+                    updated_post.status = BlogPost.STATUS_DRAFT
+                    message_text = 'Draft saved.'
+                elif action == 'publish':
+                    updated_post.status = BlogPost.STATUS_APPROVED
+                    message_text = 'Post published.'
+            else:
+                if action == 'save_draft':
+                    updated_post.status = BlogPost.STATUS_DRAFT
+                    message_text = 'Draft updated.'
+                elif action == 'publish':
+                    if original_status == BlogPost.STATUS_APPROVED:
+                        updated_post.status = BlogPost.STATUS_APPROVED
+                        message_text = 'Post updated.'
+                    else:
+                        updated_post.status = BlogPost.STATUS_PENDING
+                        message_text = 'Post submitted for review.'
+                        message_level = messages.info
+                else:
+                    updated_post.status = original_status
+                    if original_status == BlogPost.STATUS_DRAFT:
+                        message_text = 'Draft updated.'
+                    elif original_status == BlogPost.STATUS_PENDING:
+                        message_text = 'Post updated. Still pending review.'
+                        message_level = messages.info
                 if hasattr(updated_post, 'featured'):
                     updated_post.featured = original_featured
             updated_post.save()
-            messages.success(request, 'Post updated.')
+            message_level(request, message_text)
             return redirect(redirect_url)
     else:
         form = form_class(instance=post)
@@ -377,7 +432,7 @@ def report_comment(request, pk):
 @login_required
 @require_POST
 def delete_comment(request, pk):
-    """Allow comment authors or staff to delete a comment."""
+    """Allow post authors or staff to delete a comment."""
     comment = get_object_or_404(Comment, pk=pk)
     redirect_url = request.POST.get('next') or comment.post.get_absolute_url()
 

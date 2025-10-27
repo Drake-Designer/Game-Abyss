@@ -19,11 +19,28 @@
                   novalidate>
               {% csrf_token %}
               {{ form.as_p }}
-              <div class="d-flex justify-content-between mt-3">
+              <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mt-3">
                 <a class="btn btn-outline-secondary" href="{{ next_url }}">Cancel</a>
-                <button type="submit" class="comp-button comp-button--outline">
-                  <i class="fa-solid fa-save me-2"></i>Save Changes
-                </button>
+                <div class="d-flex flex-wrap gap-2 justify-content-end">
+                  <button type="submit"
+                          name="action"
+                          value="save_draft"
+                          class="comp-button comp-button--outline">
+                    <i class="fa-solid fa-save me-2"></i>Save Draft
+                  </button>
+                  <button type="submit"
+                          name="action"
+                          value="save"
+                          class="comp-button comp-button--outline">
+                    <i class="fa-solid fa-pen-to-square me-2"></i>Save Changes
+                  </button>
+                  <button type="submit"
+                          name="action"
+                          value="publish"
+                          class="comp-button comp-button--primary">
+                    <i class="fa-solid fa-rocket me-2"></i>Publish
+                  </button>
+                </div>
               </div>
             </form>
           </div>

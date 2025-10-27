@@ -13,10 +13,14 @@
           <span class="comp-badge comp-badge--featured"><i class="fas fa-star"></i> Featured</span>
         {% endif %}
         {% if user.is_authenticated and post.status != post.STATUS_APPROVED %}
-          {% if user.is_staff or user == post.author %}
-            <span class="comp-badge comp-badge--status {% if post.status == post.STATUS_PENDING %}comp-badge--pending{% else %}comp-badge--rejected{% endif %}">
-              {{ post.get_status_display }}
-            </span>
+          {% if user.is_staff or user.is_superuser or user == post.author %}
+            {% if post.status == post.STATUS_PENDING %}
+              <span class="comp-badge comp-badge--status comp-badge--pending">{{ post.get_status_display }}</span>
+            {% elif post.status == post.STATUS_REJECTED %}
+              <span class="comp-badge comp-badge--status comp-badge--rejected">{{ post.get_status_display }}</span>
+            {% else %}
+              <span class="comp-badge comp-badge--status comp-badge--neutral">{{ post.get_status_display }}</span>
+            {% endif %}
           {% endif %}
         {% endif %}
       </h1>

@@ -12,9 +12,11 @@
           <div class="comp-card__body p-4">
             <h2 class="page-new-post__title text-center mb-2">Summon a New Chronicle</h2>
             <p class="text-center text-muted mb-4">
-              Forge your entry below.
+              Forge your entry below. Use <strong>Save Draft</strong> to keep it private and finish later.
               {% if not request.user.is_staff and not request.user.is_superuser %}
-                Your post will wait in the shadows until approved.
+                Choosing <strong>Publish</strong> will submit your post for review before it appears on the site.
+              {% else %}
+                Publish will push it live immediately.
               {% endif %}
             </p>
             {# Non-field errors #}
@@ -81,8 +83,17 @@
               {% endfor %}
               {# Form actions #}
               <div class="d-grid gap-2 mt-4 page-new-post__actions">
-                <button type="submit" class="comp-button comp-button--primary">
-                  <i class="fas fa-satellite-dish me-2"></i>Transmit
+                <button type="submit"
+                        name="action"
+                        value="save_draft"
+                        class="comp-button comp-button--outline">
+                  <i class="fas fa-save me-2"></i>Save Draft
+                </button>
+                <button type="submit"
+                        name="action"
+                        value="publish"
+                        class="comp-button comp-button--primary">
+                  <i class="fas fa-satellite-dish me-2"></i>Publish
                 </button>
                 <a href="{% url 'pages:home' %}"
                    class="comp-button comp-button--outline">

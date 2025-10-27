@@ -45,10 +45,12 @@ class BlogPost(models.Model):
     """Blog post with moderation workflow and publishing metadata."""
 
     # Moderation workflow
+    STATUS_DRAFT = 'draft'
     STATUS_PENDING = 'pending'
     STATUS_APPROVED = 'approved'
     STATUS_REJECTED = 'rejected'
     STATUS_CHOICES = [
+        (STATUS_DRAFT, 'Draft'),
         (STATUS_PENDING, 'Pending'),
         (STATUS_APPROVED, 'Approved'),
         (STATUS_REJECTED, 'Rejected'),
@@ -131,14 +133,14 @@ class BlogPost(models.Model):
         # Publishing rules
         if self.status == self.STATUS_APPROVED and not self.published_at:
             self.published_at = timezone.now()
-        elif self.status in (self.STATUS_PENDING, self.STATUS_REJECTED):
+        elif self.status in (self.STATUS_PENDING, self.STATUS_REJECTED, self.STATUS_DRAFT):
             self.published_at = None
 
         # Slug
         if not self.slug:
             slug_field = self._meta.get_field('slug')
             base_slug = slugify(self.title)[:100] or 'post'
-            reference_dt = self.published_at or timezone.now()
+            reference_dt = self.published_at or self.created_at or timezone.now()
             date_str = reference_dt.strftime('%Y-%m-%d')
             base_without_suffix = f"{base_slug}-{date_str}"[
                 : slug_field.max_length].rstrip('-')
@@ -149,7 +151,10 @@ class BlogPost(models.Model):
                 existing = existing.filter(
                     published_at__date=reference_dt.date())
             else:
-                existing = existing.filter(published_at__isnull=True)
+                existing = existing.filter(
+                    published_at__isnull=True,
+                    created_at__date=reference_dt.date(),
+                )
 
             unique_slug = base_without_suffix
             counter = 2
@@ -192,7 +197,7 @@ class BlogPost(models.Model):
 
     def get_absolute_url(self):
         """Canonical URL like /blog/YYYY/MM/DD/slug/."""
-        date = self.published_at or timezone.now()
+        date = self.published_at or self.created_at or timezone.now()
         return f"/blog/{date.year}/{date.month:02d}/{date.day:02d}/{self.slug}/"
 
 
