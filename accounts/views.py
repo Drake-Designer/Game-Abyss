@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import login_required
 from allauth.account.models import EmailAddress
 from allauth.account.views import PasswordChangeView
+from datetime import datetime
+
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -100,9 +102,32 @@ def profile(request, username):
 
     role_badge: dict[str, str] | None = None
     if profile_user.is_superuser:
-        role_badge = {"label": "Admin", "css_class": "comp-badge--admin"}
+        role_badge = {
+            "label": "Super Admin",
+            "css_class": "comp-badge--superadmin",
+        }
     elif profile_user.is_staff:
         role_badge = {"label": "Staff", "css_class": "comp-badge--staff"}
+
+    last_active_candidates: list[datetime] = []
+    if profile_user.last_login:
+        last_active_candidates.append(profile_user.last_login)
+
+    latest_post = public_posts_qs.first()
+    if latest_post:
+        last_active_candidates.append(
+            latest_post.published_at or latest_post.created_at
+        )
+
+    latest_comment = approved_comments_qs.first()
+    if latest_comment:
+        last_active_candidates.append(latest_comment.created_at)
+
+    if draft_posts:
+        last_active_candidates.append(draft_posts[0].updated_at)
+
+    last_active = max(
+        last_active_candidates) if last_active_candidates else None
 
     context = {
         "profile_user": profile_user,
@@ -114,6 +139,11 @@ def profile(request, username):
         "draft_posts": draft_posts,
         "stats": stats,
         "role_badge": role_badge,
+        "member_since": profile_user.date_joined,
+        "last_active": last_active,
+        "show_moderation_tools": is_self and (
+            profile_user.is_staff or profile_user.is_superuser
+        ),
         "has_favorites": bool(profile_obj.favorite_games or profile_obj.favorite_genres),
     }
     return render(request, "accounts/profile.html", context)

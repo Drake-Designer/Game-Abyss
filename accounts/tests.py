@@ -249,6 +249,16 @@ class ProfileDraftVisibilityTests(TestCase):
         self.assertNotContains(response, "Edit profile")
         self.assertNotContains(response, "Delete account")
 
+    def test_staff_owner_sees_moderation_tools_placeholder(self):
+        self.client.force_login(self.staff_user)
+
+        response = self.client.get(
+            reverse("accounts:profile", args=[self.staff_user.username])
+        )
+
+        self.assertContains(response, "Staff tools")
+        self.assertContains(response, "moderation and admin")
+
 
 class ProfilePublicViewTests(TestCase):
     def setUp(self):
@@ -263,7 +273,6 @@ class ProfilePublicViewTests(TestCase):
             email="profile_viewer@example.com",
             password="secret",
         )
-        # Add full name and profile metadata
         self.author.first_name = "Aurora"
         self.author.last_name = "Vega"
         self.author.save(update_fields=["first_name", "last_name"])
@@ -332,14 +341,19 @@ class ProfilePublicViewTests(TestCase):
         formatted_dob = date_format(
             self.author_profile.date_of_birth, "F j, Y"
         )
+        joined = date_format(self.author.date_joined, "F j, Y")
         self.assertContains(response, "Nickname")
         self.assertContains(response, self.author.username)
+        self.assertContains(response, "Member since")
+        self.assertContains(response, joined)
         self.assertContains(response, "Full name")
         self.assertContains(response, "Aurora Vega")
         self.assertContains(response, formatted_dob)
         self.assertContains(response, "Bio")
         self.assertContains(response, self.author_profile.bio)
         self.assertContains(response, "Activity status")
+        self.assertContains(response, "Last active")
+        self.assertNotContains(response, "No activity recorded")
 
     def test_profile_hides_role_badge_for_regular_user(self):
         response = self.client.get(
@@ -377,7 +391,7 @@ class ProfilePublicViewTests(TestCase):
         )
 
         self.assertContains(response, 'data-testid="role-badge"')
-        self.assertContains(response, "Admin")
+        self.assertContains(response, "Super Admin")
 
     def test_profile_owner_sees_their_role_badge(self):
         admin_user = get_user_model().objects.create_superuser(
@@ -391,6 +405,7 @@ class ProfilePublicViewTests(TestCase):
         )
 
         self.assertContains(response, 'data-testid="role-badge"')
+        self.assertContains(response, "Super Admin")
 
     def test_authenticated_user_can_open_other_profile(self):
         self.client.force_login(self.viewer)

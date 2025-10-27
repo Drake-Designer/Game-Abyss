@@ -51,6 +51,10 @@
               <dd class="col-sm-7 mb-0" data-testid="profile-nickname">
                 {{ profile_user.username }}
               </dd>
+              <dt class="col-sm-5 text-uppercase text-muted small">Member since</dt>
+              <dd class="col-sm-7 mb-0" data-testid="profile-member-since">
+                {{ member_since|date:"F j, Y" }}
+              </dd>
               {% if full_name %}
                 <dt class="col-sm-5 text-uppercase text-muted small">Full name</dt>
                 <dd class="col-sm-7 mb-0">
@@ -63,6 +67,14 @@
                   {{ profile.date_of_birth|date:"F j, Y" }}
                 {% else %}
                   <span class="text-muted">Not provided</span>
+                {% endif %}
+              </dd>
+              <dt class="col-sm-5 text-uppercase text-muted small">Last active</dt>
+              <dd class="col-sm-7 mb-0" data-testid="profile-last-active">
+                {% if last_active %}
+                  {{ last_active|date:"F j, Y H:i" }}
+                {% else %}
+                  <span class="text-muted">No activity recorded</span>
                 {% endif %}
               </dd>
             </dl>
@@ -134,6 +146,16 @@
           </div>
         </div>
       </section>
+      {% if show_moderation_tools %}
+        <section class="mb-4">
+          <div class="comp-card">
+            <div class="comp-card__body">
+              <h2 class="comp-card__title">Staff tools</h2>
+              <p class="text-muted mb-0">Quick links to moderation and admin utilities will appear here.</p>
+            </div>
+          </div>
+        </section>
+      {% endif %}
     {% endif %}
     <div class="row g-4">
       <div class="col-lg-6">
