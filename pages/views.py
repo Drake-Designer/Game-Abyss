@@ -8,84 +8,95 @@ from .forms import HelpRequestForm
 from .models import HelpRequest
 
 from blog.models import BlogPost
-from gallery.models import GalleryImage  # NEW
+from gallery.models import GalleryImage
 
+# Homepage constants
 HOME_FEATURED_POST_LIMIT = 6
-HOME_FEATURED_GALLERY_LIMIT = 10  # NEW
+HOME_FEATURED_GALLERY_LIMIT = 10
 HOME_OTHER_POSTS_PER_PAGE = 6
 
 
 class HomeView(TemplateView):
-    """Render the homepage."""
-    template_name = 'pages/home.html'
+    """Render the homepage with featured posts and gallery highlights."""
+    template_name = "pages/home.html"
 
     def get_context_data(self, **kwargs):
-        """Include the featured posts grid and hero gallery images."""
+        """Add featured posts, other posts, and gallery images to context."""
         context = super().get_context_data(**kwargs)
-        context['featured_posts'] = (
+
+        # Featured posts (main grid)
+        featured_qs = (
             BlogPost.objects.filter(
                 featured=True,
                 status=BlogPost.STATUS_APPROVED,
             )
-            .select_related('author')
-            .order_by('-published_at', '-updated_at')[:HOME_FEATURED_POST_LIMIT]
+            .select_related("author")
+            .order_by("-published_at", "-updated_at")
         )
+        featured_posts = list(featured_qs[:HOME_FEATURED_POST_LIMIT])
+        context["featured_posts"] = featured_posts
 
+        # "Latest posts" section should only include approved + featured posts
+        # Exclude any duplicates already shown in the featured grid
+        featured_ids = [p.id for p in featured_posts]
         other_posts_qs = (
             BlogPost.objects.filter(
-                featured=False,
+                featured=True,
                 status=BlogPost.STATUS_APPROVED,
             )
-            .select_related('author')
-            .order_by('-published_at', '-updated_at')
+            .exclude(id__in=featured_ids)
+            .select_related("author")
+            .order_by("-published_at", "-updated_at")
         )
-        page_number = self.request.GET.get('page')
-        paginator = Paginator(other_posts_qs, HOME_OTHER_POSTS_PER_PAGE)
-        context['other_posts_page'] = paginator.get_page(page_number)
 
-        # NEW: featured & approved images for the hero carousel
-        context['hero_gallery_images'] = (
+        # Paginate the "latest" posts
+        page_number = self.request.GET.get("page")
+        paginator = Paginator(other_posts_qs, HOME_OTHER_POSTS_PER_PAGE)
+        context["other_posts_page"] = paginator.get_page(page_number)
+
+        # Hero carousel: only featured and approved gallery images
+        context["hero_gallery_images"] = (
             GalleryImage.objects.featured()
-            .select_related('uploaded_by')[:HOME_FEATURED_GALLERY_LIMIT]
+            .select_related("uploaded_by")[:HOME_FEATURED_GALLERY_LIMIT]
         )
+
         return context
 
 
 class AboutView(TemplateView):
-    """Render the about page."""
-    template_name = 'pages/about.html'
+    """Simple about page."""
+    template_name = "pages/about.html"
 
 
 class ContactView(View):
     """Contact page backed by the HelpRequest model."""
 
-    template_name = 'pages/contact.html'
+    template_name = "pages/contact.html"
     form_class = HelpRequestForm
 
     def get_initial(self, request):
-        """Return default initial values for the form."""
-        initial = {
-            'priority': HelpRequest.PRIORITY_MEDIUM,
-        }
+        """Return default values for the help request form."""
+        initial = {"priority": HelpRequest.PRIORITY_MEDIUM}
         if request.user.is_authenticated:
             initial.update({
-                'name': request.user.get_full_name() or request.user.get_username(),
-                'email': request.user.email,
+                "name": request.user.get_full_name() or request.user.get_username(),
+                "email": request.user.email,
             })
         return initial
 
     def get(self, request):
-        """Show the help request form."""
+        """Render the form with default values."""
         form = self.form_class(initial=self.get_initial(request))
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name, {"form": form})
 
     def post(self, request):
-        """Create a HelpRequest from the submitted data."""
+        """Handle form submission and create a HelpRequest entry."""
         form = self.form_class(request.POST)
 
         if form.is_valid():
             help_request = form.save(commit=False)
 
+            # Auto-fill user info if authenticated
             if request.user.is_authenticated:
                 help_request.user = request.user
                 if not help_request.name:
@@ -93,6 +104,7 @@ class ContactView(View):
                 if not help_request.email:
                     help_request.email = request.user.email
 
+            # Ensure defaults for status and priority
             help_request.status = help_request.status or HelpRequest.STATUS_OPEN
             help_request.priority = help_request.priority or HelpRequest.PRIORITY_MEDIUM
             help_request.save()
@@ -101,10 +113,11 @@ class ContactView(View):
                 request,
                 "Thanks for reaching out! Your help request has been submitted successfully."
             )
-            return redirect('pages:contact')
+            return redirect("pages:contact")
 
+        # Show error message if form is invalid
         messages.error(
             request,
             "We couldn't send your request. Please review the errors below and try again."
         )
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name, {"form": form})

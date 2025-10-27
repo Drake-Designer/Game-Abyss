@@ -1,11 +1,16 @@
+from datetime import date
+
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.urls import reverse
+from django.utils.formats import date_format
 
 from blog.models import BlogPost, Comment, PostReaction, ReactionType
+
+from .models import UserProfile
 
 
 def _verify_email(user):
@@ -258,6 +263,16 @@ class ProfilePublicViewTests(TestCase):
             email="profile_viewer@example.com",
             password="secret",
         )
+        # Add full name and profile metadata
+        self.author.first_name = "Aurora"
+        self.author.last_name = "Vega"
+        self.author.save(update_fields=["first_name", "last_name"])
+        self.author_profile = UserProfile.objects.create(
+            user=self.author,
+            date_of_birth=date(1992, 7, 16),
+            bio="Charting nebulae and new horizons.",
+        )
+
         self.approved_post = BlogPost.objects.create(
             title="Approved spotlight",
             body="Public content",
@@ -308,6 +323,74 @@ class ProfilePublicViewTests(TestCase):
         self.assertNotContains(response, "Pending feedback")
         self.assertContains(response, 'data-testid="public-post-count">1')
         self.assertContains(response, 'data-testid="approved-comment-count">1')
+
+    def test_public_profile_shows_profile_metadata(self):
+        response = self.client.get(
+            reverse("accounts:profile", args=[self.author.username])
+        )
+
+        formatted_dob = date_format(
+            self.author_profile.date_of_birth, "F j, Y"
+        )
+        self.assertContains(response, "Nickname")
+        self.assertContains(response, self.author.username)
+        self.assertContains(response, "Full name")
+        self.assertContains(response, "Aurora Vega")
+        self.assertContains(response, formatted_dob)
+        self.assertContains(response, "Bio")
+        self.assertContains(response, self.author_profile.bio)
+        self.assertContains(response, "Activity status")
+
+    def test_profile_hides_role_badge_for_regular_user(self):
+        response = self.client.get(
+            reverse("accounts:profile", args=[self.author.username])
+        )
+
+        self.assertNotContains(response, 'data-testid="role-badge"')
+
+    def test_profile_shows_role_badge_for_staff_user(self):
+        staff_user = get_user_model().objects.create_user(
+            username="staffer",
+            email="staffer@example.com",
+            password="secret",
+            is_staff=True,
+        )
+        UserProfile.objects.create(user=staff_user)
+
+        response = self.client.get(
+            reverse("accounts:profile", args=[staff_user.username])
+        )
+
+        self.assertContains(response, 'data-testid="role-badge"')
+        self.assertContains(response, "Staff")
+
+    def test_profile_shows_admin_badge_for_superuser(self):
+        admin_user = get_user_model().objects.create_superuser(
+            username="overseer",
+            email="overseer@example.com",
+            password="secret",
+        )
+        UserProfile.objects.create(user=admin_user)
+
+        response = self.client.get(
+            reverse("accounts:profile", args=[admin_user.username])
+        )
+
+        self.assertContains(response, 'data-testid="role-badge"')
+        self.assertContains(response, "Admin")
+
+    def test_profile_owner_sees_their_role_badge(self):
+        admin_user = get_user_model().objects.create_superuser(
+            username="stellar", email="stellar@example.com", password="secret"
+        )
+        UserProfile.objects.create(user=admin_user)
+        self.client.force_login(admin_user)
+
+        response = self.client.get(
+            reverse("accounts:profile", args=[admin_user.username])
+        )
+
+        self.assertContains(response, 'data-testid="role-badge"')
 
     def test_authenticated_user_can_open_other_profile(self):
         self.client.force_login(self.viewer)

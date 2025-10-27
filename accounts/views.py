@@ -111,6 +111,18 @@ def profile(request, username):
 
     full_name = (profile_user.get_full_name() or "").strip() or None
 
+    role_badge: dict[str, str] | None = None
+    if profile_user.is_superuser:
+        role_badge = {
+            "label": "Admin",
+            "css_class": "comp-badge--admin",
+        }
+    elif profile_user.is_staff:
+        role_badge = {
+            "label": "Staff",
+            "css_class": "comp-badge--staff",
+        }
+
     context = {
         "profile_user": profile_user,
         "profile": profile_obj,
@@ -120,6 +132,7 @@ def profile(request, username):
         "comments_page": comments_page,
         "draft_posts": draft_posts,
         "stats": stats,
+        "role_badge": role_badge,
     }
     return render(request, "accounts/profile.html", context)
 

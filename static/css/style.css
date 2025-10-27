@@ -391,6 +391,21 @@ hr {
   text-transform: uppercase;
 }
 
+/* New badges added by patch */
+.comp-badge--staff {
+  background: rgb(78 205 196 / 25%);
+  border: 1px solid rgb(78 205 196 / 55%);
+  color: var(--color-secondary);
+  font-weight: 600;
+}
+
+.comp-badge--admin {
+  background: rgb(255 107 53 / 25%);
+  border: 1px solid rgb(255 107 53 / 55%);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
 .comp-badge--featured {
   background: #ffc107;
   color: #111;
@@ -1109,9 +1124,9 @@ select::-ms-expand {
   color: #fff;
   cursor: pointer;
   display: flex;
-  align-items: center; /* centra verticalmente l’icona */
-  justify-content: center; /* centra orizzontalmente l’icona */
-  line-height: 1; /* evita baseline stramba del font */
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   font-size: 1.2rem;
   height: 50px;
   width: 50px;
@@ -1188,7 +1203,7 @@ select::-ms-expand {
   position: absolute;
   top: 50%;
   left: 50%;
-  height: 36px; /* fisso = stabile rispetto al diametro 50px */
+  height: 36px;
   width: 2px;
   transform: translate(-50%, -50%) rotate(-45deg);
   opacity: 0;

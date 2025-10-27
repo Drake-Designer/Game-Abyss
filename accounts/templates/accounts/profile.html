@@ -14,8 +14,14 @@
                height="120">
         </div>
         <div>
-          <h1 class="mb-1">{{ profile_user.username }}</h1>
-          {% if full_name %}<p class="text-muted mb-0">{{ full_name }}</p>{% endif %}
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <h1 class="mb-0">{{ profile_user.username }}</h1>
+            {% if role_badge %}
+              <span class="comp-badge {{ role_badge.css_class }}"
+                    data-testid="role-badge">{{ role_badge.label }}</span>
+            {% endif %}
+          </div>
+          {% if full_name %}<p class="text-muted mb-0" data-testid="profile-full-name">{{ full_name }}</p>{% endif %}
         </div>
         {% if is_self %}
           <div class="ms-md-auto d-flex flex-wrap gap-2">
@@ -40,14 +46,41 @@
         <div class="comp-card h-100">
           <div class="comp-card__body">
             <h2 class="comp-card__title">About</h2>
-            <p class="mb-0">{{ profile.bio|default:"This explorer has not written a bio yet." }}</p>
+            <dl class="row gy-2 mb-0">
+              <dt class="col-sm-5 text-uppercase text-muted small">Nickname</dt>
+              <dd class="col-sm-7 mb-0" data-testid="profile-nickname">
+                {{ profile_user.username }}
+              </dd>
+              {% if full_name %}
+                <dt class="col-sm-5 text-uppercase text-muted small">Full name</dt>
+                <dd class="col-sm-7 mb-0">
+                  {{ full_name }}
+                </dd>
+              {% endif %}
+              <dt class="col-sm-5 text-uppercase text-muted small">Date of birth</dt>
+              <dd class="col-sm-7 mb-0" data-testid="profile-birthdate">
+                {% if profile.date_of_birth %}
+                  {{ profile.date_of_birth|date:"F j, Y" }}
+                {% else %}
+                  <span class="text-muted">Not provided</span>
+                {% endif %}
+              </dd>
+            </dl>
+            <div class="mt-3">
+              <h3 class="h6 text-uppercase text-muted fw-semibold mb-2">Bio</h3>
+              {% if profile.bio %}
+                <p class="mb-0" data-testid="profile-bio">{{ profile.bio }}</p>
+              {% else %}
+                <p class="text-muted mb-0">This explorer has not written a bio yet.</p>
+              {% endif %}
+            </div>
           </div>
         </div>
       </div>
       <div class="col-lg-7">
         <div class="comp-card h-100">
           <div class="comp-card__body">
-            <h2 class="comp-card__title">Activity</h2>
+            <h2 class="comp-card__title">Activity status</h2>
             <dl class="row mb-0">
               <dt class="col-sm-6">Public posts</dt>
               {# djlint:off #}
