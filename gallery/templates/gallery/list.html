@@ -35,10 +35,11 @@
                 <i class="fas fa-bolt comp-icon--primary"></i>
                 {{ image.title|default:'Untitled upload' }}
               </span>
-              <span class="text-white-50 small d-inline-flex align-items-center gap-1">
+              <a class="text-white-50 small d-inline-flex align-items-center gap-1 util-no-decoration"
+                 href="{% url 'accounts:profile' image.uploaded_by.username %}">
                 <i class="fas fa-user-astronaut"></i>
                 {{ image.uploaded_by.get_username }}
-              </span>
+              </a>
               <span class="text-white-50 small d-inline-flex align-items-center gap-1">
                 <i class="fas fa-calendar-alt"></i>
                 {{ image.created_at|date:"F j, Y" }}

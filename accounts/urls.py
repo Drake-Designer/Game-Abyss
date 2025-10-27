@@ -18,6 +18,6 @@ urlpatterns = [
     # Delete user profile + cascade delete posts and comments
     path("profile/delete/", views.profile_delete, name="profile_delete"),
 
-    # Public profile by username
-    path("profile/<str:username>/", views.profile, name="profile"),
+    # Public profile by username (canonical /u/<username>/ URL)
+    path("u/<str:username>/", views.profile, name="profile"),
 ]

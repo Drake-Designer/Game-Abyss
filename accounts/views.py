@@ -5,9 +5,8 @@ from allauth.account.models import EmailAddress
 from allauth.account.views import PasswordChangeView
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 
-from blog.models import BlogPost, Comment, CommentReport
+from blog.models import BlogPost, Comment
 
 from .forms import ProfileForm
 from .models import UserProfile
@@ -69,119 +68,58 @@ def _process_email_change(request, user, new_email: str):
     )
 
 
-def _rarity_for_user(user):
-    """Simple 'rarity' badge based on activity volume."""
-    post_count = user.blog_posts.count()
-    comment_count = user.comments.count()
-    total = post_count + comment_count
-    if total >= 30 or post_count >= 15:
-        return "Legendary"
-    if total >= 15 or post_count >= 8:
-        return "Epic"
-    return "Common"
-
-
-def _build_stats(user):
-    """Aggregate basic activity stats for the profile dashboard."""
-    posts = user.blog_posts.all()
-    comments = user.comments.all()
-    total_posts = posts.count()
-    total_comments = comments.count()
-    approved_posts = posts.filter(status=BlogPost.STATUS_APPROVED).count()
-    approved_comments = comments.filter(status=Comment.STATUS_APPROVED).count()
-    reports_received = CommentReport.objects.filter(
-        comment__author=user).count()
-    reports_made = CommentReport.objects.filter(reported_by=user).count()
-    approved_total = approved_posts + approved_comments
-    overall_total = total_posts + total_comments
-    approval_rate = round((approved_total / overall_total)
-                          * 100) if overall_total else 0
-    return {
-        "total_posts": total_posts,
-        "total_comments": total_comments,
-        "approved_posts": approved_posts,
-        "approved_comments": approved_comments,
-        "approval_rate": approval_rate,
-        "reports_received": reports_received,
-        "reports_made": reports_made,
-    }
-
-
 def profile(request, username):
-    """Public profile page (self-view shows private data and pending items)."""
-    profile_user = get_object_or_404(User.objects.all(), username=username)
+    """Public profile page showing a user's activity."""
+    profile_user = get_object_or_404(
+        User.objects.select_related("profile"),
+        username=username,
+    )
     profile_obj = _get_profile(profile_user)
 
     is_self = request.user.is_authenticated and request.user.pk == profile_user.pk
-    viewer_is_staff = request.user.is_authenticated and request.user.is_staff
-    viewer_is_superuser = request.user.is_authenticated and request.user.is_superuser
-    can_moderate = request.user.is_authenticated and (
-        request.user.is_staff or request.user.is_superuser
+
+    public_posts_qs = (
+        profile_user.blog_posts.filter(status=BlogPost.STATUS_APPROVED)
+        .select_related("author")
+        .order_by("-published_at", "-created_at")
     )
 
-    show_private = is_self or viewer_is_superuser
-
-    base_posts = profile_user.blog_posts.select_related("author")
-    base_comments = profile_user.comments.select_related("post", "author")
-
-    draft_posts_qs = (
-        base_posts.filter(status=BlogPost.STATUS_DRAFT)
-        .order_by("-updated_at")
-        if is_self
-        else BlogPost.objects.none()
+    approved_comments_qs = (
+        profile_user.comments.filter(status=Comment.STATUS_APPROVED)
+        .select_related("post", "post__author", "author")
+        .order_by("-created_at")
     )
 
-    posts_qs = base_posts.exclude(status=BlogPost.STATUS_DRAFT)
+    draft_posts = []
+    if is_self:
+        draft_posts = list(
+            profile_user.blog_posts.filter(status=BlogPost.STATUS_DRAFT)
+            .select_related("author")
+            .order_by("-updated_at")
+        )
 
-    if not (is_self or viewer_is_superuser):
-        posts_qs = posts_qs.filter(status=BlogPost.STATUS_APPROVED)
-        comments_qs = base_comments.filter(status=Comment.STATUS_APPROVED)
-    else:
-        posts_qs = base_posts
-        comments_qs = base_comments
+    post_paginator = Paginator(public_posts_qs, 5)
+    comment_paginator = Paginator(approved_comments_qs, 5)
 
-    posts_qs = posts_qs.order_by("-created_at")
-    comments_qs = comments_qs.order_by("-created_at")
+    posts_page = post_paginator.get_page(request.GET.get("post_page"))
+    comments_page = comment_paginator.get_page(request.GET.get("comment_page"))
 
-    post_paginator = Paginator(posts_qs, 5)
-    comment_paginator = Paginator(comments_qs, 5)
+    stats = {
+        "public_posts": public_posts_qs.count(),
+        "approved_comments": approved_comments_qs.count(),
+    }
 
-    post_page_number = request.GET.get("post_page")
-    comment_page_number = request.GET.get("comment_page")
-
-    posts_page = post_paginator.get_page(post_page_number)
-    comments_page = comment_paginator.get_page(comment_page_number)
-
-    quick_posts = posts_qs[:5]
-    quick_comments = (
-        profile_user.comments.select_related(
-            "post").order_by("-created_at")[:5]
-    )
-
-    admin_links = {}
-    if viewer_is_superuser:
-        admin_links = {
-            "users": reverse("admin:auth_user_changelist"),
-            "posts": reverse("admin:blog_blogpost_changelist"),
-            "comments": reverse("admin:blog_comment_changelist"),
-        }
+    full_name = (profile_user.get_full_name() or "").strip() or None
 
     context = {
         "profile_user": profile_user,
         "profile": profile_obj,
         "is_self": is_self,
-        "can_moderate": can_moderate and not is_self,
-        "viewer_is_staff": viewer_is_staff,
-        "viewer_is_superuser": viewer_is_superuser,
-        "show_private": show_private,
+        "full_name": full_name,
         "posts_page": posts_page,
         "comments_page": comments_page,
-        "quick_posts": quick_posts,
-        "quick_comments": quick_comments,
-        "draft_posts": list(draft_posts_qs),
-        "admin_links": admin_links,
-        "stats": _build_stats(profile_user),
-        "rarity": _rarity_for_user(profile_user),
+        "draft_posts": draft_posts,
+        "stats": stats,
     }
     return render(request, "accounts/profile.html", context)
 
@@ -235,7 +173,7 @@ def profile_delete(request):
 
 @login_required
 def my_profile_redirect(request):
-    """Shortcut: /profile/ -> /profile/<username>/ for the logged-in user."""
+    """Shortcut: /profile/ -> /u/<username>/ for the logged-in user."""
     return redirect("accounts:profile", request.user.username)
 
 

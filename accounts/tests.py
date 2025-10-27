@@ -213,8 +213,9 @@ class ProfileDraftVisibilityTests(TestCase):
             reverse("accounts:profile", args=[self.author.username])
         )
 
+        self.assertContains(response, 'data-testid="draft-posts"')
         self.assertContains(response, "Hidden draft")
-        self.assertContains(response, "Draft ·")
+        self.assertContains(response, "Continue editing")
         self.assertContains(response, "Visible post")
 
     def test_other_user_cannot_see_drafts(self):
@@ -226,7 +227,9 @@ class ProfileDraftVisibilityTests(TestCase):
 
         self.assertContains(response, "Visible post")
         self.assertNotContains(response, "Hidden draft")
-        self.assertNotContains(response, "Draft ·")
+        self.assertNotContains(response, 'data-testid="draft-posts"')
+        self.assertNotContains(response, "Edit profile")
+        self.assertNotContains(response, "Delete account")
 
     def test_staff_user_cannot_see_drafts(self):
         self.client.force_login(self.staff_user)
@@ -237,4 +240,85 @@ class ProfileDraftVisibilityTests(TestCase):
 
         self.assertContains(response, "Visible post")
         self.assertNotContains(response, "Hidden draft")
-        self.assertNotContains(response, "Draft ·")
+        self.assertNotContains(response, 'data-testid="draft-posts"')
+        self.assertNotContains(response, "Edit profile")
+        self.assertNotContains(response, "Delete account")
+
+
+class ProfilePublicViewTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.author = User.objects.create_user(
+            username="profile_author",
+            email="profile_author@example.com",
+            password="secret",
+        )
+        self.viewer = User.objects.create_user(
+            username="profile_viewer",
+            email="profile_viewer@example.com",
+            password="secret",
+        )
+        self.approved_post = BlogPost.objects.create(
+            title="Approved spotlight",
+            body="Public content",
+            author=self.author,
+            status=BlogPost.STATUS_APPROVED,
+        )
+        self.pending_post = BlogPost.objects.create(
+            title="Pending showcase",
+            body="Pending content",
+            author=self.author,
+            status=BlogPost.STATUS_PENDING,
+        )
+        self.draft_post = BlogPost.objects.create(
+            title="Draft idea",
+            body="Draft content",
+            author=self.author,
+            status=BlogPost.STATUS_DRAFT,
+        )
+        self.approved_comment = Comment.objects.create(
+            post=self.approved_post,
+            author=self.author,
+            body="Approved feedback",
+            status=Comment.STATUS_APPROVED,
+        )
+        self.pending_comment = Comment.objects.create(
+            post=self.approved_post,
+            author=self.author,
+            body="Pending feedback",
+            status=Comment.STATUS_PENDING,
+        )
+
+    def test_profile_url_pattern(self):
+        self.assertEqual(
+            reverse("accounts:profile", args=[self.author.username]),
+            f"/u/{self.author.username}/",
+        )
+
+    def test_public_profile_shows_only_public_content(self):
+        response = self.client.get(
+            reverse("accounts:profile", args=[self.author.username])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.approved_post.title)
+        self.assertNotContains(response, self.pending_post.title)
+        self.assertNotContains(response, self.draft_post.title)
+        self.assertContains(response, "Approved feedback")
+        self.assertNotContains(response, "Pending feedback")
+        self.assertContains(response, 'data-testid="public-post-count">1')
+        self.assertContains(response, 'data-testid="approved-comment-count">1')
+
+    def test_authenticated_user_can_open_other_profile(self):
+        self.client.force_login(self.viewer)
+
+        response = self.client.get(
+            reverse("accounts:profile", args=[self.author.username])
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_profile_404_for_unknown_user(self):
+        response = self.client.get(reverse("accounts:profile", args=["ghost"]))
+
+        self.assertEqual(response.status_code, 404)

@@ -1,9 +1,3 @@
-"""
-URL configuration for core project.
-
-For more information see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-"""
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -12,33 +6,25 @@ from django.conf.urls.static import static
 from accounts.views import VerifiedEmailPasswordChangeView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
 
-    # Authentication system (django-allauth)
     path(
-        'accounts/password/change/',
+        "accounts/password/change/",
         VerifiedEmailPasswordChangeView.as_view(),
-        name='account_change_password',
+        name="account_change_password",
     ),
-    path('accounts/', include('allauth.urls')),
+    path("accounts/", include("allauth.urls")),
 
-    # Custom user profiles
-    path('user/', include(('accounts.urls', 'accounts'), namespace='accounts')),
+    # Accounts alla root: il profilo pubblico è /u/<username>/
+    path("", include(("accounts.urls", "accounts"), namespace="accounts")),
 
-    # Pages app (home, about, contact)
-    path('', include('pages.urls')),
-
-    # Blog app
-    path('blog/', include('blog.urls', namespace='blog')),
-
-    # Gallery app
-    path('gallery/', include('gallery.urls', namespace='gallery')),
+    path("", include("pages.urls")),
+    path("blog/", include("blog.urls", namespace="blog")),
+    path("gallery/", include("gallery.urls", namespace="gallery")),
 ]
 
-# Serve media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
                           document_root=settings.MEDIA_ROOT)
 
-# Custom error handlers
 handler403 = "core.views.permission_denied_view"
