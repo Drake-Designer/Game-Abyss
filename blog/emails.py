@@ -12,6 +12,7 @@ User = get_user_model()
 
 
 def _truncate_excerpt(text: str, limit: int = 200) -> str:
+    """Return a shortened text excerpt with a default message."""
     excerpt = (text or "").strip()
     if len(excerpt) > limit:
         excerpt = excerpt[: limit - 3].rstrip() + "..."
@@ -19,7 +20,7 @@ def _truncate_excerpt(text: str, limit: int = 200) -> str:
 
 
 def get_primary_superadmin_email() -> list[str]:
-    """Return the primary super admin email if configured or fallback to DB."""
+    """Return the primary superadmin email address."""
     configured = getattr(settings, "PRIMARY_SUPERADMIN_EMAIL", "")
     if configured:
         return [configured]
@@ -29,14 +30,18 @@ def get_primary_superadmin_email() -> list[str]:
 
 
 def get_staff_recipients() -> list[str]:
-    """Return active staff emails for moderation alerts."""
+    """Return staff emails for moderation alerts."""
     qs = User.objects.filter(is_staff=True, is_active=True).exclude(email="")
     return list(qs.values_list("email", flat=True))
 
 
 def notify_superadmins_new_post(post) -> None:
+    """Notify superadmins when a new post is submitted."""
     subject = "[Game Abyss] New post submitted"
-    post_url = build_absolute_uri(post.get_absolute_url())
+    admin_url = build_absolute_uri(reverse("admin:blog_blogpost_changelist"))
+    post_admin_url = build_absolute_uri(
+        reverse("admin:blog_blogpost_change", args=[post.pk])
+    )
     context = {
         "greeting": "Hello Council,",
         "intro": (
@@ -49,9 +54,11 @@ def notify_superadmins_new_post(post) -> None:
         "detail_items": [
             {"label": "Author", "value": post.author.get_username()},
             {"label": "Status", "value": post.get_status_display()},
-            {"label": "Preview", "value": post_url, "url": post_url},
+            {"label": "Post (admin)", "value": post_admin_url,
+             "url": post_admin_url},
+            {"label": "All posts", "value": admin_url, "url": admin_url},
         ],
-        "cta": {"label": "Review submission", "url": post_url},
+        "cta": {"label": "Review submission", "url": post_admin_url},
         "closing": "Thanks for keeping the Abyss curated.",
         "signature": "The Game Abyss Council",
         "footer_note": "Notification for Game Abyss superadmins.",
@@ -66,10 +73,13 @@ def notify_superadmins_new_post(post) -> None:
 
 
 def notify_superadmins_new_comment(comment) -> None:
+    """Notify superadmins when a new comment is submitted."""
     subject = "[Game Abyss] New comment submitted"
-    post_url = build_absolute_uri(comment.post.get_absolute_url())
-    moderation_url = build_absolute_uri(
-        f"{comment.post.get_absolute_url()}#comment-{comment.pk}"
+    comment_admin_url = build_absolute_uri(
+        reverse("admin:blog_comment_change", args=[comment.pk])
+    )
+    post_admin_url = build_absolute_uri(
+        reverse("admin:blog_blogpost_change", args=[comment.post.pk])
     )
     context = {
         "greeting": "Hello Council,",
@@ -82,10 +92,11 @@ def notify_superadmins_new_comment(comment) -> None:
         ],
         "detail_items": [
             {"label": "Commenter", "value": comment.author.get_username()},
-            {"label": "Post", "value": comment.post.title, "url": post_url},
-            {"label": "Current status", "value": comment.get_status_display()},
+            {"label": "Post (admin)", "value": post_admin_url,
+             "url": post_admin_url},
+            {"label": "Status", "value": comment.get_status_display()},
         ],
-        "cta": {"label": "Moderate comment", "url": moderation_url},
+        "cta": {"label": "Moderate comment", "url": comment_admin_url},
         "closing": "Stay vigilant, council members.",
         "signature": "Game Abyss Moderation",
         "footer_note": "Notification for Game Abyss superadmins.",
@@ -100,6 +111,7 @@ def notify_superadmins_new_comment(comment) -> None:
 
 
 def notify_author_post_approved(post) -> None:
+    """Notify the author when a post is approved."""
     if not getattr(post.author, "email", ""):
         return
     subject = "[Game Abyss] Your post was approved"
@@ -129,15 +141,14 @@ def notify_author_post_approved(post) -> None:
 
 
 def notify_author_post_featured(post) -> None:
+    """Notify the author when a post is featured."""
     if not getattr(post.author, "email", ""):
         return
     subject = "[Game Abyss] Your post is Featured"
     post_url = build_absolute_uri(post.get_absolute_url())
     context = {
         "greeting": f"Explorer {post.author.get_username()},",
-        "intro": (
-            "Your post just breached the spotlight — the Council marked it as Featured."
-        ),
+        "intro": "Your post was marked as Featured.",
         "body_lines": [
             f"Title: \"{post.title}\"",
             "Expect a surge of eyes on your signal!",
@@ -160,14 +171,13 @@ def notify_author_post_featured(post) -> None:
 
 
 def notify_author_post_rejected(post) -> None:
+    """Notify the author when a post is rejected."""
     if not getattr(post.author, "email", ""):
         return
     subject = "[Game Abyss] Your post was rejected"
     context = {
         "greeting": f"Explorer {post.author.get_username()},",
-        "intro": (
-            "The Council reviewed your post but it won't surface on the site this round."
-        ),
+        "intro": "The Council reviewed your post but it won't surface this round.",
         "body_lines": [
             f"Title: \"{post.title}\"",
             "Tighten the signal and submit again when you're ready.",
@@ -186,14 +196,17 @@ def notify_author_post_rejected(post) -> None:
 
 
 def notify_staff_comment_report(report) -> None:
+    """Notify staff when a comment is reported."""
     recipients = get_staff_recipients()
     if not recipients:
         return
     subject = "[Game Abyss] Comment reported"
-    moderation_url = build_absolute_uri(
+    comment_admin_url = build_absolute_uri(
         reverse("admin:blog_comment_change", args=[report.comment.pk])
     )
-    post_url = build_absolute_uri(report.comment.post.get_absolute_url())
+    post_admin_url = build_absolute_uri(
+        reverse("admin:blog_blogpost_change", args=[report.comment.post.pk])
+    )
     context = {
         "greeting": "Heads up, team,",
         "intro": (
@@ -205,11 +218,12 @@ def notify_staff_comment_report(report) -> None:
             f"Comment excerpt: {_truncate_excerpt(report.comment.body)}",
         ],
         "detail_items": [
-            {"label": "Original post", "value": post_url, "url": post_url},
+            {"label": "Post (admin)", "value": post_admin_url,
+             "url": post_admin_url},
             {"label": "Reporter", "value": report.reported_by.get_username()},
             {"label": "Comment author", "value": report.comment.author.get_username()},
         ],
-        "cta": {"label": "Open in admin", "url": moderation_url},
+        "cta": {"label": "Open in admin", "url": comment_admin_url},
         "closing": "Thanks for watching the Abyss gates.",
         "signature": "Game Abyss Moderation",
         "footer_note": "Notification for Game Abyss staff.",
