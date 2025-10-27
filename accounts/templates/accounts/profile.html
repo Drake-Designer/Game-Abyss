@@ -7,7 +7,7 @@
   <section class="page-profile">
     <header class="mb-4">
       <div class="d-flex flex-column flex-md-row gap-3 align-items-md-center">
-        <div class="flex-shrink-0 text-center text-md-start">
+        <div class="shrink-0 text-center text-md-start">
           <img src="{{ profile.get_avatar_url }}"
                alt="Avatar of {{ profile_user.username }}"
                class="rounded-circle border util-avatar-img"
@@ -204,6 +204,7 @@
         <div class="comp-card h-100">
           <div class="comp-card__body">
             <h2 class="comp-card__title">Posts</h2>
+            <h3 class="h6 text-uppercase text-muted">Published &amp; moderated</h3>
             {% if posts_page.object_list %}
               <ul class="list-unstyled">
                 {% for post in posts_page.object_list %}
@@ -245,7 +246,29 @@
                 </nav>
               {% endif %}
             {% else %}
-              <p class="text-muted mb-0">No posts to show.</p>
+              <p class="text-muted">No published posts to show.</p>
+            {% endif %}
+            {% if is_self %}
+              <hr>
+              <h3 class="h6 text-uppercase text-muted">Drafts</h3>
+              {% if draft_posts %}
+                <ul class="list-unstyled mb-0">
+                  {% for draft in draft_posts %}
+                    <li class="mb-3 border-bottom pb-2">
+                      <div class="d-flex justify-content-between align-items-center gap-2">
+                        <div>
+                          <span class="fw-semibold">{{ draft.title }}</span>
+                          <div class="small text-muted">Draft · Last updated {{ draft.updated_at|date:"j M Y H:i" }}</div>
+                        </div>
+                        <a class="btn btn-sm btn-outline-primary"
+                           href="{% url 'blog:edit_post' draft.pk %}">Continue editing</a>
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-muted mb-0">You have no drafts.</p>
+              {% endif %}
             {% endif %}
           </div>
         </div>

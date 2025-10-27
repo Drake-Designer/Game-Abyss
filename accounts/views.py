@@ -124,8 +124,17 @@ def profile(request, username):
     base_posts = profile_user.blog_posts.select_related("author")
     base_comments = profile_user.comments.select_related("post", "author")
 
+    draft_posts_qs = (
+        base_posts.filter(status=BlogPost.STATUS_DRAFT)
+        .order_by("-updated_at")
+        if is_self
+        else BlogPost.objects.none()
+    )
+
+    posts_qs = base_posts.exclude(status=BlogPost.STATUS_DRAFT)
+
     if not (is_self or viewer_is_superuser):
-        posts_qs = base_posts.filter(status=BlogPost.STATUS_APPROVED)
+        posts_qs = posts_qs.filter(status=BlogPost.STATUS_APPROVED)
         comments_qs = base_comments.filter(status=Comment.STATUS_APPROVED)
     else:
         posts_qs = base_posts
@@ -143,7 +152,7 @@ def profile(request, username):
     posts_page = post_paginator.get_page(post_page_number)
     comments_page = comment_paginator.get_page(comment_page_number)
 
-    quick_posts = profile_user.blog_posts.order_by("-created_at")[:5]
+    quick_posts = posts_qs[:5]
     quick_comments = (
         profile_user.comments.select_related(
             "post").order_by("-created_at")[:5]
@@ -169,6 +178,7 @@ def profile(request, username):
         "comments_page": comments_page,
         "quick_posts": quick_posts,
         "quick_comments": quick_comments,
+        "draft_posts": list(draft_posts_qs),
         "admin_links": admin_links,
         "stats": _build_stats(profile_user),
         "rarity": _rarity_for_user(profile_user),

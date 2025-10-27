@@ -180,3 +180,61 @@ class EmailVerificationRequirementTests(TestCase):
 
         response = self.client.get(reverse("account_change_password"))
         self.assertEqual(response.status_code, 200)
+
+
+class ProfileDraftVisibilityTests(TestCase):
+    def setUp(self):
+        self.author = get_user_model().objects.create_user(
+            username="author", email="author@example.com", password="secret"
+        )
+        self.other_user = get_user_model().objects.create_user(
+            username="reader", email="reader@example.com", password="secret"
+        )
+        self.staff_user = get_user_model().objects.create_user(
+            username="mod", email="mod@example.com", password="secret", is_staff=True
+        )
+        self.draft_post = BlogPost.objects.create(
+            title="Hidden draft",
+            body="Draft content",
+            author=self.author,
+            status=BlogPost.STATUS_DRAFT,
+        )
+        self.published_post = BlogPost.objects.create(
+            title="Visible post",
+            body="Published content",
+            author=self.author,
+            status=BlogPost.STATUS_APPROVED,
+        )
+
+    def test_author_can_see_draft_section(self):
+        self.client.force_login(self.author)
+
+        response = self.client.get(
+            reverse("accounts:profile", args=[self.author.username])
+        )
+
+        self.assertContains(response, "Hidden draft")
+        self.assertContains(response, "Draft ·")
+        self.assertContains(response, "Visible post")
+
+    def test_other_user_cannot_see_drafts(self):
+        self.client.force_login(self.other_user)
+
+        response = self.client.get(
+            reverse("accounts:profile", args=[self.author.username])
+        )
+
+        self.assertContains(response, "Visible post")
+        self.assertNotContains(response, "Hidden draft")
+        self.assertNotContains(response, "Draft ·")
+
+    def test_staff_user_cannot_see_drafts(self):
+        self.client.force_login(self.staff_user)
+
+        response = self.client.get(
+            reverse("accounts:profile", args=[self.author.username])
+        )
+
+        self.assertContains(response, "Visible post")
+        self.assertNotContains(response, "Hidden draft")
+        self.assertNotContains(response, "Draft ·")
