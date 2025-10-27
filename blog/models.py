@@ -80,7 +80,7 @@ class BlogPost(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(
         max_length=120,
-        unique_for_date='published_at',
+        unique=True,
         blank=True,
         editable=False,
     )
@@ -160,22 +160,11 @@ class BlogPost(models.Model):
         # Slug
         if not self.slug:
             slug_field = self._meta.get_field('slug')
-            base_slug = slugify(self.title)[:100] or 'post'
-            reference_dt = self.published_at or self.created_at or timezone.now()
-            date_str = reference_dt.strftime('%Y-%m-%d')
-            base_without_suffix = f"{base_slug}-{date_str}"[
-                : slug_field.max_length].rstrip('-')
+            base_slug = slugify(self.title)[: slug_field.max_length] or 'post'
+            base_without_suffix = base_slug.rstrip('-') or 'post'
 
             existing = BlogPost.objects.exclude(
                 pk=self.pk) if self.pk else BlogPost.objects.all()
-            if self.published_at:
-                existing = existing.filter(
-                    published_at__date=reference_dt.date())
-            else:
-                existing = existing.filter(
-                    published_at__isnull=True,
-                    created_at__date=reference_dt.date(),
-                )
 
             unique_slug = base_without_suffix
             counter = 2
