@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}
   {{ profile_user.username }} · Profile · Game Abyss
 {% endblock title %}
@@ -21,24 +22,7 @@
                     data-testid="role-badge">{{ role_badge.label }}</span>
             {% endif %}
           </div>
-          {% if full_name %}<p class="text-muted mb-0" data-testid="profile-full-name">{{ full_name }}</p>{% endif %}
         </div>
-        {% if is_self %}
-          <div class="ms-md-auto d-flex flex-wrap gap-2">
-            <a class="comp-button comp-button--outline"
-               href="{% url 'accounts:profile_edit' %}">
-              <i class="fa-solid fa-pen-to-square"></i><span>Edit profile</span>
-            </a>
-            <a class="comp-button comp-button--outline"
-               href="{% url 'account_change_password' %}">
-              <i class="fa-solid fa-key"></i><span>Change password</span>
-            </a>
-            <a class="comp-button comp-button--outline text-danger border-danger"
-               href="{% url 'accounts:profile_delete' %}">
-              <i class="fa-solid fa-user-slash"></i><span>Delete account</span>
-            </a>
-          </div>
-        {% endif %}
       </div>
     </header>
     <div class="row g-4 mb-4">
@@ -55,48 +39,38 @@
               <dd class="col-sm-7 mb-0" data-testid="profile-member-since">
                 {{ member_since|date:"F j, Y" }}
               </dd>
-              {% if full_name %}
-                <dt class="col-sm-5 text-uppercase text-muted small">Full name</dt>
-                <dd class="col-sm-7 mb-0">
+              <dt class="col-sm-5 text-uppercase text-muted small">Full name</dt>
+              <dd class="col-sm-7 mb-0" data-testid="profile-full-name">
+                {% if full_name %}
                   {{ full_name }}
-                </dd>
-              {% endif %}
+                {% else %}
+                  Hidden
+                {% endif %}
+              </dd>
               <dt class="col-sm-5 text-uppercase text-muted small">Date of birth</dt>
               <dd class="col-sm-7 mb-0" data-testid="profile-birthdate">
-                {% if profile.date_of_birth %}
-                  {{ profile.date_of_birth|date:"F j, Y" }}
-                {% else %}
-                  <span class="text-muted">Not provided</span>
-                {% endif %}
+                {% if profile.date_of_birth %}{{ profile.date_of_birth|date:"F j" }}{% endif %}
               </dd>
               <dt class="col-sm-5 text-uppercase text-muted small">Last active</dt>
               <dd class="col-sm-7 mb-0" data-testid="profile-last-active">
-                {% if last_active %}
-                  {{ last_active|date:"F j, Y H:i" }}
-                {% else %}
-                  <span class="text-muted">No activity recorded</span>
-                {% endif %}
+                {% if last_active %}{{ last_active|date:"F j, Y H:i" }}{% endif %}
               </dd>
             </dl>
             <div class="mt-3">
               <h3 class="h6 text-uppercase text-muted fw-semibold mb-2">Bio</h3>
-              {% if profile.bio %}
-                <p class="mb-0" data-testid="profile-bio">{{ profile.bio }}</p>
-              {% else %}
-                <p class="text-muted mb-0">This explorer has not written a bio yet.</p>
-              {% endif %}
+              <p class="mb-0" data-testid="profile-bio">{{ profile.bio }}</p>
             </div>
-            {% if profile.favorite_games or profile.favorite_genres %}
+            {% if has_favorites %}
               <div class="mt-3">
                 <h3 class="h6 text-uppercase text-muted fw-semibold mb-2">Favorites</h3>
                 {% if profile.favorite_games %}
-                  <p class="mb-1" data-testid="favorite-games">
-                    <span class="fw-semibold">Games:</span> {{ profile.favorite_games }}
+                  <p class="mb-1">
+                    <strong>Games:</strong> {{ profile.favorite_games }}
                   </p>
                 {% endif %}
                 {% if profile.favorite_genres %}
-                  <p class="mb-0" data-testid="favorite-genres">
-                    <span class="fw-semibold">Genres:</span> {{ profile.favorite_genres }}
+                  <p class="mb-0">
+                    <strong>Genres:</strong> {{ profile.favorite_genres }}
                   </p>
                 {% endif %}
               </div>
@@ -110,94 +84,35 @@
             <h2 class="comp-card__title">Activity status</h2>
             <dl class="row mb-0">
               <dt class="col-sm-6">Public posts</dt>
-              {# djlint:off #}
-              <dd class="col-sm-6" data-testid="public-post-count">{{ stats.public_posts }}</dd>
+              <dd class="col-sm-6" data-testid="public-post-count">
+                {{ stats.public_posts }}
+              </dd>
               <dt class="col-sm-6">Approved comments</dt>
-              <dd class="col-sm-6" data-testid="approved-comment-count">{{ stats.approved_comments }}</dd>
-              {# djlint:on #}
+              <dd class="col-sm-6" data-testid="approved-comment-count">
+                {{ stats.approved_comments }}
+              </dd>
             </dl>
           </div>
         </div>
       </div>
     </div>
-    {% if is_self %}
-      <section class="mb-4">
-        <div class="comp-card">
-          <div class="comp-card__body">
-            <h2 class="comp-card__title">Drafts</h2>
-            {% if draft_posts %}
-              <ul class="list-unstyled mb-0" data-testid="draft-posts">
-                {% for draft in draft_posts %}
-                  <li class="mb-3 border-bottom pb-2">
-                    <div class="d-flex justify-content-between align-items-center gap-2">
-                      <div>
-                        <span class="fw-semibold">{{ draft.title }}</span>
-                        <div class="small text-muted">Last updated {{ draft.updated_at|date:"F j, Y H:i" }}</div>
-                      </div>
-                      <a class="btn btn-sm btn-outline-primary"
-                         href="{% url 'blog:edit_post' draft.pk %}">Continue editing</a>
-                    </div>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <p class="text-muted mb-0">You have no drafts.</p>
-            {% endif %}
-          </div>
-        </div>
-      </section>
-      {% if show_moderation_tools %}
-        <section class="mb-4">
-          <div class="comp-card">
-            <div class="comp-card__body">
-              <h2 class="comp-card__title">Staff tools</h2>
-              <p class="text-muted mb-0">Quick links to moderation and admin utilities will appear here.</p>
-            </div>
-          </div>
-        </section>
-      {% endif %}
-    {% endif %}
     <div class="row g-4">
       <div class="col-lg-6">
         <div class="comp-card h-100">
           <div class="comp-card__body">
             <h2 class="comp-card__title">Approved posts</h2>
-            {% if posts_page.object_list %}
+            {% if posts_page and posts_page.object_list %}
               <ul class="list-unstyled mb-0">
-                {% for post in posts_page.object_list %}
+                {% for post in posts_page %}
                   <li class="mb-3 border-bottom pb-2">
-                    <div class="d-flex justify-content-between align-items-start gap-2">
-                      <div>
-                        <a class="fw-semibold" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
-                        <div class="small text-muted">Published {{ post.published_at|default:post.created_at|date:"F j, Y" }}</div>
-                      </div>
+                    <div>
+                      <a class="fw-semibold" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
                     </div>
                   </li>
                 {% endfor %}
               </ul>
-              {% if posts_page.paginator.num_pages > 1 %}
-                <nav aria-label="Post navigation" class="mt-3">
-                  <ul class="pagination pagination-sm mb-0">
-                    {% if posts_page.has_previous %}
-                      <li class="page-item">
-                        <a class="page-link"
-                           href="?post_page={{ posts_page.previous_page_number }}&comment_page={{ comments_page.number }}">Previous</a>
-                      </li>
-                    {% endif %}
-                    <li class="page-item disabled">
-                      <span class="page-link">Page {{ posts_page.number }} of {{ posts_page.paginator.num_pages }}</span>
-                    </li>
-                    {% if posts_page.has_next %}
-                      <li class="page-item">
-                        <a class="page-link"
-                           href="?post_page={{ posts_page.next_page_number }}&comment_page={{ comments_page.number }}">Next</a>
-                      </li>
-                    {% endif %}
-                  </ul>
-                </nav>
-              {% endif %}
             {% else %}
-              <p class="text-muted mb-0">No approved posts yet.</p>
+              <p class="mb-0 text-muted">No posts yet.</p>
             {% endif %}
           </div>
         </div>
@@ -206,47 +121,40 @@
         <div class="comp-card h-100">
           <div class="comp-card__body">
             <h2 class="comp-card__title">Approved comments</h2>
-            {% if comments_page.object_list %}
+            {% if comments_page and comments_page.object_list %}
               <ul class="list-unstyled mb-0">
-                {% for comment in comments_page.object_list %}
+                {% for comment in comments_page %}
                   <li class="mb-3 border-bottom pb-2">
-                    <div>
-                      <a class="fw-semibold"
-                         href="{{ comment.post.get_absolute_url }}#comment-{{ comment.pk }}">
-                        {{ comment.body|truncatewords:20 }}
-                      </a>
-                      <div class="small text-muted">On “{{ comment.post.title }}” · {{ comment.created_at|date:"F j, Y H:i" }}</div>
-                    </div>
+                    <a class="fw-semibold"
+                       href="{{ comment.post.get_absolute_url }}#comment-{{ comment.id }}">
+                      {{ comment.body|truncatewords:6 }}
+                    </a>
                   </li>
                 {% endfor %}
               </ul>
-              {% if comments_page.paginator.num_pages > 1 %}
-                <nav aria-label="Comment navigation" class="mt-3">
-                  <ul class="pagination pagination-sm mb-0">
-                    {% if comments_page.has_previous %}
-                      <li class="page-item">
-                        <a class="page-link"
-                           href="?post_page={{ posts_page.number }}&comment_page={{ comments_page.previous_page_number }}">Previous</a>
-                      </li>
-                    {% endif %}
-                    <li class="page-item disabled">
-                      <span class="page-link">Page {{ comments_page.number }} of {{ comments_page.paginator.num_pages }}</span>
-                    </li>
-                    {% if comments_page.has_next %}
-                      <li class="page-item">
-                        <a class="page-link"
-                           href="?post_page={{ posts_page.number }}&comment_page={{ comments_page.next_page_number }}">Next</a>
-                      </li>
-                    {% endif %}
-                  </ul>
-                </nav>
-              {% endif %}
             {% else %}
-              <p class="text-muted mb-0">No approved comments yet.</p>
+              <p class="mb-0 text-muted">No comments yet.</p>
             {% endif %}
           </div>
         </div>
       </div>
     </div>
+    {% if show_moderation_tools %}
+      <section class="mb-4 mt-4">
+        <div class="comp-card">
+          <div class="comp-card__body">
+            <h2 class="comp-card__title">Staff tools</h2>
+            <div class="d-flex flex-wrap gap-2">
+              {% for tool in staff_tools %}
+                <a class="comp-button comp-button--outline" href="{{ tool.url }}">
+                  <i class="fa-solid {{ tool.icon }}"></i><span>{{ tool.label }}</span>
+                  {% if tool.count != None %}<span class="badge bg-secondary ms-2">{{ tool.count }}</span>{% endif %}
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </section>
+    {% endif %}
   </section>
 {% endblock content %}

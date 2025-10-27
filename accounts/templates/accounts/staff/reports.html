@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}
+  Comment reports · Staff tools · Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="py-4">
+    <h1 class="h3 mb-3">Reported comments</h1>
+    {% if reports %}
+      <form method="post">
+        {% csrf_token %}
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th scope="col">Comment</th>
+                <th scope="col">Reported by</th>
+                <th scope="col">Reason</th>
+                <th scope="col">Notes</th>
+                <th scope="col">Created</th>
+                <th scope="col">Resolved</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for report in reports %}
+                <tr class="{% if report.resolved %}table-light{% else %}table-warning{% endif %}">
+                  <td>
+                    <a href="{{ report.comment.post.get_absolute_url }}#comment-{{ report.comment.id }}"
+                       target="_blank"
+                       rel="noopener">{{ report.comment.body|truncatewords:12 }}</a>
+                  </td>
+                  <td>
+                    <a href="{% url 'accounts:profile' report.reported_by.username %}">{{ report.reported_by.username }}</a>
+                  </td>
+                  <td>{{ report.get_reason_display }}</td>
+                  <td>{{ report.notes|default:"—" }}</td>
+                  <td>{{ report.created_at|date:"F j, Y H:i" }}</td>
+                  <td>
+                    {% if report.resolved %}
+                      <span class="badge bg-success">Yes</span>
+                    {% else %}
+                      <span class="badge bg-danger">No</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if not report.resolved %}
+                      <button type="submit"
+                              name="resolve"
+                              value="{{ report.id }}"
+                              class="btn btn-sm btn-primary">Mark resolved</button>
+                    {% endif %}
+                    <button type="submit"
+                            name="delete"
+                            value="{{ report.id }}"
+                            class="btn btn-sm btn-danger">Delete</button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </form>
+    {% else %}
+      <p class="text-muted">No reports found.</p>
+    {% endif %}
+  </section>
+{% endblock content %}

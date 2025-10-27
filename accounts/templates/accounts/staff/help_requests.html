@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}
+  Help requests · Staff tools · Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="py-4">
+    <h1 class="h3 mb-3">User help requests</h1>
+    {% if requests %}
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead>
+            <tr>
+              <th scope="col">User</th>
+              <th scope="col">Subject</th>
+              <th scope="col">Message</th>
+              <th scope="col">Created</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in requests %}
+              <tr>
+                <td>
+                  <a href="{% url 'accounts:profile' req.user.username %}">{{ req.user.username }}</a>
+                </td>
+                <td>{{ req.subject }}</td>
+                <td>{{ req.message|truncatewords:15 }}</td>
+                <td>{{ req.created_at|date:"F j, Y H:i" }}</td>
+                <td>
+                  {% if req.resolved %}
+                    <span class="badge bg-success">Resolved</span>
+                  {% else %}
+                    <span class="badge bg-warning">Pending</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if not req.resolved %}
+                    <form method="post" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit"
+                              name="resolve"
+                              value="{{ req.id }}"
+                              class="btn btn-sm btn-primary">Mark resolved</button>
+                    </form>
+                  {% endif %}
+                  <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                            name="delete"
+                            value="{{ req.id }}"
+                            class="btn btn-sm btn-danger">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted">No help requests at the moment.</p>
+    {% endif %}
+  </section>
+{% endblock content %}

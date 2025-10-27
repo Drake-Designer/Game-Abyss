@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}
+  View as user · Staff tools · Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="py-4">
+    <h1 class="h3 mb-3">View site as another user</h1>
+    <p class="text-muted">Preview what a player sees without impersonating them.</p>
+    <form class="row g-2 mb-4" method="get">
+      <div class="col-sm-8 col-lg-6">
+        <input class="form-control"
+               type="search"
+               name="username"
+               value="{{ username }}"
+               placeholder="Enter a username">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary" type="submit">Preview</button>
+      </div>
+    </form>
+    {% if preview_user %}
+      <div class="comp-card mb-4">
+        <div class="comp-card__body">
+          <div class="d-flex gap-3 align-items-start">
+            <img src="{{ preview_profile.get_avatar_url }}"
+                 alt="Avatar"
+                 class="rounded-circle border"
+                 width="96"
+                 height="96">
+            <div>
+              <h2 class="h4 mb-1">{{ preview_user.username }}</h2>
+              {% if preview_user.get_full_name %}<div class="text-muted">{{ preview_user.get_full_name }}</div>{% endif %}
+              <div class="small text-muted">Member since {{ preview_user.date_joined|date:"F j, Y" }}</div>
+              {% if last_active %}<div class="small text-muted">Last active {{ last_active|date:"F j, Y H:i" }}</div>{% endif %}
+            </div>
+          </div>
+          {% if preview_profile.bio %}
+            <div class="mt-3">
+              <h3 class="h6 text-uppercase text-muted fw-semibold">Bio</h3>
+              <p class="mb-0">{{ preview_profile.bio }}</p>
+            </div>
+          {% endif %}
+          {% if preview_profile.favorites %}
+            <div class="mt-3">
+              <h3 class="h6 text-uppercase text-muted fw-semibold">Favorite games or genres</h3>
+              <p class="mb-0">{{ preview_profile.favorites }}</p>
+            </div>
+          {% endif %}
+          <div class="mt-3">
+            <h3 class="h6 text-uppercase text-muted fw-semibold">Public stats</h3>
+            <ul class="list-inline mb-0">
+              <li class="list-inline-item me-3">
+                Approved posts: <strong>{{ preview_stats.public_posts }}</strong>
+              </li>
+              <li class="list-inline-item">
+                Approved comments: <strong>{{ preview_stats.approved_comments }}</strong>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="comp-card h-100">
+            <div class="comp-card__body">
+              <h2 class="comp-card__title">Latest approved posts</h2>
+              {% if preview_posts %}
+                <ul class="list-unstyled mb-0">
+                  {% for post in preview_posts %}
+                    <li class="mb-3 border-bottom pb-2">
+                      <a class="fw-semibold"
+                         href="{{ post.get_absolute_url }}"
+                         target="_blank"
+                         rel="noopener">{{ post.title }}</a>
+                      <div class="small text-muted">Published {{ post.published_at|default:post.created_at|date:"F j, Y" }}</div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-muted mb-0">No approved posts yet.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="comp-card h-100">
+            <div class="comp-card__body">
+              <h2 class="comp-card__title">Latest approved comments</h2>
+              {% if preview_comments %}
+                <ul class="list-unstyled mb-0">
+                  {% for comment in preview_comments %}
+                    <li class="mb-3 border-bottom pb-2">
+                      <a href="{{ comment.post.get_absolute_url }}#comment-{{ comment.pk }}"
+                         target="_blank"
+                         rel="noopener">{{ comment.body|truncatewords:25 }}</a>
+                      <div class="small text-muted">On “{{ comment.post.title }}” · {{ comment.created_at|date:"F j, Y H:i" }}</div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-muted mb-0">No approved comments yet.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% elif username %}
+      <div class="alert alert-warning">No user named “{{ username }}” was found.</div>
+    {% endif %}
+  </section>
+{% endblock content %}

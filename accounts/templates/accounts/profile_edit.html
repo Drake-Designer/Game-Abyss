@@ -52,6 +52,16 @@
                 {% render_field form.bio class+="form-control" %}
                 {% for error in form.bio.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
               </div>
+              <div class="mb-3">
+                <label for="{{ form.favorite_games.id_for_label }}" class="form-label">Favorite games</label>
+                {% render_field form.favorite_games class+="form-control" %}
+                {% for error in form.favorite_games.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="mb-3">
+                <label for="{{ form.favorite_genres.id_for_label }}" class="form-label">Favorite genres</label>
+                {% render_field form.favorite_genres class+="form-control" %}
+                {% for error in form.favorite_genres.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+              </div>
               <div class="d-flex justify-content-between gap-2">
                 <a class="comp-button comp-button--outline"
                    href="{% url 'accounts:profile' request.user.username %}">Cancel</a>

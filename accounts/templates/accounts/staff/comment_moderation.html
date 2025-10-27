@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}
+  Comment moderation · Staff tools · Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="py-4">
+    <h1 class="h3 mb-3">Pending comments</h1>
+    {% if comments %}
+      <form method="post">
+        {% csrf_token %}
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th scope="col">Author</th>
+                <th scope="col">Excerpt</th>
+                <th scope="col">Post</th>
+                <th scope="col">Created</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for comment in comments %}
+                <tr>
+                  <td>
+                    <a href="{% url 'accounts:profile' comment.author.username %}">{{ comment.author.username }}</a>
+                  </td>
+                  <td>{{ comment.body|truncatewords:15 }}</td>
+                  <td>
+                    <a href="{{ comment.post.get_absolute_url }}"
+                       target="_blank"
+                       rel="noopener">{{ comment.post.title }}</a>
+                  </td>
+                  <td>{{ comment.created_at|date:"F j, Y H:i" }}</td>
+                  <td>
+                    <button type="submit"
+                            name="approve"
+                            value="{{ comment.id }}"
+                            class="btn btn-sm btn-success">Approve</button>
+                    <button type="submit"
+                            name="reject"
+                            value="{{ comment.id }}"
+                            class="btn btn-sm btn-danger">Reject</button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </form>
+    {% else %}
+      <p class="text-muted">No pending comments for moderation.</p>
+    {% endif %}
+  </section>
+{% endblock content %}

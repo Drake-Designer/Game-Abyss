@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}
+  Content search · Staff tools · Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="py-4">
+    <h1 class="h3 mb-3">Content search</h1>
+    <form method="get" class="row g-2 mb-4">
+      <div class="col-sm-8 col-lg-6">
+        <input type="text"
+               name="q"
+               class="form-control"
+               placeholder="Search posts and comments"
+               value="{{ request.GET.q }}">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </form>
+    {% if query %}
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="comp-card h-100">
+            <div class="comp-card__body">
+              <h2 class="comp-card__title">Posts</h2>
+              {% if posts %}
+                <ul class="list-unstyled mb-0">
+                  {% for post in posts %}
+                    <li class="mb-3 border-bottom pb-2">
+                      <a href="{{ post.get_absolute_url }}"
+                         target="_blank"
+                         class="fw-semibold">{{ post.title }}</a>
+                      <div class="small text-muted">
+                        By <a href="{% url 'accounts:profile' post.author.username %}">{{ post.author.username }}</a>
+                        · {{ post.created_at|date:"F j, Y" }}
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-muted mb-0">No posts matched "{{ query }}".</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="comp-card h-100">
+            <div class="comp-card__body">
+              <h2 class="comp-card__title">Comments</h2>
+              {% if comments %}
+                <ul class="list-unstyled mb-0">
+                  {% for comment in comments %}
+                    <li class="mb-3 border-bottom pb-2">
+                      <a href="{{ comment.post.get_absolute_url }}#comment-{{ comment.id }}"
+                         target="_blank">{{ comment.body|truncatewords:20 }}</a>
+                      <div class="small text-muted">
+                        By <a href="{% url 'accounts:profile' comment.author.username %}">{{ comment.author.username }}</a>
+                        on “{{ comment.post.title }}”
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-muted mb-0">No comments matched "{{ query }}".</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <p class="text-muted">Enter a search term to explore content.</p>
+    {% endif %}
+  </section>
+{% endblock content %}

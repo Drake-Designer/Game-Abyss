@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}
+  Staff dashboard · Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="py-4">
+    <h1 class="h3 mb-4">Staff dashboard</h1>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="comp-card h-100">
+          <div class="comp-card__body">
+            <h2 class="comp-card__title h5">Moderation</h2>
+            <ul class="list-unstyled mb-0">
+              <li>
+                <a href="{% url 'accounts:staff_pending_posts' %}">Pending posts <span class="badge bg-secondary">{{ counts.pending_posts }}</span></a>
+              </li>
+              <li>
+                <a href="{% url 'accounts:staff_pending_comments' %}">Pending comments <span class="badge bg-secondary">{{ counts.pending_comments }}</span></a>
+              </li>
+              <li>
+                <a href="{% url 'accounts:staff_reports' %}">Reports <span class="badge bg-secondary">{{ counts.reports }}</span></a>
+              </li>
+              <li>
+                <a href="{% url 'accounts:staff_comment_moderation' %}">All comments</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="comp-card h-100">
+          <div class="comp-card__body">
+            <h2 class="comp-card__title h5">Content tools</h2>
+            <ul class="list-unstyled mb-0">
+              <li>
+                <a href="{% url 'accounts:staff_featured_manager' %}">Featured posts</a>
+              </li>
+              <li>
+                <a href="{% url 'accounts:staff_content_search' %}">Search posts & comments</a>
+              </li>
+              <li>
+                <a href="{% url 'accounts:staff_help_requests' %}">Help requests <span class="badge bg-secondary">{{ counts.help_requests }}</span></a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="comp-card h-100">
+          <div class="comp-card__body">
+            <h2 class="comp-card__title h5">User management</h2>
+            <ul class="list-unstyled mb-0">
+              <li>
+                <a href="{% url 'accounts:staff_user_search' %}">User search</a>
+              </li>
+              <li>
+                <a href="{% url 'accounts:staff_view_as_user' %}">View as user</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock content %}

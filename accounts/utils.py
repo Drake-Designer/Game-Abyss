@@ -7,6 +7,9 @@ from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.contrib.admin.views.decorators import staff_member_required
+
+from blog.models import BlogPost, Comment, CommentReport, log_moderation_action
 
 
 EMAIL_VERIFICATION_REQUIRED_MESSAGE = (
@@ -20,7 +23,6 @@ def user_email_is_verified(user) -> bool:
     """Return True when the user has at least one verified email address."""
     email = getattr(user, "email", "") or ""
     if not email:
-        # Users without an email address bypass the verification requirement
         return True
 
     email_qs = EmailAddress.objects.filter(user=user)
@@ -54,3 +56,38 @@ def verified_email_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return _wrapped
+
+
+def approve_post(actor, post: BlogPost, notes: str = "") -> None:
+    """Mark a blog post as approved."""
+    post.status = BlogPost.STATUS_APPROVED
+    post.save()
+    log_moderation_action(actor, "approve_post", post, notes)
+
+
+def reject_post(actor, post: BlogPost, notes: str = "") -> None:
+    """Mark a blog post as rejected."""
+    post.status = BlogPost.STATUS_REJECTED
+    post.save()
+    log_moderation_action(actor, "reject_post", post, notes)
+
+
+def approve_comment(actor, comment: Comment, notes: str = "") -> None:
+    """Mark a comment as approved."""
+    comment.status = Comment.STATUS_APPROVED
+    comment.save()
+    log_moderation_action(actor, "approve_comment", comment, notes)
+
+
+def reject_comment(actor, comment: Comment, notes: str = "") -> None:
+    """Mark a comment as rejected."""
+    comment.status = Comment.STATUS_REJECTED
+    comment.save()
+    log_moderation_action(actor, "reject_comment", comment, notes)
+
+
+def resolve_report(actor, report: CommentReport, notes: str = "") -> None:
+    """Mark a report as resolved."""
+    report.resolved = True
+    report.save()
+    log_moderation_action(actor, "resolve_report", report, notes)

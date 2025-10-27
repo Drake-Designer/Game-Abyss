@@ -9,7 +9,7 @@ class ProfileForm(forms.ModelForm):
     """
     Profile edit form combining:
     - User fields: first_name, last_name, email
-    - Profile fields: avatar, date_of_birth, bio, favorites
+    - Profile fields: avatar, date_of_birth, bio, favorite_games, favorite_genres
     """
 
     first_name = forms.CharField(max_length=150, required=False)
@@ -69,7 +69,7 @@ class ProfileForm(forms.ModelForm):
         return self.cleaned_data.get("favorite_genres", "").strip()
 
     def save(self, commit=True):
-        """Save profile + sync User fields."""
+        """Save profile and sync basic User fields."""
         profile: UserProfile = super().save(commit=False)
         profile.user = self.user
 
@@ -83,7 +83,6 @@ class ProfileForm(forms.ModelForm):
             new_email = self.cleaned_data.get("email", "") or ""
             self.new_email = self._normalize_email(new_email)
             self.email_changed = self.new_email != self._initial_email
-
             if self.email_changed:
                 self.user.email = self.new_email
                 update_fields.append("email")

@@ -13,8 +13,16 @@ class UserProfile(models.Model):
     )
     date_of_birth = models.DateField(blank=True, null=True)
     bio = models.TextField(blank=True)
-    favorite_games = models.TextField(blank=True)   # optional
-    favorite_genres = models.TextField(blank=True)  # optional
+
+    favorite_games = models.TextField(
+        blank=True,
+        help_text="Favorite games separated by commas.",
+    )
+    favorite_genres = models.TextField(
+        blank=True,
+        help_text="Favorite genres separated by commas.",
+    )
+
     avatar = models.ImageField(
         "Profile avatar",
         upload_to="avatars/",
@@ -26,16 +34,19 @@ class UserProfile(models.Model):
         verbose_name = "User Profile"
         verbose_name_plural = "User Profiles"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Profile for {self.user}" if self.user_id else "Profile"
 
     @property
-    def has_avatar(self):
+    def has_avatar(self) -> bool:
         """True if a custom avatar exists."""
         return bool(self.avatar)
 
-    def get_avatar_url(self):
-        """Avatar URL or fallback."""
+    def get_avatar_url(self) -> str:
+        """Return avatar URL or a static fallback if missing or broken."""
         if self.avatar:
-            return self.avatar.url
+            try:
+                return self.avatar.url
+            except Exception:
+                pass
         return static("images/default-avatar.png")

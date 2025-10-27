@@ -342,3 +342,47 @@ class CommentReport(models.Model):
 
     def __str__(self):
         return f"Report on comment {self.comment_id} by {self.reported_by}"
+
+
+class ModerationActionLog(models.Model):
+    """Minimal audit log for moderation actions."""
+
+    actor = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="moderation_logs",
+    )
+    action = models.CharField(max_length=50)
+    target_model = models.CharField(max_length=100)
+    target_id = models.PositiveIntegerField()
+    target_repr = models.CharField(max_length=255, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Moderation action"
+        verbose_name_plural = "Moderation actions"
+
+    def __str__(self):
+        actor_label = self.actor.get_username() if self.actor else "System"
+        return f"{self.action} by {actor_label} on {self.target_model}#{self.target_id}"
+
+
+def log_moderation_action(actor, action: str, target, notes: str = "") -> None:
+    """Persist a simple moderation audit entry."""
+    target_model = target.__class__.__name__
+    target_id = getattr(target, "pk", 0) or 0
+    target_repr = str(target)
+    actor_value = actor if getattr(actor, "is_authenticated", False) else None
+
+    ModerationActionLog.objects.create(
+        actor=actor_value,
+        action=action,
+        target_model=target_model,
+        target_id=target_id,
+        target_repr=target_repr[:255],
+        notes=notes,
+    )
