@@ -1,0 +1,18 @@
+{% if greeting %}{{ greeting }}
+{% endif %}{% if intro %}{{ intro }}
+{% endif %}{% if body_lines %}{% for line in body_lines %}{{ line }}
+{% endfor %}{% endif %}{% if detail_items %}
+Details:
+{% for item in detail_items %}{{ item.label }}: {{ item.value }}{% if item.url and item.url != item.value %} ({{ item.url }}){% endif %}
+{% endfor %}{% endif %}{% if cta.url %}
+Action: {{ cta.label|default:"Open" }} -> {{ cta.url }}
+{% endif %}{% if closing %}
+{{ closing }}
+{% endif %}{% if signature %}
+{{ signature }}
+{% endif %}{% if footer_note %}
+{{ footer_note }}
+{% endif %}
+Need help? Reach the council at {{ support_email }}.
+{% if site_url %}Visit {{ site_name }}: {{ site_url }}
+{% endif %}

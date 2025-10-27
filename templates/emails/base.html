@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ subject }}</title>
+    <!-- Meta for linters / accessibility -->
+    <meta name="description"
+          content="{{ subject }} | Notification from {{ site_name }}" />
+    <meta name="keywords"
+          content="Game Abyss, notifications, account, updates, alerts" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="supported-color-schemes" content="dark" />
+    <!-- Il CSS viene iniettato inline da core/emailing.py (premailer) -->
+  </head>
+  <body class="comp-email comp-email--dark">
+    <table role="presentation"
+           class="comp-email__frame"
+           cellpadding="0"
+           cellspacing="0"
+           width="100%">
+      <tr>
+        <td class="comp-email__wrapper" align="center">
+          <table role="presentation"
+                 class="comp-email__outer"
+                 cellpadding="0"
+                 cellspacing="0"
+                 width="100%">
+            <tr>
+              <td class="comp-email__container">
+                <table role="presentation" class="comp-email__brand" align="center">
+                  <tr>
+                    <td align="center">
+                      <div class="comp-email__brand-name">{{ site_name }}</div>
+                      <div class="comp-email__brand-tagline">Signals from the Abyss</div>
+                    </td>
+                  </tr>
+                </table>
+                <table role="presentation" class="comp-email__content" width="100%">
+                  <tr>
+                    <td>
+                      {% block content %}
+                      {% endblock content %}
+                    </td>
+                  </tr>
+                </table>
+                <table role="presentation" class="comp-email__footer" align="center">
+                  <tr>
+                    <td>
+                      <p class="comp-email__support">
+                        Need a hand? Reach the council at
+                        <a href="mailto:{{ support_email }}" class="comp-email__link">{{ support_email }}</a>
+                      </p>
+                      {% if site_url %}
+                        <p class="comp-email__visit">
+                          <a href="{{ site_url }}"
+                             class="comp-email__link comp-email__link--muted">Visit {{ site_name }}</a>
+                        </p>
+                      {% endif %}
+                    </td>
+                  </tr>
+                </table>
+                <p class="comp-email__legal">© {{ current_year }} {{ site_name }}. All transmissions reserved.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

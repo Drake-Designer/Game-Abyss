@@ -1,79 +1,21 @@
-# blog/emails.py
 """Email helpers for the blog application."""
 
 from __future__ import annotations
 
-import logging
-from typing import Iterable, Sequence
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.urls import reverse
 
-try:
-    from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import Mail
-except ImportError:  # optional dependency
-    SendGridAPIClient = None
-    Mail = None
-
-logger = logging.getLogger(__name__)
+from core.emailing import build_absolute_uri, send_styled_email
 
 User = get_user_model()
 
 
-def _resolve_recipients(emails: Iterable[str]) -> list[str]:
-    """Return a clean list of email addresses, removing blanks and duplicates."""
-    unique: list[str] = []
-    for email in emails:
-        if not email:
-            continue
-        e = email.strip()
-        if e and e not in unique:
-            unique.append(e)
-    return unique
-
-
-def _send_email(
-    subject: str,
-    plain_body: str,
-    recipients: Sequence[str],
-    *,
-    html_body: str | None = None,
-) -> None:
-    """Send email using SendGrid if available, otherwise Django's backend."""
-    recipient_list = _resolve_recipients(recipients)
-    if not recipient_list:
-        logger.info("Skipping email '%s' - no recipients", subject)
-        return
-
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None)
-
-    api_key = getattr(settings, "SENDGRID_API_KEY", "")
-    if api_key and SendGridAPIClient and Mail and not getattr(settings, "DEBUG", False):
-        try:
-            message = Mail(
-                from_email=from_email,
-                to_emails=recipient_list,
-                subject=subject,
-                plain_text_content=plain_body,
-                html_content=html_body or plain_body.replace("\n", "<br>"),
-            )
-            SendGridAPIClient(api_key).send(message)
-            return
-        except Exception as exc:  # best effort
-            logger.exception(
-                "SendGrid error while sending '%s': %s", subject, exc)
-
-    send_mail(
-        subject=subject,
-        message=plain_body,
-        from_email=from_email,
-        recipient_list=recipient_list,
-        fail_silently=True,
-        html_message=html_body,
-    )
+def _truncate_excerpt(text: str, limit: int = 200) -> str:
+    excerpt = (text or "").strip()
+    if len(excerpt) > limit:
+        excerpt = excerpt[: limit - 3].rstrip() + "..."
+    return excerpt or "No additional text provided."
 
 
 def get_primary_superadmin_email() -> list[str]:
@@ -94,67 +36,153 @@ def get_staff_recipients() -> list[str]:
 
 def notify_superadmins_new_post(post) -> None:
     subject = "[Game Abyss] New post submitted"
-    post_url = post.get_absolute_url()
-    plain_body = (
-        "Hello Council,\n\n"
-        f"{post.author.get_username()} just submitted a new post titled \"{post.title}\".\n"
-        f"Current status: {post.get_status_display()}.\n"
-        f"Preview: {post_url}\n"
+    post_url = build_absolute_uri(post.get_absolute_url())
+    context = {
+        "greeting": "Hello Council,",
+        "intro": (
+            f"{post.author.get_username()} just submitted a new post titled "
+            f"\"{post.title}\"."
+        ),
+        "body_lines": [
+            f"Current status: {post.get_status_display()}.",
+        ],
+        "detail_items": [
+            {"label": "Author", "value": post.author.get_username()},
+            {"label": "Status", "value": post.get_status_display()},
+            {"label": "Preview", "value": post_url, "url": post_url},
+        ],
+        "cta": {"label": "Review submission", "url": post_url},
+        "closing": "Thanks for keeping the Abyss curated.",
+        "signature": "The Game Abyss Council",
+        "footer_note": "Notification for Game Abyss superadmins.",
+    }
+    send_styled_email(
+        subject,
+        "emails/notification.html",
+        context,
+        get_primary_superadmin_email(),
+        text_template="emails/notification.txt",
     )
-    _send_email(subject, plain_body, get_primary_superadmin_email())
 
 
 def notify_superadmins_new_comment(comment) -> None:
     subject = "[Game Abyss] New comment submitted"
-    post_url = comment.post.get_absolute_url()
-    plain_body = (
-        "Hello Council,\n\n"
-        f"{comment.author.get_username()} left a new comment on \"{comment.post.title}\".\n"
-        f"Excerpt: {comment.body[:200]}\n"
-        f"Moderate on: {post_url}\n"
+    post_url = build_absolute_uri(comment.post.get_absolute_url())
+    moderation_url = build_absolute_uri(
+        f"{comment.post.get_absolute_url()}#comment-{comment.pk}"
     )
-    _send_email(subject, plain_body, get_primary_superadmin_email())
+    context = {
+        "greeting": "Hello Council,",
+        "intro": (
+            f"{comment.author.get_username()} left a new comment on "
+            f"\"{comment.post.title}\"."
+        ),
+        "body_lines": [
+            f"Excerpt: {_truncate_excerpt(comment.body)}",
+        ],
+        "detail_items": [
+            {"label": "Commenter", "value": comment.author.get_username()},
+            {"label": "Post", "value": comment.post.title, "url": post_url},
+            {"label": "Current status", "value": comment.get_status_display()},
+        ],
+        "cta": {"label": "Moderate comment", "url": moderation_url},
+        "closing": "Stay vigilant, council members.",
+        "signature": "Game Abyss Moderation",
+        "footer_note": "Notification for Game Abyss superadmins.",
+    }
+    send_styled_email(
+        subject,
+        "emails/notification.html",
+        context,
+        get_primary_superadmin_email(),
+        text_template="emails/notification.txt",
+    )
 
 
 def notify_author_post_approved(post) -> None:
     if not getattr(post.author, "email", ""):
         return
     subject = "[Game Abyss] Your post was approved"
-    post_url = post.get_absolute_url()
-    plain_body = (
-        f"Explorer {post.author.get_username()},\n\n"
-        f"The Council has approved your post \"{post.title}\". It now echoes across the Abyss, visible on the front page.\n"
-        f"Read it here: {post_url}\n\n"
-        "Keep the signals coming."
+    post_url = build_absolute_uri(post.get_absolute_url())
+    context = {
+        "greeting": f"Explorer {post.author.get_username()},",
+        "intro": "The Council has approved your latest transmission.",
+        "body_lines": [
+            f"Title: \"{post.title}\"",
+            "It now echoes across the Abyss and appears on the front page.",
+        ],
+        "detail_items": [
+            {"label": "View your post", "value": post_url, "url": post_url},
+        ],
+        "cta": {"label": "Read it on Game Abyss", "url": post_url},
+        "closing": "Keep the signals coming.",
+        "signature": "The Game Abyss Council",
+        "footer_note": "You are receiving this email because you published on Game Abyss.",
+    }
+    send_styled_email(
+        subject,
+        "emails/notification.html",
+        context,
+        [post.author.email],
+        text_template="emails/notification.txt",
     )
-    _send_email(subject, plain_body, [post.author.email])
 
 
 def notify_author_post_featured(post) -> None:
     if not getattr(post.author, "email", ""):
         return
     subject = "[Game Abyss] Your post is Featured"
-    post_url = post.get_absolute_url()
-    plain_body = (
-        f"Explorer {post.author.get_username()},\n\n"
-        f"Your post \"{post.title}\" has been marked as Featured by the Council.\n"
-        f"See it in the spotlight: {post_url}\n\n"
-        "Thanks for powering the community."
+    post_url = build_absolute_uri(post.get_absolute_url())
+    context = {
+        "greeting": f"Explorer {post.author.get_username()},",
+        "intro": (
+            "Your post just breached the spotlight — the Council marked it as Featured."
+        ),
+        "body_lines": [
+            f"Title: \"{post.title}\"",
+            "Expect a surge of eyes on your signal!",
+        ],
+        "detail_items": [
+            {"label": "Featured link", "value": post_url, "url": post_url},
+        ],
+        "cta": {"label": "View the feature", "url": post_url},
+        "closing": "Thanks for powering the community.",
+        "signature": "The Game Abyss Council",
+        "footer_note": "You are receiving this email because you published on Game Abyss.",
+    }
+    send_styled_email(
+        subject,
+        "emails/notification.html",
+        context,
+        [post.author.email],
+        text_template="emails/notification.txt",
     )
-    _send_email(subject, plain_body, [post.author.email])
 
 
 def notify_author_post_rejected(post) -> None:
     if not getattr(post.author, "email", ""):
         return
     subject = "[Game Abyss] Your post was rejected"
-    plain_body = (
-        f"Explorer {post.author.get_username()},\n\n"
-        f"Your post \"{post.title}\" was not approved this round, so it will not be visible on the blog.\n"
-        "Refine the piece and resubmit when ready.\n\n"
-        "The Game Abyss Council"
+    context = {
+        "greeting": f"Explorer {post.author.get_username()},",
+        "intro": (
+            "The Council reviewed your post but it won't surface on the site this round."
+        ),
+        "body_lines": [
+            f"Title: \"{post.title}\"",
+            "Tighten the signal and submit again when you're ready.",
+        ],
+        "closing": "We're looking forward to your next transmission.",
+        "signature": "The Game Abyss Council",
+        "footer_note": "You are receiving this email because you published on Game Abyss.",
+    }
+    send_styled_email(
+        subject,
+        "emails/notification.html",
+        context,
+        [post.author.email],
+        text_template="emails/notification.txt",
     )
-    _send_email(subject, plain_body, [post.author.email])
 
 
 def notify_staff_comment_report(report) -> None:
@@ -162,12 +190,34 @@ def notify_staff_comment_report(report) -> None:
     if not recipients:
         return
     subject = "[Game Abyss] Comment reported"
-    moderation_url = reverse(
-        "admin:blog_comment_change", args=[report.comment.pk])
-    plain_body = (
-        "Heads up, team,\n\n"
-        f"{report.reported_by.get_username()} reported a comment on \"{report.comment.post.title}\".\n"
-        f"Reason: {report.get_reason_display()}.\n"
-        f"Open moderation: {moderation_url}\n"
+    moderation_url = build_absolute_uri(
+        reverse("admin:blog_comment_change", args=[report.comment.pk])
     )
-    _send_email(subject, plain_body, recipients)
+    post_url = build_absolute_uri(report.comment.post.get_absolute_url())
+    context = {
+        "greeting": "Heads up, team,",
+        "intro": (
+            f"{report.reported_by.get_username()} flagged a comment on "
+            f"\"{report.comment.post.title}\"."
+        ),
+        "body_lines": [
+            f"Reason provided: {report.get_reason_display()}.",
+            f"Comment excerpt: {_truncate_excerpt(report.comment.body)}",
+        ],
+        "detail_items": [
+            {"label": "Original post", "value": post_url, "url": post_url},
+            {"label": "Reporter", "value": report.reported_by.get_username()},
+            {"label": "Comment author", "value": report.comment.author.get_username()},
+        ],
+        "cta": {"label": "Open in admin", "url": moderation_url},
+        "closing": "Thanks for watching the Abyss gates.",
+        "signature": "Game Abyss Moderation",
+        "footer_note": "Notification for Game Abyss staff.",
+    }
+    send_styled_email(
+        subject,
+        "emails/notification.html",
+        context,
+        recipients,
+        text_template="emails/notification.txt",
+    )

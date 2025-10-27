@@ -1,0 +1,44 @@
+{% extends "emails/base.html" %}
+{% block content %}
+  {% if greeting %}<p class="comp-email__lead">{{ greeting }}</p>{% endif %}
+  {% if intro %}<p class="comp-email__paragraph">{{ intro }}</p>{% endif %}
+  {% if body_lines %}
+    {% for line in body_lines %}<p class="comp-email__paragraph">{{ line }}</p>{% endfor %}
+  {% endif %}
+  {% if detail_items %}
+    <table role="presentation"
+           class="comp-email__details"
+           cellpadding="0"
+           cellspacing="0"
+           width="100%">
+      {% for item in detail_items %}
+        <tr>
+          <td class="comp-email__details-label">{{ item.label }}</td>
+          <td class="comp-email__details-value">
+            {% if item.url %}
+              <a href="{{ item.url }}" class="comp-email__link">{{ item.value }}</a>
+            {% else %}
+              {{ item.value }}
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  {% if cta.url %}
+    <table role="presentation"
+           class="comp-email__cta"
+           align="center"
+           cellpadding="0"
+           cellspacing="0">
+      <tr>
+        <td>
+          <a href="{{ cta.url }}" class="comp-email__button">{{ cta.label|default:"Open" }}</a>
+        </td>
+      </tr>
+    </table>
+  {% endif %}
+  {% if closing %}<p class="comp-email__paragraph comp-email__paragraph--spaced">{{ closing }}</p>{% endif %}
+  {% if signature %}<p class="comp-email__signature">{{ signature }}</p>{% endif %}
+  {% if footer_note %}<p class="comp-email__note">{{ footer_note }}</p>{% endif %}
+{% endblock content %}

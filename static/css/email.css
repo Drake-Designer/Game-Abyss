@@ -1,0 +1,203 @@
+/* ============================================================
+   GAME ABYSS - EMAIL STYLES (prefisso comp- conforme a selector-class-pattern)
+   ============================================================ */
+
+/* Base wrapper */
+.comp-email {
+  margin: 0;
+  padding: 0;
+  background-color: #0a0a0f;
+  color: #e8e8e8;
+  font-family: Rubik, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.comp-email--dark {
+  background-color: #0a0a0f;
+}
+
+.comp-email__wrapper {
+  background-color: #0a0a0f;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.comp-email__outer {
+  padding: 36px 16px;
+}
+
+.comp-email__container {
+  max-width: 640px;
+  background-color: #1a1a24;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgb(255 107 53 / 35%);
+  box-shadow: 0 25px 55px rgb(0 0 0 / 55%);
+  width: 100%;
+}
+
+/* Header / Brand */
+.comp-email__brand {
+  background: #ff6b35;
+  padding: 28px 32px;
+  text-align: center;
+}
+
+.comp-email__brand-name {
+  font-family: Orbitron, 'Segoe UI', Tahoma, sans-serif;
+  font-weight: 800;
+  letter-spacing: 4px;
+  font-size: 26px;
+  text-transform: uppercase;
+  color: #0a0a0f;
+}
+
+.comp-email__brand-tagline {
+  margin-top: 10px;
+  font-family: Inter, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgb(10 10 15 / 75%);
+}
+
+/* Content */
+.comp-email__content {
+  padding: 36px 32px;
+}
+
+.comp-email__greeting {
+  margin: 0 0 18px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.comp-email__paragraph {
+  margin: 0 0 16px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #f1f1f1;
+  font-family: Inter, 'Segoe UI', Tahoma, sans-serif;
+}
+
+.comp-email__paragraph--spaced {
+  margin: 32px 0 6px;
+}
+
+/* Details table */
+.comp-email__details {
+  margin: 24px 0;
+  border-collapse: collapse;
+  background-color: rgb(255 255 255 / 2%);
+  border-radius: 14px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.comp-email__details-row td {
+  border-bottom: 1px solid rgb(255 107 53 / 12%);
+}
+
+.comp-email__details-label {
+  padding: 12px 16px;
+  font-size: 13px;
+  font-family: Inter, 'Segoe UI', Tahoma, sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 60%);
+  background-color: rgb(255 107 53 / 8%);
+  width: 35%;
+}
+
+.comp-email__details-value {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: Rubik, 'Segoe UI', Tahoma, sans-serif;
+  color: #f5f5f5;
+}
+
+/* Links */
+.comp-email__link {
+  color: #ff6b35;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.comp-email__link-muted {
+  color: rgb(232 232 232 / 75%);
+  text-decoration: none;
+}
+
+.comp-email__link:hover {
+  text-decoration: underline;
+}
+
+/* CTA button */
+.comp-email__cta-wrap {
+  margin: 24px auto 0;
+  text-align: center;
+}
+
+.comp-email__cta {
+  display: inline-block;
+  padding: 14px 30px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #0a0a0f;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-family: Orbitron, 'Segoe UI', Tahoma, sans-serif;
+  border-radius: 999px;
+  background: #ff6b35;
+}
+
+/* Signature / Notes */
+.comp-email__signature {
+  margin: 0 0 12px;
+  font-size: 14px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 65%);
+  font-family: Orbitron, 'Segoe UI', Tahoma, sans-serif;
+}
+
+.comp-email__footnote {
+  margin: 24px 0 0;
+  font-size: 12px;
+  color: rgb(232 232 232 / 55%);
+  font-family: Inter, 'Segoe UI', Tahoma, sans-serif;
+}
+
+/* Footer */
+.comp-email__footer {
+  background-color: rgb(0 0 0 / 55%);
+  padding: 28px 32px;
+  text-align: center;
+}
+
+.comp-email__support {
+  margin: 0;
+  font-family: Inter, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgb(232 232 232 / 78%);
+}
+
+.comp-email__visit {
+  margin: 12px 0 0;
+  font-family: Inter, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 12px;
+  color: rgb(232 232 232 / 55%);
+}
+
+/* Legal note */
+.comp-email__legal {
+  margin: 24px 0 0;
+  font-family: Inter, 'Segoe UI', Tahoma, sans-serif;
+  font-size: 12px;
+  color: rgb(232 232 232 / 45%);
+}
