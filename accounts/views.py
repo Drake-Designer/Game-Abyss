@@ -10,6 +10,7 @@ from django.db import models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.formats import date_format
 
 from blog.models import BlogPost, Comment, CommentReport, log_moderation_action
 from pages.models import HelpRequest
@@ -56,15 +57,29 @@ def _process_email_change(request, user, new_email: str):
 
     email_address.send_confirmation(request=request)
     messages.info(
-        request, "We've sent a confirmation email. Please verify the new address to activate it.")
+        request, "We've sent a confirmation email. Please verify the new address to activate it."
+    )
 
 
 def profile(request, username):
-    """Public profile page with activity and metadata."""
+    """Show a user's public profile page. If not logged in, show a login or sign up call to action."""
     profile_user = get_object_or_404(
-        User.objects.select_related("profile"), username=username)
+        User.objects.select_related("profile"), username=username
+    )
+
+    if not request.user.is_authenticated:
+        return render(
+            request,
+            "accounts/profile_cta.html",
+            {
+                "login_url": reverse("account_login"),
+                "signup_url": reverse("account_signup"),
+            },
+        )
+
     profile_obj = _get_profile(profile_user)
-    is_self = request.user.is_authenticated and request.user.pk == profile_user.pk
+    is_self = request.user.pk == profile_user.pk
+    public_only = not is_self
 
     approved_posts_qs = (
         profile_user.blog_posts.filter(status=BlogPost.STATUS_APPROVED)
@@ -77,7 +92,7 @@ def profile(request, username):
         .order_by("-created_at")
     )
 
-    draft_posts = []
+    draft_posts: list[BlogPost] = []
     if is_self:
         draft_posts = list(
             profile_user.blog_posts.filter(status=BlogPost.STATUS_DRAFT)
@@ -85,12 +100,15 @@ def profile(request, username):
             .order_by("-updated_at")
         )
 
-    posts_page = Paginator(approved_posts_qs, 5).get_page(
-        request.GET.get("post_page")
-    )
-    comments_page = Paginator(approved_comments_qs, 5).get_page(
-        request.GET.get("comment_page")
-    )
+    posts_page = None
+    comments_page = None
+    if not public_only:
+        posts_page = Paginator(approved_posts_qs, 5).get_page(
+            request.GET.get("post_page")
+        )
+        comments_page = Paginator(approved_comments_qs, 5).get_page(
+            request.GET.get("comment_page")
+        )
 
     public_post_count = approved_posts_qs.count()
     approved_comment_count = approved_comments_qs.count()
@@ -109,11 +127,12 @@ def profile(request, username):
     latest_post = approved_posts_qs.first()
     if latest_post:
         last_active_candidates.append(
-            latest_post.published_at or latest_post.created_at)
+            latest_post.published_at or latest_post.created_at
+        )
     latest_comment = approved_comments_qs.first()
     if latest_comment:
         last_active_candidates.append(latest_comment.created_at)
-    if draft_posts:
+    if is_self and draft_posts:
         last_active_candidates.append(draft_posts[0].updated_at)
     last_active = max(
         last_active_candidates) if last_active_candidates else None
@@ -127,6 +146,12 @@ def profile(request, username):
         (profile_obj.favorite_games or "").strip()
         or (profile_obj.favorite_genres or "").strip()
     )
+
+    date_of_birth_display: str | None = None
+    if profile_obj.date_of_birth:
+        dob_format = "F j, Y" if is_self else "F j"
+        date_of_birth_display = date_format(
+            profile_obj.date_of_birth, dob_format)
 
     show_moderation_tools = is_self and profile_user.is_staff
     staff_tools: list[dict[str, str | int | None]] = []
@@ -168,30 +193,33 @@ def profile(request, username):
         "profile_user": profile_user,
         "profile": profile_obj,
         "is_self": is_self,
-        "full_name": full_name_value if full_name_value else None,
-        "approved_posts": list(approved_posts_qs),
-        "approved_comments": list(approved_comments_qs),
+        "public_only": public_only,
         "role_badge": role_badge,
         "member_since": profile_user.date_joined,
         "last_active": last_active,
-        "draft_posts": draft_posts,
-        "posts_page": posts_page,
-        "comments_page": comments_page,
         "stats": stats,
         "has_favorites": has_favorites,
+        "date_of_birth_display": date_of_birth_display,
+        "full_name": full_name_value if is_self and full_name_value else None,
+        "draft_posts": draft_posts if is_self else [],
+        "posts_page": posts_page,
+        "comments_page": comments_page,
         "show_moderation_tools": show_moderation_tools,
-        "staff_tools": staff_tools,
+        "staff_tools": staff_tools if show_moderation_tools else [],
     }
+
     return render(request, "accounts/profile.html", context)
 
 
 @login_required
 def profile_edit(request):
+    """Let the logged in user update their profile and email. On success, redirect back to their profile."""
     profile_obj = _get_profile(request.user)
 
     if request.method == "POST":
-        form = ProfileForm(request.POST, request.FILES,
-                           instance=profile_obj, user=request.user)
+        form = ProfileForm(
+            request.POST, request.FILES, instance=profile_obj, user=request.user
+        )
         if form.is_valid():
             form.save()
             if form.email_changed:
@@ -207,11 +235,13 @@ def profile_edit(request):
 @login_required
 @verified_email_required
 def profile_delete(request):
+    """Delete the current user's account after confirming the password. Logs out and redirects to home."""
     if request.method == "POST":
         password = (request.POST.get("confirm_password") or "").strip()
         if not request.user.check_password(password):
             messages.error(
-                request, "Incorrect password. Your account was not deleted.")
+                request, "Incorrect password. Your account was not deleted."
+            )
             return redirect("accounts:profile_delete")
 
         user = request.user
@@ -226,10 +256,13 @@ def profile_delete(request):
 
 @login_required
 def my_profile_redirect(request):
+    """Shortcut that redirects the logged in user to their own profile page."""
     return redirect("accounts:profile", request.user.username)
 
 
 class VerifiedEmailPasswordChangeView(PasswordChangeView):
+    """Password change view that only allows access if the user's email is verified."""
+
     def dispatch(self, request, *args, **kwargs):
         response = ensure_verified_email(request)
         if response is not None:
@@ -239,42 +272,69 @@ class VerifiedEmailPasswordChangeView(PasswordChangeView):
 
 @staff_member_required
 def staff_dashboard(request):
+    """Staff overview with counters and quick links to common moderation tasks."""
     counters = {
         "pending_posts": BlogPost.objects.filter(status=BlogPost.STATUS_PENDING).count(),
         "pending_comments": Comment.objects.filter(status=Comment.STATUS_PENDING).count(),
         "unresolved_reports": CommentReport.objects.filter(resolved=False).count(),
-        "open_help_requests": HelpRequest.objects.exclude(status=HelpRequest.STATUS_RESOLVED).count(),
+        "open_help_requests": HelpRequest.objects.exclude(
+            status=HelpRequest.STATUS_RESOLVED
+        ).count(),
         "featured_posts": BlogPost.objects.filter(featured=True).count(),
         "total_users": User.objects.count(),
     }
     quick_links = [
-        {"label": "Pending posts", "url": reverse(
-            "accounts:staff_pending_posts"), "icon": "fa-newspaper"},
-        {"label": "Pending comments", "url": reverse(
-            "accounts:staff_pending_comments"), "icon": "fa-comments"},
-        {"label": "Reports", "url": reverse(
-            "accounts:staff_reports"), "icon": "fa-triangle-exclamation"},
-        {"label": "Help requests", "url": reverse(
-            "accounts:staff_help_requests"), "icon": "fa-life-ring"},
+        {
+            "label": "Pending posts",
+            "url": reverse("accounts:staff_pending_posts"),
+            "icon": "fa-newspaper",
+        },
+        {
+            "label": "Pending comments",
+            "url": reverse("accounts:staff_pending_comments"),
+            "icon": "fa-comments",
+        },
+        {
+            "label": "Reports",
+            "url": reverse("accounts:staff_reports"),
+            "icon": "fa-triangle-exclamation",
+        },
+        {
+            "label": "Help requests",
+            "url": reverse("accounts:staff_help_requests"),
+            "icon": "fa-life-ring",
+        },
         {"label": "User search", "url": reverse(
             "accounts:staff_user_search"), "icon": "fa-users"},
-        {"label": "Featured manager", "url": reverse(
-            "accounts:staff_featured_manager"), "icon": "fa-star"},
-        {"label": "Content search", "url": reverse(
-            "accounts:staff_content_search"), "icon": "fa-search"},
+        {
+            "label": "Featured manager",
+            "url": reverse("accounts:staff_featured_manager"),
+            "icon": "fa-star",
+        },
+        {
+            "label": "Content search",
+            "url": reverse("accounts:staff_content_search"),
+            "icon": "fa-search",
+        },
         {"label": "Admin", "url": reverse(
             "admin:index"), "icon": "fa-gauge-high"},
     ]
-    return render(request, "accounts/staff/dashboard.html", {"counters": counters, "quick_links": quick_links})
+    return render(
+        request,
+        "accounts/staff/dashboard.html",
+        {"counters": counters, "quick_links": quick_links},
+    )
 
 
 @staff_member_required
 def staff_pending_posts(request):
+    """Moderate pending posts. Approve, reject, or delete items from a paginated list."""
     if request.method == "POST":
         post_id = request.POST.get("post_id")
         action = request.POST.get("action") or ""
         post = get_object_or_404(
-            BlogPost.objects.select_related("author"), pk=post_id)
+            BlogPost.objects.select_related("author"), pk=post_id
+        )
         if action == "approve":
             post.status = BlogPost.STATUS_APPROVED
             post.save()
@@ -294,19 +354,26 @@ def staff_pending_posts(request):
         return redirect("accounts:staff_pending_posts")
 
     qs = BlogPost.objects.filter(
-        status=BlogPost.STATUS_PENDING).select_related("author")
+        status=BlogPost.STATUS_PENDING
+    ).select_related("author")
     paginator = Paginator(qs.order_by("created_at"), 20)
     page_obj = paginator.get_page(request.GET.get("page"))
-    return render(request, "accounts/staff/pending_posts.html", {"page_obj": page_obj, "total_pending": qs.count()})
+    return render(
+        request,
+        "accounts/staff/pending_posts.html",
+        {"page_obj": page_obj, "total_pending": qs.count()},
+    )
 
 
 @staff_member_required
 def staff_pending_comments(request):
+    """Moderate pending comments. Approve, reject, or delete items from a paginated list."""
     if request.method == "POST":
         comment_id = request.POST.get("comment_id")
         action = request.POST.get("action") or ""
         comment = get_object_or_404(
-            Comment.objects.select_related("author", "post"), pk=comment_id)
+            Comment.objects.select_related("author", "post"), pk=comment_id
+        )
         if action == "approve":
             comment.status = Comment.STATUS_APPROVED
             comment.save()
@@ -326,38 +393,49 @@ def staff_pending_comments(request):
         return redirect("accounts:staff_pending_comments")
 
     qs = Comment.objects.filter(status=Comment.STATUS_PENDING).select_related(
-        "author", "post", "post__author")
+        "author", "post", "post__author"
+    )
     paginator = Paginator(qs.order_by("created_at"), 25)
     page_obj = paginator.get_page(request.GET.get("page"))
-    return render(request, "accounts/staff/pending_comments.html", {"page_obj": page_obj, "total_pending": qs.count()})
+    return render(
+        request,
+        "accounts/staff/pending_comments.html",
+        {"page_obj": page_obj, "total_pending": qs.count()},
+    )
 
 
 @staff_member_required
 def staff_reports(request):
+    """Handle user reports on comments. Resolve, reject, or delete the related comment."""
     if request.method == "POST":
         report_id = request.POST.get("report_id")
         action = request.POST.get("action") or ""
-        report = get_object_or_404(CommentReport.objects.select_related(
-            "comment", "comment__post"), pk=report_id)
+        report = get_object_or_404(
+            CommentReport.objects.select_related("comment", "comment__post"),
+            pk=report_id,
+        )
         comment = report.comment
         if action == "resolve":
             report.resolved = True
             report.save(update_fields=["resolved"])
             log_moderation_action(
-                request.user, "resolve_report", comment, notes=f"Report #{report.pk} resolved")
+                request.user, "resolve_report", comment, notes=f"Report #{report.pk} resolved"
+            )
             messages.success(request, "Report marked as resolved.")
         elif action == "reject_comment":
             if comment:
                 comment.status = Comment.STATUS_REJECTED
                 comment.save()
                 log_moderation_action(
-                    request.user, "reject_comment", comment, notes=f"Report #{report.pk} rejected")
+                    request.user, "reject_comment", comment, notes=f"Report #{report.pk} rejected"
+                )
             report.resolved = True
             report.save(update_fields=["resolved"])
             messages.info(request, "Comment rejected and report resolved.")
         elif action == "delete_comment" and comment:
             log_moderation_action(
-                request.user, "delete_comment", comment, notes=f"Report #{report.pk}")
+                request.user, "delete_comment", comment, notes=f"Report #{report.pk}"
+            )
             comment.delete()
             report.resolved = True
             report.save(update_fields=["resolved"])
@@ -367,14 +445,20 @@ def staff_reports(request):
         return redirect("accounts:staff_reports")
 
     qs = CommentReport.objects.filter(resolved=False).select_related(
-        "comment", "comment__author", "comment__post")
+        "comment", "comment__author", "comment__post"
+    )
     paginator = Paginator(qs.order_by("-created_at"), 25)
     page_obj = paginator.get_page(request.GET.get("page"))
-    return render(request, "accounts/staff/reports.html", {"page_obj": page_obj, "total_reports": qs.count()})
+    return render(
+        request,
+        "accounts/staff/reports.html",
+        {"page_obj": page_obj, "total_reports": qs.count()},
+    )
 
 
 @staff_member_required
 def staff_help_requests(request):
+    """Track and update user help requests. Mark items as in progress or resolved."""
     if request.method == "POST":
         req_id = request.POST.get("request_id")
         action = request.POST.get("action") or ""
@@ -394,11 +478,16 @@ def staff_help_requests(request):
     qs = HelpRequest.objects.exclude(status=HelpRequest.STATUS_RESOLVED)
     paginator = Paginator(qs.order_by("-created_at"), 20)
     page_obj = paginator.get_page(request.GET.get("page"))
-    return render(request, "accounts/staff/help_requests.html", {"page_obj": page_obj, "open_count": qs.count()})
+    return render(
+        request,
+        "accounts/staff/help_requests.html",
+        {"page_obj": page_obj, "open_count": qs.count()},
+    )
 
 
 @staff_member_required
 def staff_user_search(request):
+    """Search users by username or email and show a paginated list of results."""
     query = (request.GET.get("q") or "").strip()
     results = User.objects.none()
     if query:
@@ -409,16 +498,22 @@ def staff_user_search(request):
         )
     paginator = Paginator(results, 25)
     page_obj = paginator.get_page(request.GET.get("page"))
-    return render(request, "accounts/staff/user_search.html", {"page_obj": page_obj, "query": query})
+    return render(
+        request,
+        "accounts/staff/user_search.html",
+        {"page_obj": page_obj, "query": query},
+    )
 
 
 @staff_member_required
 def staff_featured_manager(request):
+    """Toggle the featured flag on posts and browse featured content."""
     if request.method == "POST":
         post_id = request.POST.get("post_id")
         action = request.POST.get("action") or ""
         post = get_object_or_404(
-            BlogPost.objects.select_related("author"), pk=post_id)
+            BlogPost.objects.select_related("author"), pk=post_id
+        )
         if action == "feature":
             post.featured = True
             post.save(update_fields=["featured", "updated_at"])
@@ -434,25 +529,33 @@ def staff_featured_manager(request):
         return redirect("accounts:staff_featured_manager")
 
     qs = BlogPost.objects.select_related("author").order_by(
-        models.F("featured").desc(), "-published_at", "-updated_at")
+        models.F("featured").desc(), "-published_at", "-updated_at"
+    )
     paginator = Paginator(qs, 25)
     page_obj = paginator.get_page(request.GET.get("page"))
     return render(
         request,
         "accounts/staff/featured_manager.html",
-        {"page_obj": page_obj, "featured_total": BlogPost.objects.filter(
-            featured=True).count()},
+        {
+            "page_obj": page_obj,
+            "featured_total": BlogPost.objects.filter(featured=True).count(),
+        },
     )
 
 
 @staff_member_required
 def staff_content_search(request):
+    """Search posts and comments by a free text query and show recent matches."""
     query = (request.GET.get("q") or "").strip()
     posts, comments = [], []
     if query:
         posts = list(
             BlogPost.objects.select_related("author")
-            .filter(Q(title__icontains=query) | Q(body__icontains=query) | Q(tags__icontains=query))
+            .filter(
+                Q(title__icontains=query)
+                | Q(body__icontains=query)
+                | Q(tags__icontains=query)
+            )
             .order_by("-published_at", "-updated_at")[:25]
         )
         comments = list(
@@ -460,18 +563,24 @@ def staff_content_search(request):
             .filter(body__icontains=query)
             .order_by("-created_at")[:25]
         )
-    return render(request, "accounts/staff/content_search.html", {"query": query, "posts": posts, "comments": comments})
+    return render(
+        request,
+        "accounts/staff/content_search.html",
+        {"query": query, "posts": posts, "comments": comments},
+    )
 
 
 @staff_member_required
 def staff_view_as_user(request):
+    """Preview a user's public profile as seen by others to help with moderation."""
     username = (request.GET.get("username") or "").strip()
     preview_user, preview_profile = None, None
     preview_posts, preview_comments, preview_stats, last_active = [], [], {}, None
 
     if username:
         preview_user = get_object_or_404(
-            User.objects.select_related("profile"), username=username)
+            User.objects.select_related("profile"), username=username
+        )
         preview_profile = _get_profile(preview_user)
 
         posts_qs = (
@@ -497,7 +606,8 @@ def staff_view_as_user(request):
             last_active_candidates.append(preview_user.last_login)
         if preview_posts:
             last_active_candidates.append(
-                preview_posts[0].published_at or preview_posts[0].created_at)
+                preview_posts[0].published_at or preview_posts[0].created_at
+            )
         if preview_comments:
             last_active_candidates.append(preview_comments[0].created_at)
         if last_active_candidates:

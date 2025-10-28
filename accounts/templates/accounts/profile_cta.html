@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}
+  Profile access · Game Abyss
+{% endblock title %}
+{% block content %}
+  <section class="py-5">
+    <div class="container text-center">
+      <h1 class="mb-3">Register or log in to view this content</h1>
+      <p class="text-muted mb-4">Create an account or sign in to explore community profiles.</p>
+      <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+        <a class="comp-button comp-button--primary" href="{{ signup_url }}">
+          <i class="fa-solid fa-user-plus"></i><span>Sign up</span>
+        </a>
+        <a class="comp-button comp-button--outline" href="{{ login_url }}">
+          <i class="fa-solid fa-right-to-bracket"></i><span>Log in</span>
+        </a>
+      </div>
+    </div>
+  </section>
+{% endblock content %}

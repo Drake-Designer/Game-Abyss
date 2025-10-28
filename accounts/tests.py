@@ -230,11 +230,13 @@ class ProfileDraftVisibilityTests(TestCase):
             reverse("accounts:profile", args=[self.author.username])
         )
 
-        self.assertContains(response, "Visible post")
+        self.assertContains(response, "Activity status")
         self.assertNotContains(response, "Hidden draft")
         self.assertNotContains(response, 'data-testid="draft-posts"')
         self.assertNotContains(response, "Edit profile")
         self.assertNotContains(response, "Delete account")
+        self.assertNotContains(response, "Approved posts")
+        self.assertNotContains(response, "Visible post")
 
     def test_staff_user_cannot_see_drafts(self):
         self.client.force_login(self.staff_user)
@@ -243,11 +245,13 @@ class ProfileDraftVisibilityTests(TestCase):
             reverse("accounts:profile", args=[self.author.username])
         )
 
-        self.assertContains(response, "Visible post")
+        self.assertContains(response, "Activity status")
         self.assertNotContains(response, "Hidden draft")
         self.assertNotContains(response, 'data-testid="draft-posts"')
         self.assertNotContains(response, "Edit profile")
         self.assertNotContains(response, "Delete account")
+        self.assertNotContains(response, "Approved posts")
+        self.assertNotContains(response, "Visible post")
 
     def test_staff_owner_sees_moderation_tools_placeholder(self):
         self.client.force_login(self.staff_user)
@@ -320,42 +324,82 @@ class ProfilePublicViewTests(TestCase):
         )
 
     def test_public_profile_shows_only_public_content(self):
+        self.client.force_login(self.viewer)
+
         response = self.client.get(
             reverse("accounts:profile", args=[self.author.username])
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.approved_post.title)
+        self.assertNotContains(response, "Approved posts")
+        self.assertNotContains(response, self.approved_post.title)
         self.assertNotContains(response, self.pending_post.title)
         self.assertNotContains(response, self.draft_post.title)
-        self.assertContains(response, "Approved feedback")
-        self.assertNotContains(response, "Pending feedback")
+        self.assertNotContains(response, "Approved comments</h2>")
         self.assertContains(response, 'data-testid="public-post-count">1')
         self.assertContains(response, 'data-testid="approved-comment-count">1')
 
     def test_public_profile_shows_profile_metadata(self):
+        self.client.force_login(self.viewer)
+
         response = self.client.get(
             reverse("accounts:profile", args=[self.author.username])
         )
 
         formatted_dob = date_format(
-            self.author_profile.date_of_birth, "F j, Y"
+            self.author_profile.date_of_birth, "F j"
         )
         joined = date_format(self.author.date_joined, "F j, Y")
         self.assertContains(response, "Nickname")
         self.assertContains(response, self.author.username)
         self.assertContains(response, "Member since")
         self.assertContains(response, joined)
-        self.assertContains(response, "Full name")
-        self.assertContains(response, "Aurora Vega")
+        self.assertNotContains(response, "Full name")
+        self.assertNotContains(response, "Aurora Vega")
         self.assertContains(response, formatted_dob)
+        self.assertNotContains(
+            response, str(self.author_profile.date_of_birth.year)
+        )
         self.assertContains(response, "Bio")
         self.assertContains(response, self.author_profile.bio)
         self.assertContains(response, "Activity status")
         self.assertContains(response, "Last active")
         self.assertNotContains(response, "No activity recorded")
 
+    def test_owner_sees_full_profile_details(self):
+        self.client.force_login(self.author)
+
+        response = self.client.get(
+            reverse("accounts:profile", args=[self.author.username])
+        )
+
+        full_dob = date_format(self.author_profile.date_of_birth, "F j, Y")
+        self.assertContains(response, "Full name")
+        self.assertContains(response, "Aurora Vega")
+        self.assertContains(response, full_dob)
+        self.assertContains(response, self.approved_post.title)
+        self.assertContains(response, "Approved posts")
+        self.assertContains(response, "Approved comments")
+        self.assertContains(response, "Approved feedback")
+
+    def test_unauthenticated_user_sees_login_cta(self):
+        response = self.client.get(
+            reverse("accounts:profile", args=[self.author.username])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, "Register or log in to view this content")
+        self.assertContains(response, "Sign up")
+        self.assertContains(response, "Log in")
+        if response.context is not None:
+            self.assertFalse(
+                any("profile_user" in layer for layer in response.context)
+            )
+
     def test_profile_hides_role_badge_for_regular_user(self):
+        self.client.force_login(self.viewer)
+
         response = self.client.get(
             reverse("accounts:profile", args=[self.author.username])
         )
@@ -371,6 +415,8 @@ class ProfilePublicViewTests(TestCase):
         )
         UserProfile.objects.create(user=staff_user)
 
+        self.client.force_login(self.viewer)
+
         response = self.client.get(
             reverse("accounts:profile", args=[staff_user.username])
         )
@@ -385,6 +431,8 @@ class ProfilePublicViewTests(TestCase):
             password="secret",
         )
         UserProfile.objects.create(user=admin_user)
+
+        self.client.force_login(self.viewer)
 
         response = self.client.get(
             reverse("accounts:profile", args=[admin_user.username])
@@ -437,6 +485,8 @@ class ProfileFavoritesTests(TestCase):
         )
 
     def test_favorites_render_in_profile(self):
+        self.client.force_login(self.user)
+
         response = self.client.get(
             reverse("accounts:profile", args=[self.user.username]))
         self.assertEqual(response.status_code, 200)
@@ -451,6 +501,8 @@ class ProfileFavoritesTests(TestCase):
             password="secret",
         )
         UserProfile.objects.create(user=empty_user)
+
+        self.client.force_login(empty_user)
 
         response = self.client.get(
             reverse("accounts:profile", args=[empty_user.username]))

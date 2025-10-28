@@ -78,17 +78,19 @@
               <dd class="col-sm-7 mb-0" data-testid="profile-member-since">
                 {{ member_since|date:"F j, Y" }}
               </dd>
-              <dt class="col-sm-5 text-uppercase text-muted small">Full name</dt>
-              <dd class="col-sm-7 mb-0" data-testid="profile-full-name">
-                {% if full_name %}
-                  {{ full_name }}
-                {% else %}
-                  Hidden
-                {% endif %}
-              </dd>
+              {% if not public_only %}
+                <dt class="col-sm-5 text-uppercase text-muted small">Full name</dt>
+                <dd class="col-sm-7 mb-0" data-testid="profile-full-name">
+                  {% if full_name %}
+                    {{ full_name }}
+                  {% else %}
+                    Hidden
+                  {% endif %}
+                </dd>
+              {% endif %}
               <dt class="col-sm-5 text-uppercase text-muted small">Date of birth</dt>
               <dd class="col-sm-7 mb-0" data-testid="profile-birthdate">
-                {% if profile.date_of_birth %}{{ profile.date_of_birth|date:"F j, Y" }}{% endif %}
+                {{ date_of_birth_display }}
               </dd>
               <dt class="col-sm-5 text-uppercase text-muted small">Last active</dt>
               <dd class="col-sm-7 mb-0" data-testid="profile-last-active">
@@ -135,49 +137,51 @@
         </div>
       </div>
     </div>
-    <div class="row g-4">
-      <div class="col-lg-6">
-        <div class="comp-card h-100">
-          <div class="comp-card__body">
-            <h2 class="comp-card__title">Approved posts</h2>
-            {% if posts_page and posts_page.object_list %}
-              <ul class="list-unstyled mb-0">
-                {% for post in posts_page %}
-                  <li class="mb-3 border-bottom pb-2">
-                    <div>
-                      <a class="fw-semibold" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
-                    </div>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <p class="mb-0 text-muted">No posts yet.</p>
-            {% endif %}
+    {% if not public_only %}
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="comp-card h-100">
+            <div class="comp-card__body">
+              <h2 class="comp-card__title">Approved posts</h2>
+              {% if posts_page and posts_page.object_list %}
+                <ul class="list-unstyled mb-0">
+                  {% for post in posts_page %}
+                    <li class="mb-3 border-bottom pb-2">
+                      <div>
+                        <a class="fw-semibold" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="mb-0 text-muted">No posts yet.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="comp-card h-100">
+            <div class="comp-card__body">
+              <h2 class="comp-card__title">Approved comments</h2>
+              {% if comments_page and comments_page.object_list %}
+                <ul class="list-unstyled mb-0">
+                  {% for comment in comments_page %}
+                    <li class="mb-3 border-bottom pb-2">
+                      <a class="fw-semibold"
+                         href="{{ comment.post.get_absolute_url }}#comment-{{ comment.id }}">
+                        {{ comment.body|truncatewords:6 }}
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="mb-0 text-muted">No comments yet.</p>
+              {% endif %}
+            </div>
           </div>
         </div>
       </div>
-      <div class="col-lg-6">
-        <div class="comp-card h-100">
-          <div class="comp-card__body">
-            <h2 class="comp-card__title">Approved comments</h2>
-            {% if comments_page and comments_page.object_list %}
-              <ul class="list-unstyled mb-0">
-                {% for comment in comments_page %}
-                  <li class="mb-3 border-bottom pb-2">
-                    <a class="fw-semibold"
-                       href="{{ comment.post.get_absolute_url }}#comment-{{ comment.id }}">
-                      {{ comment.body|truncatewords:6 }}
-                    </a>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <p class="mb-0 text-muted">No comments yet.</p>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
+    {% endif %}
     {% if show_moderation_tools %}
       <section class="mb-4 mt-4">
         <div class="comp-card">
