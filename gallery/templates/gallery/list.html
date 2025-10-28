@@ -4,16 +4,16 @@
 {% endblock title %}
 {% block content %}
   <section class="page-gallery-list py-4">
-    <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-      <div>
-        <h1 class="h2 mb-1 util-text-shadow">
+    <header class="d-flex flex-column flex-md-row align-items-md-center gap-3 mb-4">
+      <div class="w-100 text-center">
+        <h1 class="comp-card__title-contact mb-4">
           <i class="fas fa-images me-2 text-primary"></i>
           Community Gallery
         </h1>
         <p class="text-muted mb-0">Approved uploads from the abyss - curated by staff, shared by you.</p>
       </div>
       {% if user.is_authenticated %}
-        <a class="comp-button comp-button--primary"
+        <a class="comp-button comp-button--primary ms-md-auto"
            href="{% url 'gallery:upload' %}">
           <i class="fas fa-cloud-upload-alt me-2"></i> Upload Image
         </a>

@@ -62,7 +62,7 @@
           <li class="nav-item comp-navbar__action">
             <form action="{% url 'account_logout' %}" method="post" class="d-inline">
               {% csrf_token %}
-              <button class="comp-button comp-button--outline comp-button--sm comp-navbar__btn"
+              <button class="comp-button comp-button--outline comp-button--sm comp-navbar__btn mt-2"
                       type="submit">Logout</button>
             </form>
           </li>
