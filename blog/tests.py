@@ -226,6 +226,10 @@ class DraftWorkflowViewTests(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(detail_url)
         self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["show_engagement"])
+        self.assertIsNone(response.context["comment_form"])
+        self.assertNotContains(response, "Post Reactions")
+        self.assertNotContains(response, "Submit Comment")
         self.client.logout()
 
         # Other regular users cannot see the draft
@@ -238,6 +242,58 @@ class DraftWorkflowViewTests(TestCase):
         self.client.force_login(self.staff)
         response = self.client.get(detail_url)
         self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["show_engagement"])
+        self.assertNotContains(response, "Post Reactions")
+        self.assertNotContains(response, "Submit Comment")
+
+    def test_published_post_keeps_engagement_sections(self):
+        """Ensure published posts still render reactions and comments."""
+        post = BlogPost.objects.create(
+            author=self.user,
+            title="Live Post",
+            body="Ready for the world",
+            status=BlogPost.STATUS_APPROVED,
+        )
+        detail_url = post.get_absolute_url()
+
+        self.client.force_login(self.other)
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["show_engagement"])
+        self.assertContains(response, "Post Reactions")
+        self.assertContains(response, "Comments")
+
+    def test_staff_edit_draft_hides_author_field(self):
+        """Verify staff do not see author field when editing drafts."""
+        draft = BlogPost.objects.create(
+            author=self.staff,
+            title="Staff Draft",
+            body="Classified",
+            status=BlogPost.STATUS_DRAFT,
+        )
+        edit_url = reverse("blog:edit_post", args=[draft.pk])
+
+        self.client.force_login(self.staff)
+        response = self.client.get(edit_url)
+        form = response.context["form"]
+        self.assertNotIn("author", form.fields)
+        self.assertNotContains(response, 'id="id_author"')
+
+    def test_staff_edit_published_retains_author_field(self):
+        """Ensure staff retain author field when editing non-drafts."""
+        post = BlogPost.objects.create(
+            author=self.staff,
+            title="Published",
+            body="Visible",
+            status=BlogPost.STATUS_APPROVED,
+        )
+        edit_url = reverse("blog:edit_post", args=[post.pk])
+
+        self.client.force_login(self.staff)
+        response = self.client.get(edit_url)
+        form = response.context["form"]
+        self.assertIn("author", form.fields)
+        self.assertContains(response, 'id="id_author"')
 
 # /* ============================================================
 #    *** BLOG: Tests: Comment Model Tests ***

@@ -190,64 +190,73 @@ def post_detail(request, year, month, day, slug):
     ):
         return HttpResponse('Not found', status=404)
 
-    comment_form = CommentForm()
+    is_draft = post.status == BlogPost.STATUS_DRAFT
+    show_engagement = not is_draft
 
-    if request.method == 'POST':
-        # New comment submission
-        comment_form = CommentForm(request.POST)
-        if not request.user.is_authenticated:
-            messages.error(
-                request, 'Log in to add your signal to the constellation.')
-        else:
-            redirect_response = ensure_verified_email(request)
-            if redirect_response is not None:
-                return redirect_response
+    comment_form = None
+    approved_comments = []
+    post_reaction_display = []
 
-        if request.user.is_authenticated and comment_form.is_valid():
-            comment = comment_form.save(commit=False)
-            comment.post = post
-            comment.author = request.user
-            if request.user.is_staff or request.user.is_superuser:
-                comment.status = Comment.STATUS_APPROVED
-                comment.save()
-                messages.success(request, "Comment live.")
+    if show_engagement:
+        comment_form = CommentForm()
+
+        if request.method == 'POST':
+            # New comment submission
+            comment_form = CommentForm(request.POST)
+            if not request.user.is_authenticated:
+                messages.error(
+                    request, 'Log in to add your signal to the constellation.')
             else:
-                comment.status = Comment.STATUS_PENDING
-                comment.save()
-                messages.success(request, "Your comment is pending approval.")
-            return redirect(post.get_absolute_url())
-        else:
-            messages.error(request, 'We could not accept that comment.')
+                redirect_response = ensure_verified_email(request)
+                if redirect_response is not None:
+                    return redirect_response
 
-    # Comments (approved only for public)
-    approved_comments = list(
-        post.comments.approved()
-        .select_related('author')
-        .prefetch_related('reactions__user', 'reports__reported_by')
-    )
+            if request.user.is_authenticated and comment_form.is_valid():
+                comment = comment_form.save(commit=False)
+                comment.post = post
+                comment.author = request.user
+                if request.user.is_staff or request.user.is_superuser:
+                    comment.status = Comment.STATUS_APPROVED
+                    comment.save()
+                    messages.success(request, "Comment live.")
+                else:
+                    comment.status = Comment.STATUS_PENDING
+                    comment.save()
+                    messages.success(
+                        request, "Your comment is pending approval.")
+                return redirect(post.get_absolute_url())
+            else:
+                messages.error(request, 'We could not accept that comment.')
 
-    # Post reactions
-    post_reactions = list(post.reactions.select_related('user'))
-    post_reaction_totals = {opt['value']: 0 for opt in REACTION_OPTIONS}
-    for r in post_reactions:
-        post_reaction_totals[r.reaction] = post_reaction_totals.get(
-            r.reaction, 0) + 1
+        # Comments (approved only for public)
+        approved_comments = list(
+            post.comments.approved()
+            .select_related('author')
+            .prefetch_related('reactions__user', 'reports__reported_by')
+        )
 
-    user_post_reaction = None
-    if request.user.is_authenticated:
+        # Post reactions
+        post_reactions = list(post.reactions.select_related('user'))
+        post_reaction_totals = {opt['value']: 0 for opt in REACTION_OPTIONS}
         for r in post_reactions:
-            if r.user_id == request.user.id:
-                user_post_reaction = r.reaction
-                break
+            post_reaction_totals[r.reaction] = post_reaction_totals.get(
+                r.reaction, 0) + 1
 
-    post_reaction_display = [
-        {
-            **opt,
-            'count': post_reaction_totals.get(opt['value'], 0),
-            'active': (opt['value'] == user_post_reaction),
-        }
-        for opt in REACTION_OPTIONS
-    ]
+        user_post_reaction = None
+        if request.user.is_authenticated:
+            for r in post_reactions:
+                if r.user_id == request.user.id:
+                    user_post_reaction = r.reaction
+                    break
+
+        post_reaction_display = [
+            {
+                **opt,
+                'count': post_reaction_totals.get(opt['value'], 0),
+                'active': (opt['value'] == user_post_reaction),
+            }
+            for opt in REACTION_OPTIONS
+        ]
 
     # Permissions for UI actions on the post
     if request.user.is_authenticated:
@@ -305,6 +314,8 @@ def post_detail(request, year, month, day, slug):
         'comments': approved_comments,
         'comment_form': comment_form,
         'post_reaction_display': post_reaction_display,
+        'show_engagement': show_engagement,
+        'is_draft': is_draft,
     }
     return render(request, 'blog/post_detail.html', context)
 
@@ -331,12 +342,22 @@ def edit_post(request, pk):
     form_class = BlogPostForm if (
         request.user.is_staff or request.user.is_superuser) else PublicBlogPostForm
 
+    hide_author_field = (
+        post.status == BlogPost.STATUS_DRAFT
+        and (request.user.is_staff or request.user.is_superuser)
+    )
+
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES, instance=post)
         original_status = post.status
         original_featured = getattr(post, 'featured', False)
         if isinstance(form, BlogPostForm):
-            form.fields['author'].disabled = True
+            if hide_author_field:
+                form.fields.pop('author', None)
+                if hasattr(form, '_bound_fields_cache'):
+                    form._bound_fields_cache.pop('author', None)
+            elif 'author' in form.fields:
+                form.fields['author'].disabled = True
         if form.is_valid():
             updated_post = form.save(commit=False)
             updated_post.author = post.author
@@ -377,9 +398,23 @@ def edit_post(request, pk):
     else:
         form = form_class(instance=post)
         if isinstance(form, BlogPostForm):
-            form.fields['author'].disabled = True
+            if hide_author_field:
+                form.fields.pop('author', None)
+                if hasattr(form, '_bound_fields_cache'):
+                    form._bound_fields_cache.pop('author', None)
+            elif 'author' in form.fields:
+                form.fields['author'].disabled = True
 
-    return render(request, 'blog/edit_post.html', {'form': form, 'post': post, 'next_url': redirect_url})
+    return render(
+        request,
+        'blog/edit_post.html',
+        {
+            'form': form,
+            'post': post,
+            'next_url': redirect_url,
+            'hide_author_field': hide_author_field,
+        },
+    )
 
 
 # /* ============================================================
