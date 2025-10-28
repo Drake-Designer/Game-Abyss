@@ -1,3 +1,8 @@
+<!--
+/* ============================================================
+   *** BLOG TEMPLATE: Post Index Page ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% load static %}
 {% load cloudinary_extras %}
@@ -5,19 +10,23 @@
   Blog - Game Abyss
 {% endblock title %}
 {% block content %}
+  <!-- Render main blog listing section. -->
   <section class="container py-4">
-    <!-- Toolbar -->
+    <!-- Present page toolbar. -->
     <div class="d-flex align-items-center justify-content-between mb-3">
       <h1 class="page-blog-index__title mb-0">
         <i class="fas fa-wave-square me-2 text-primary"></i>Echoes from the Abyss
       </h1>
     </div>
     {% if posts %}
+      <!-- Render post card grid. -->
       <div class="row g-4">
         {% for post in posts %}
+          <!-- Render individual post card. -->
           <div class="col-md-6 col-lg-4">
             <article class="comp-card h-100" aria-labelledby="post-{{ post.pk }}-title">
               {% if post.image %}
+                <!-- Display post thumbnail media. -->
                 <div class="comp-card__image-wrap">
                   <picture>
                     <source media="(max-width: 991.98px)"
@@ -34,6 +43,7 @@
                 </div>
               {% endif %}
               <div class="comp-card__body d-flex flex-column">
+                <!-- Post title and featured badge. -->
                 <h3 id="post-{{ post.pk }}-title"
                     class="comp-card__title h5 d-flex align-items-center gap-2">
                   <a class="util-no-decoration" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
@@ -43,7 +53,7 @@
                     </span>
                   {% endif %}
                 </h3>
-                <!-- Meta: author and date -->
+                <!-- Show author and date metadata. -->
                 <div class="page-blog-index__meta mb-2">
                   <div class="d-flex align-items-center gap-1 mb-1">
                     <i class="fas fa-user-astronaut"></i>
@@ -60,6 +70,7 @@
                     {{ post.published_at|default:post.updated_at|date:"F j, Y" }}
                   </time>
                 </div>
+                <!-- Post excerpt. -->
                 <p class="page-blog-index__excerpt mb-3">
                   {% if post.excerpt %}
                     {{ post.excerpt }}
@@ -68,6 +79,7 @@
                   {% endif %}
                 </p>
                 {% if post.tag_list %}
+                  <!-- Render post tag badges. -->
                   <ul class="list-unstyled d-flex flex-wrap gap-2 mb-3">
                     {% for tag in post.tag_list %}
                       <li>
@@ -81,6 +93,7 @@
                 {% else %}
                   <span class="page-blog-index__tags--empty small"></span>
                 {% endif %}
+                <!-- Card footer actions. -->
                 <div class="mt-auto d-flex justify-content-between align-items-center">
                   <a class="comp-button comp-button--primary"
                      href="{{ post.get_absolute_url }}">
@@ -98,6 +111,7 @@
         {% endfor %}
       </div>
     {% else %}
+      <!-- Show empty state message. -->
       <div class="text-center py-5">
         <h3 class="mb-2">
           <i class="fas fa-moon me-2 text-secondary"></i>The Abyss is quiet
@@ -109,4 +123,5 @@
       </div>
     {% endif %}
   </section>
+  <!-- End blog listing section. -->
 {% endblock content %}

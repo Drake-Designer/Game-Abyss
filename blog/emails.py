@@ -1,5 +1,11 @@
-"""Email helpers for the blog application."""
+# /* ============================================================
+#    *** BLOG: Emails ***
+#    ============================================================ */
+"""Provide email helper functions for the blog app."""
 
+# /* ============================================================
+#    *** BLOG: Emails: Imports ***
+#    ============================================================ */
 from __future__ import annotations
 
 from django.conf import settings
@@ -10,6 +16,10 @@ from core.emailing import build_absolute_uri, send_styled_email
 
 User = get_user_model()
 
+
+# /* ============================================================
+#    *** BLOG: Emails: Utilities ***
+#    ============================================================ */
 
 def _truncate_excerpt(text: str, limit: int = 200) -> str:
     """Return a shortened text excerpt with a default message."""
@@ -34,6 +44,10 @@ def get_staff_recipients() -> list[str]:
     qs = User.objects.filter(is_staff=True, is_active=True).exclude(email="")
     return list(qs.values_list("email", flat=True))
 
+
+# /* ============================================================
+#    *** BLOG: Emails: Notifications ***
+#    ============================================================ */
 
 def notify_superadmins_new_post(post) -> None:
     """Notify superadmins when a new post is submitted."""

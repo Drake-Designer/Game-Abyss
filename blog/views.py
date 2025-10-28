@@ -1,3 +1,11 @@
+# /* ============================================================
+#    *** BLOG: Views ***
+#    ============================================================ */
+"""Define blog view logic."""
+
+# /* ============================================================
+#    *** BLOG: Views: Imports ***
+#    ============================================================ */
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -21,7 +29,10 @@ from .models import (
     ReactionType,
 )
 
-# Icon map used by the template to render reaction buttons
+# /* ============================================================
+#    *** BLOG: Views: Reaction Constants ***
+#    ============================================================ */
+
 REACTION_ICON_MAP = {
     ReactionType.LIKE.value: 'fa-thumbs-up',
     ReactionType.LOVE.value: 'fa-heart',
@@ -43,10 +54,15 @@ REACTION_VALUES = {opt['value'] for opt in REACTION_OPTIONS}
 DEFAULT_BLOG_INDEX_PAGE_SIZE = 9
 
 
+# /* ============================================================
+#    *** BLOG: Views: Post Creation ***
+#    ============================================================ */
+
+
 @login_required
 @verified_email_required
 def new_post(request):
-    """Launch a new signal into the Abyss: staff goes live, explorers queue in orbit (pending)."""
+    """Handle creation of a new blog post."""
 
     if request.method == 'POST':
         form = PublicBlogPostForm(request.POST, request.FILES)
@@ -83,8 +99,13 @@ def new_post(request):
     return render(request, 'blog/new_post.html', {'form': form})
 
 
+# /* ============================================================
+#    *** BLOG: Views: Post Browsing ***
+#    ============================================================ */
+
+
 def post_list(request, tag_slug=None):
-    """Homepage: approved posts with optional search, tag filter and pagination."""
+    """Display approved posts with optional filtering."""
 
     search_query = (request.GET.get('q') or '').strip()
     raw_tag = (tag_slug or request.GET.get('tag') or '').strip()
@@ -140,7 +161,7 @@ def post_list(request, tag_slug=None):
 
 
 def post_detail(request, year, month, day, slug):
-    """View a single post; drafts/pending visible only to author/staff."""
+    """Display a single post with access control."""
     qs = BlogPost.objects.filter(slug=slug).filter(
         Q(
             published_at__year=year,
@@ -288,9 +309,14 @@ def post_detail(request, year, month, day, slug):
     return render(request, 'blog/post_detail.html', context)
 
 
+# /* ============================================================
+#    *** BLOG: Views: Post Management ***
+#    ============================================================ */
+
+
 @login_required
 def edit_post(request, pk):
-    """Allow post authors to update their own posts."""
+    """Handle editing of an existing post."""
     post = get_object_or_404(BlogPost, pk=pk)
 
     if post.author != request.user:
@@ -356,9 +382,14 @@ def edit_post(request, pk):
     return render(request, 'blog/edit_post.html', {'form': form, 'post': post, 'next_url': redirect_url})
 
 
+# /* ============================================================
+#    *** BLOG: Views: Comment Management ***
+#    ============================================================ */
+
+
 @login_required
 def edit_comment(request, pk):
-    """Allow comment authors to update their own comments."""
+    """Handle editing of an existing comment."""
     comment = get_object_or_404(Comment, pk=pk)
 
     if comment.author != request.user:
@@ -383,11 +414,16 @@ def edit_comment(request, pk):
     return render(request, 'blog/edit_comment.html', {'form': form, 'comment': comment, 'next_url': redirect_url})
 
 
+# /* ============================================================
+#    *** BLOG: Views: Reaction Handling ***
+#    ============================================================ */
+
+
 @login_required
 @verified_email_required
 @require_POST
 def react_to_post(request, pk):
-    """Add/replace/remove the current user's reaction on a post."""
+    """Manage a user's reaction on a post."""
     post = get_object_or_404(BlogPost, pk=pk)
     reaction_value = request.POST.get('reaction')
     redirect_url = request.POST.get('next') or post.get_absolute_url()
@@ -415,7 +451,7 @@ def react_to_post(request, pk):
 @verified_email_required
 @require_POST
 def react_to_comment(request, pk):
-    """Add/replace/remove the current user's reaction on a comment."""
+    """Manage a user's reaction on a comment."""
     comment = get_object_or_404(Comment, pk=pk)
     redirect_url = request.POST.get(
         'next') or f"{comment.post.get_absolute_url()}#comment-{comment.pk}"
@@ -445,10 +481,15 @@ def react_to_comment(request, pk):
     return redirect(redirect_url)
 
 
+# /* ============================================================
+#    *** BLOG: Views: Comment Moderation ***
+#    ============================================================ */
+
+
 @login_required
 @require_POST
 def report_comment(request, pk):
-    """Report a comment; if reported, the comment goes back to pending for moderation."""
+    """Handle user reports against a comment."""
     comment = get_object_or_404(Comment, pk=pk)
     redirect_url = request.POST.get(
         'next') or f"{comment.post.get_absolute_url()}#comment-{comment.pk}"
@@ -488,7 +529,7 @@ def report_comment(request, pk):
 @login_required
 @require_POST
 def delete_comment(request, pk):
-    """Allow post authors or staff to delete a comment."""
+    """Delete a comment when permitted."""
     comment = get_object_or_404(Comment, pk=pk)
     redirect_url = request.POST.get('next') or comment.post.get_absolute_url()
 
@@ -507,7 +548,7 @@ def delete_comment(request, pk):
 @login_required
 @require_POST
 def delete_post(request, pk):
-    """Allow post authors or staff to delete a post."""
+    """Delete a post when permitted."""
     post = get_object_or_404(BlogPost, pk=pk)
 
     if not (request.user == post.author or request.user.is_staff or request.user.is_superuser):

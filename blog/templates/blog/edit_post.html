@@ -1,28 +1,38 @@
+<!--
+/* ============================================================
+   *** BLOG TEMPLATE: Edit Post Page ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
   Edit Post · Game Abyss
 {% endblock title %}
 {% block content %}
-  <!-- PAGE: Blog / Edit post -->
+  <!-- Render main edit post section. -->
   <section class="container page-blog-edit-post">
     <div class="row justify-content-center">
       <div class="col-md-8 col-lg-7">
         <div class="comp-card">
           <div class="comp-card__body p-4">
+            <!-- Show page title. -->
             <h2 class="comp-card__title mb-4 text-center">
               <i class="fa-solid fa-pen-to-square me-2"></i>Edit Post
             </h2>
+            <!-- Render edit post form. -->
             <form method="post"
                   enctype="multipart/form-data"
                   class="comp-form"
                   novalidate>
               {% csrf_token %}
               {{ form.as_p }}
+              <!-- Render form actions. -->
               <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mt-3">
+                <!-- Back to previous page. -->
                 <a class="comp-button comp-button--outline" href="{{ next_url }}">
                   <i class="fa-solid fa-arrow-left me-2"></i>Cancel
                 </a>
+                <!-- Save and publish controls. -->
                 <div class="d-flex flex-wrap gap-2 justify-content-end">
                   <button type="submit"
                           name="action"
@@ -45,10 +55,11 @@
                 </div>
               </div>
             </form>
+            <!-- End edit post form. -->
           </div>
         </div>
       </div>
     </div>
   </section>
-  <!-- END PAGE: Blog / Edit post -->
+  <!-- End main edit post section. -->
 {% endblock content %}

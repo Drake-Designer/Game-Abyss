@@ -1,23 +1,26 @@
+# /* ============================================================
+#    *** BLOG: AppConfig ***
+#    ============================================================ */
+"""Define configuration for the blog app."""
+
+# /* ============================================================
+#    *** BLOG: AppConfig: Imports ***
+#    ============================================================ */
 from django.apps import AppConfig
 
-"""
-Blog app configuration.
 
-Defines the application config used by Django to register the blog app.
-"""
-
-
+# /* ============================================================
+#    *** BLOG: AppConfig: Main Class ***
+#    ============================================================ */
 class BlogConfig(AppConfig):
+    """Configure the blog application."""
     default_auto_field = "django.db.models.BigAutoField"
     name = "blog"
 
     def ready(self):
-        """
-        Import signal handlers when the app is ready.
-        Keeps it safe if signals.py is missing during early setup.
-        """
+        """Import signal handlers when the app is ready."""
         try:
             import blog.signals  # noqa: F401
         except ImportError:
-            # No signals defined yet, safe to ignore
+            # Safe to ignore if signals module is missing during setup
             pass

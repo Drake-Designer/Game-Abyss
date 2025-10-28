@@ -1,3 +1,8 @@
+<!--
+/* ============================================================
+   *** BLOG TEMPLATE: Post Detail Page ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% load static %}
 {% load cloudinary_extras %}
@@ -5,12 +10,16 @@
   Post - Game Abyss
 {% endblock title %}
 {% block content %}
+  <!-- Render post detail page. -->
   <section class="container py-4">
+    <!-- Post heading, status and author meta. -->
     <article>
       <h1 class="page-post-detail__title d-flex align-items-center gap-2">
         {{ post.title }}
         {% if post.featured %}
-          <span class="comp-badge comp-badge--featured"><i class="fas fa-star"></i> Featured</span>
+          <span class="comp-badge comp-badge--featured">
+            <i class="fas fa-star"></i> Featured
+          </span>
         {% endif %}
         {% if user.is_authenticated and post.status != post.STATUS_APPROVED %}
           {% if user.is_staff or user.is_superuser or user == post.author %}
@@ -41,28 +50,28 @@
           </time>
         </div>
       {% endwith %}
-      {% if user.is_authenticated %}
-        {% if post.can_edit or post.can_delete %}
-          <div class="d-flex flex-wrap gap-2 mb-4">
-            {% if post.can_edit %}
-              <a class="btn btn-outline-primary"
-                 href="{% url 'blog:edit_post' post.pk %}?next={{ request.get_full_path }}">
-                <i class="fas fa-pen"></i> Edit post
-              </a>
-            {% endif %}
-            {% if post.can_delete %}
-              <form method="post"
-                    action="{% url 'blog:delete_post' post.pk %}"
-                    onsubmit="return confirm('Delete this post?');">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger">
-                  <i class="fas fa-trash"></i> Delete post
-                </button>
-              </form>
-            {% endif %}
-          </div>
-        {% endif %}
+      <!-- Post owner actions. -->
+      {% if user.is_authenticated and (post.can_edit or post.can_delete) %}
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          {% if post.can_edit %}
+            <a class="btn btn-outline-primary"
+               href="{% url 'blog:edit_post' post.pk %}?next={{ request.get_full_path }}">
+              <i class="fas fa-pen"></i> Edit post
+            </a>
+          {% endif %}
+          {% if post.can_delete %}
+            <form method="post"
+                  action="{% url 'blog:delete_post' post.pk %}"
+                  onsubmit="return confirm('Delete this post?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger">
+                <i class="fas fa-trash"></i> Delete post
+              </button>
+            </form>
+          {% endif %}
+        </div>
       {% endif %}
+      <!-- Post hero media. -->
       {% if post.image %}
         <div class="page-post-detail__image-wrap mb-4">
           <picture>
@@ -79,7 +88,9 @@
           </picture>
         </div>
       {% endif %}
+      <!-- Post body. -->
       <div class="page-post-detail__body">{{ post.body|linebreaks }}</div>
+      <!-- Reactions block. -->
       <section class="mt-4">
         <h3 class="h6 text-uppercase text-muted d-flex align-items-center gap-2 mb-2">
           <i class="fas fa-icons"></i> Post Reactions
@@ -109,6 +120,7 @@
         {% if not user.is_authenticated %}<p class="small text-muted mt-2">Log in to leave a reaction.</p>{% endif %}
       </section>
     </article>
+    <!-- Comments list and actions. -->
     <section class="mt-5">
       <h2 class="page-post-detail__comments-title d-flex align-items-center gap-2">
         <i class="fas fa-comments"></i> Comments
@@ -117,6 +129,7 @@
         <ul class="list-unstyled">
           {% for comment in comments %}
             <li class="mb-4" id="comment-{{ comment.pk }}">
+              <!-- Comment meta. -->
               <div class="mb-1 page-post-detail__meta">
                 <div class="d-flex align-items-center gap-1 mb-1">
                   <i class="fas fa-user-astronaut"></i>
@@ -132,8 +145,11 @@
                   <i class="fas fa-clock"></i> {{ comment.created_at|date:"F j, Y H:i" }}
                 </time>
               </div>
+              <!-- Comment body. -->
               <p class="page-post-detail__comment-body">{{ comment.body|linebreaks }}</p>
+              <!-- Comment actions and reactions. -->
               <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+                <!-- Comment reactions. -->
                 <div class="d-flex flex-wrap gap-2">
                   {% for option in comment.reaction_display %}
                     {% if user.is_authenticated %}
@@ -158,6 +174,7 @@
                     {% endif %}
                   {% endfor %}
                 </div>
+                <!-- Comment moderation controls. -->
                 {% if user.is_authenticated %}
                   <div class="d-flex gap-2">
                     {% if comment.can_edit %}
@@ -209,9 +226,11 @@
       {% else %}
         <p class="text-muted">No approved comments yet. Be the first to leave a signal in the Abyss.</p>
       {% endif %}
+      <!-- Moderation hint for non staff. -->
       {% if not user.is_staff %}
         <div class="alert alert-info w-50" role="alert">Comments enter orbit first and appear after editorial approval.</div>
       {% endif %}
+      <!-- Comment form or login prompt. -->
       {% if user.is_authenticated %}
         <form method="post" class="comp-form mt-4">
           {% csrf_token %}
@@ -234,4 +253,5 @@
       {% endif %}
     </section>
   </section>
+  <!-- End post detail page. -->
 {% endblock content %}

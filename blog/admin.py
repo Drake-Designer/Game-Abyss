@@ -1,4 +1,11 @@
-# blog/admin.py
+# /* ============================================================
+#    *** BLOG: Admin ***
+#    ============================================================ */
+"""Configure admin interfaces for the blog app."""
+
+# /* ============================================================
+#    *** BLOG: Admin: Imports ***
+#    ============================================================ */
 from django.contrib import admin
 from django.utils.html import format_html
 
@@ -12,9 +19,14 @@ from .models import (
 )
 
 
+# /* ============================================================
+#    *** BLOG: Admin: Blog Post Admin ***
+#    ============================================================ */
+
+
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
-    """Moderation console for BlogPost - quick actions to approve, reject, and feature."""
+    """Moderate blog posts inside the admin."""
     list_display = (
         'title',
         'author',
@@ -43,7 +55,7 @@ class BlogPostAdmin(admin.ModelAdmin):
     form = BlogPostForm
 
     def save_model(self, request, obj, form, change):
-        """Assign author only on creation; keep original author on edits. Also apply default status on creation."""
+        """Assign author and default status during creation."""
         # Set author automatically only when the object is first created and author is not already set
         if not obj.pk and not obj.author_id:
             obj.author = request.user
@@ -57,27 +69,28 @@ class BlogPostAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def thumbnail(self, obj):
-        """Small preview thumbnail for posts."""
+        """Render a small preview thumbnail."""
         if getattr(obj, 'image', None):
             return format_html('<img src="{}" style="height:40px;border-radius:4px;"/>', obj.image.url)
         return '-'
     thumbnail.short_description = 'Image'
 
     def view_on_site(self, obj):
-        """Open the post directly on the site."""
+        """Link to the post on the site."""
         return format_html('<a href="{}" target="_blank">View</a>', obj.get_absolute_url())
     view_on_site.short_description = 'On site'
 
     list_display = ('thumbnail',) + list_display + ('view_on_site',)
 
     def get_readonly_fields(self, request, obj=None):
-        """Status is editable only for staff or superusers."""
+        """Limit readonly fields for non-staff."""
         ro = list(self.readonly_fields)
         if not (request.user.is_staff or request.user.is_superuser):
             ro.extend(['status'])
         return ro
 
     def get_prepopulated_fields(self, request, obj=None):
+        """Return prepopulated fields safe for the request."""
         fields = getattr(self, 'prepopulated_fields', {}) or {}
         try:
             form = self.get_form(request, obj)()
@@ -90,20 +103,24 @@ class BlogPostAdmin(admin.ModelAdmin):
         return safe
 
     def has_delete_permission(self, request, obj=None):
-        """Only superusers can erase content from the Abyss."""
+        """Restrict deletion to superusers."""
         if not request.user.is_superuser:
             return False
         return super().has_delete_permission(request, obj)
 
     def get_actions(self, request):
+        """Filter available actions based on permissions."""
         actions = super().get_actions(request)
         if not request.user.has_perm('blog.change_blogpost'):
             for action in list(actions):
                 actions.pop(action)
         return actions
 
-    # Moderation actions
+    # /* ============================================================
+    #    *** BLOG: Admin: Blog Post Moderation Actions ***
+    #    ============================================================ */
     def mark_pending(self, request, queryset):
+        """Mark selected posts as pending."""
         updated = 0
         for post in queryset:
             post.status = BlogPost.STATUS_PENDING
@@ -114,6 +131,7 @@ class BlogPostAdmin(admin.ModelAdmin):
     mark_pending.short_description = 'Mark selected posts as pending'
 
     def mark_approved(self, request, queryset):
+        """Mark selected posts as approved."""
         updated = 0
         for post in queryset:
             post.status = BlogPost.STATUS_APPROVED
@@ -124,6 +142,7 @@ class BlogPostAdmin(admin.ModelAdmin):
     mark_approved.short_description = 'Approve selected posts'
 
     def mark_rejected(self, request, queryset):
+        """Mark selected posts as rejected."""
         updated = 0
         for post in queryset:
             post.status = BlogPost.STATUS_REJECTED
@@ -133,8 +152,11 @@ class BlogPostAdmin(admin.ModelAdmin):
             request, f"Cast {updated} post(s) into the void (Rejected).")
     mark_rejected.short_description = 'Reject selected posts'
 
-    # Featured flags
+    # /* ============================================================
+    #    *** BLOG: Admin: Blog Post Featured Actions ***
+    #    ============================================================ */
     def mark_featured(self, request, queryset):
+        """Set selected posts as featured."""
         updated = 0
         for post in queryset:
             if not post.featured:
@@ -145,6 +167,7 @@ class BlogPostAdmin(admin.ModelAdmin):
     mark_featured.short_description = 'Mark selected posts as featured'
 
     def mark_unfeatured(self, request, queryset):
+        """Clear the featured flag from selected posts."""
         updated = 0
         for post in queryset:
             if post.featured:
@@ -156,9 +179,14 @@ class BlogPostAdmin(admin.ModelAdmin):
     mark_unfeatured.short_description = 'Remove featured flag'
 
 
+# /* ============================================================
+#    *** BLOG: Admin: Comment Admin ***
+#    ============================================================ */
+
+
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    """Moderation console for comments."""
+    """Moderate comments inside the admin."""
     list_display = ('post', 'author', 'status', 'created_at', 'updated_at')
     list_filter = ('status', 'created_at', 'post')
     search_fields = ('post__title', 'author__username', 'body')
@@ -166,18 +194,21 @@ class CommentAdmin(admin.ModelAdmin):
     actions = ['mark_pending', 'mark_approved', 'mark_rejected']
 
     def mark_pending(self, request, queryset):
+        """Mark selected comments as pending."""
         updated = queryset.update(status=Comment.STATUS_PENDING)
         self.message_user(
             request, f"Queued {updated} comment(s) in stasis (Pending).")
     mark_pending.short_description = 'Mark selected comments as pending'
 
     def mark_approved(self, request, queryset):
+        """Mark selected comments as approved."""
         updated = queryset.update(status=Comment.STATUS_APPROVED)
         self.message_user(
             request, f"Cleared {updated} comment(s) for orbit (Approved).")
     mark_approved.short_description = 'Mark selected comments as approved'
 
     def mark_rejected(self, request, queryset):
+        """Mark selected comments as rejected."""
         updated = queryset.update(status=Comment.STATUS_REJECTED)
         self.message_user(
             request, f"Cast {updated} comment(s) into the void (Rejected).")
@@ -186,6 +217,7 @@ class CommentAdmin(admin.ModelAdmin):
 
 @admin.register(PostReaction)
 class PostReactionAdmin(admin.ModelAdmin):
+    """Manage post reactions inside the admin."""
     list_display = ('post', 'user', 'reaction', 'created_at')
     list_filter = ('reaction', 'created_at')
     search_fields = ('post__title', 'user__username')
@@ -193,6 +225,7 @@ class PostReactionAdmin(admin.ModelAdmin):
 
 @admin.register(CommentReaction)
 class CommentReactionAdmin(admin.ModelAdmin):
+    """Manage comment reactions inside the admin."""
     list_display = ('comment', 'user', 'reaction', 'created_at')
     list_filter = ('reaction', 'created_at')
     search_fields = ('comment__post__title', 'user__username')
@@ -200,6 +233,7 @@ class CommentReactionAdmin(admin.ModelAdmin):
 
 @admin.register(CommentReport)
 class CommentReportAdmin(admin.ModelAdmin):
+    """Manage comment reports inside the admin."""
     list_display = ('comment', 'reported_by',
                     'reason', 'resolved', 'created_at')
     list_filter = ('reason', 'resolved', 'created_at')
@@ -212,6 +246,7 @@ class CommentReportAdmin(admin.ModelAdmin):
     actions = ['mark_resolved']
 
     def mark_resolved(self, request, queryset):
+        """Mark selected reports as resolved."""
         updated = queryset.update(resolved=True)
         self.message_user(request, f"Marked {updated} report(s) as resolved.")
     mark_resolved.short_description = 'Mark reports as resolved'

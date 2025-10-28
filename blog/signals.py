@@ -1,11 +1,11 @@
-"""
-Signals for the blog app.
+# /* ============================================================
+#    *** BLOG: Signals ***
+#    ============================================================ */
+"""Define signal handlers for the blog app."""
 
-- on_post_created: notify superadmins when a new post is created
-- on_comment_created: notify superadmins when a new comment is created
-- on_comment_report_created: notify staff when a comment is reported
-"""
-
+# /* ============================================================
+#    *** BLOG: Signals: Imports ***
+#    ============================================================ */
 from __future__ import annotations
 
 from django.db import transaction
@@ -20,9 +20,13 @@ from .emails import (
 from .models import BlogPost, Comment, CommentReport
 
 
+# /* ============================================================
+#    *** BLOG: Signals: Handlers ***
+#    ============================================================ */
+
 @receiver(post_save, sender=BlogPost, dispatch_uid="blog_post_created_notify")
 def on_post_created(sender, instance: BlogPost, created: bool, **kwargs):
-    """Send notification to superadmins when a new post is submitted."""
+    """Notify superadmins when a new post is created."""
     if not created:
         return
     transaction.on_commit(lambda: notify_superadmins_new_post(instance))
@@ -30,7 +34,7 @@ def on_post_created(sender, instance: BlogPost, created: bool, **kwargs):
 
 @receiver(post_save, sender=Comment, dispatch_uid="blog_comment_created_notify")
 def on_comment_created(sender, instance: Comment, created: bool, **kwargs):
-    """Send notification to superadmins when a new comment is submitted."""
+    """Notify superadmins when a new comment is created."""
     if not created:
         return
     transaction.on_commit(lambda: notify_superadmins_new_comment(instance))
@@ -42,7 +46,7 @@ def on_comment_created(sender, instance: Comment, created: bool, **kwargs):
     dispatch_uid="blog_comment_report_created_notify",
 )
 def on_comment_report_created(sender, instance: CommentReport, created: bool, **kwargs):
-    """Send notification to staff when a comment is reported."""
+    """Notify staff when a comment is reported."""
     if not created:
         return
     transaction.on_commit(lambda: notify_staff_comment_report(instance))

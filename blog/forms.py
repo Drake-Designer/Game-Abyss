@@ -1,3 +1,11 @@
+# /* ============================================================
+#    *** BLOG: Forms ***
+#    ============================================================ */
+"""Define blog form classes."""
+
+# /* ============================================================
+#    *** BLOG: Forms: Imports ***
+#    ============================================================ */
 import re
 
 from django import forms
@@ -7,18 +15,15 @@ from django.core.exceptions import ValidationError
 from .models import BlogPost, Comment
 
 
-"""
-Forms for the blog app - Game-Abyss edition.
-
-- BlogPostForm (admin): reviewers can set status and featured.
-- PublicBlogPostForm: status is set by the system; users just craft the post.
-- CommentForm: submit a thought; moderation keeps the void at bay.
-"""
+# /* ============================================================
+#    *** BLOG: Forms: Administrative Forms ***
+#    ============================================================ */
 
 
 class BlogPostForm(forms.ModelForm):
-    """Admin/reviewer form: exposes status and featured."""
+    """Manage blog post submissions for staff."""
     class Meta:
+        """Configure admin blog post form fields."""
         model = BlogPost
         fields = [
             'author',
@@ -46,19 +51,22 @@ class BlogPostForm(forms.ModelForm):
         }
 
     def clean_tags(self):
-        """Ensure tags are normalized for the canonical CharField storage."""
+        """Normalize tag input for storage."""
         value = self.cleaned_data.get('tags')
         if not value:
             return ''
         return BlogPost.normalize_tags(value)
 
 
+# /* ============================================================
+#    *** BLOG: Forms: Public Post Form ***
+#    ============================================================ */
+
+
 class PublicBlogPostForm(forms.ModelForm):
-    """
-    Public submission form.
-    Status is NOT shown; it will be set by the view based on the author role.
-    """
+    """Collect public blog post submissions."""
     class Meta:
+        """Configure public blog post form fields."""
         model = BlogPost
         fields = ['title', 'excerpt', 'body', 'image', 'tags']  # no 'status'
         widgets = {
@@ -73,23 +81,29 @@ class PublicBlogPostForm(forms.ModelForm):
         }
 
     def clean_tags(self):
-        """Trim/dedupe, then normalize via model helper."""
+        """Normalize tags provided by public authors."""
         value = self.cleaned_data.get('tags')
         if not value:
             return ''
         return BlogPost.normalize_tags(value)
 
     def save(self, commit=True):
-        """Status is assigned in the view; this just builds the instance."""
+        """Save the public post without altering status."""
         post = super().save(commit=False)
         if commit:
             post.save()
         return post
 
 
+# /* ============================================================
+#    *** BLOG: Forms: Comment Form ***
+#    ============================================================ */
+
+
 class CommentForm(forms.ModelForm):
-    """Public comment form - be kind to your fellow travelers."""
+    """Collect public comment submissions."""
     class Meta:
+        """Configure public comment form fields."""
         model = Comment
         fields = ['body']
         labels = {'body': 'Comment'}
@@ -105,7 +119,7 @@ class CommentForm(forms.ModelForm):
         }
 
     def clean_body(self):
-        """Minimum signal to avoid low-effort stardust."""
+        """Validate the comment body content."""
         body = self.cleaned_data.get('body', '') or ''
         if len(body.strip()) < 5:
             raise ValidationError(

@@ -1,3 +1,11 @@
+# /* ============================================================
+#    *** BLOG: Models ***
+#    ============================================================ */
+"""Define blog data models."""
+
+# /* ============================================================
+#    *** BLOG: Models: Imports ***
+#    ============================================================ */
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.utils import timezone
@@ -14,35 +22,50 @@ from .emails import notify_author_post_approved, notify_author_post_rejected
 User = get_user_model()
 
 
+# /* ============================================================
+#    *** BLOG: Models: Choices and Managers ***
+#    ============================================================ */
+
+
 class ReactionType(models.TextChoices):
+    """List possible reaction types."""
+
     LIKE = 'like', 'Like'
     LOVE = 'love', 'Love'
     DISLIKE = 'dislike', 'Dislike'
 
 
 class ApprovedManager(models.Manager):
-    """Returns posts that are APPROVED (public on the site)."""
+    """Provide manager for approved posts."""
 
     def get_queryset(self):
+        """Return queryset filtered to approved posts."""
         return super().get_queryset().filter(status=self.model.STATUS_APPROVED)
 
 
 class CommentQuerySet(models.QuerySet):
-    """Query helpers for comments."""
+    """Offer comment queryset helpers."""
 
     def approved(self):
+        """Return comments flagged as approved."""
         return self.filter(status=self.model.STATUS_APPROVED)
 
 
 class ApprovedCommentManager(models.Manager.from_queryset(CommentQuerySet)):
-    """Returns comments that are approved for display."""
+    """Provide manager for approved comments."""
 
     def get_queryset(self):
+        """Return queryset filtered to approved comments."""
         return super().get_queryset().approved()
 
 
+# /* ============================================================
+#    *** BLOG: Models: Tag Utilities ***
+#    ============================================================ */
+
+
 def _parse_tag_string(raw_value):
-    """Return a list of dicts describing unique tags (name + slug)."""
+    """Parse raw tag text into unique tag dictionaries."""
     tags = []
     seen_slugs = set()
     for fragment in (raw_value or "").split(","):
@@ -58,12 +81,17 @@ def _parse_tag_string(raw_value):
 
 
 def _normalize_tag_string(raw_value):
-    """Return a cleaned, comma-separated representation of the tags."""
+    """Normalize tag text into a cleaned comma list."""
     return ", ".join(tag["name"] for tag in _parse_tag_string(raw_value))
 
 
+# /* ============================================================
+#    *** BLOG: Models: Core Models ***
+#    ============================================================ */
+
+
 class BlogPost(models.Model):
-    """Blog post with moderation workflow and publishing metadata."""
+    """Represent a blog post with moderation metadata."""
 
     # Moderation workflow
     STATUS_DRAFT = 'draft'
@@ -130,12 +158,13 @@ class BlogPost(models.Model):
     approved = ApprovedManager()
 
     class Meta:
+        """Configure blog post metadata."""
         ordering = ['-published_at', '-updated_at']
         verbose_name = 'Blog Post'
         verbose_name_plural = 'Blog Posts'
 
     def save(self, *args, **kwargs):
-        """Keep published_at in sync with status, generate slug, compute reading time, normalize tags, then save."""
+        """Persist post while maintaining derived fields."""
         previous_status = None
         previous_featured = None
 
@@ -146,7 +175,7 @@ class BlogPost(models.Model):
                 previous_status = previous['status']
                 previous_featured = previous['featured']
 
-        # Flag for signals: notify when featured flips from False -> True
+        # Flag for signals: notify when featured flips from False to True
         self._notify_featured = bool(
             previous_featured is not None and not previous_featured and self.featured
         )
@@ -209,26 +238,27 @@ class BlogPost(models.Model):
             transaction.on_commit(lambda: notify_author_post_rejected(self))
 
     def __str__(self):
+        """Return readable post title."""
         return self.title
 
     @property
     def tag_list(self):
-        """Parsed representation of ``self.tags``."""
+        """Return parsed representation of tags."""
         return _parse_tag_string(self.tags)
 
     @staticmethod
     def normalize_tags(value):
-        """Expose tag normalization to forms/other callers."""
+        """Normalize provided tag text."""
         return _normalize_tag_string(value)
 
     def get_absolute_url(self):
-        """Canonical URL like /blog/YYYY/MM/DD/slug/."""
+        """Build canonical URL for the post."""
         date = self.published_at or self.created_at or timezone.now()
         return f"/blog/{date.year}/{date.month:02d}/{date.day:02d}/{self.slug}/"
 
 
 class Comment(models.Model):
-    """User comment with simple moderation flags."""
+    """Represent a user comment with moderation flags."""
 
     STATUS_PENDING = 'pending'
     STATUS_APPROVED = 'approved'
@@ -263,16 +293,18 @@ class Comment(models.Model):
     approved = ApprovedCommentManager()
 
     class Meta:
+        """Configure comment metadata."""
         ordering = ['-created_at']
         verbose_name = 'Comment'
         verbose_name_plural = 'Comments'
 
     def __str__(self):
+        """Return readable comment label."""
         return f"Comment by {self.author} on {self.post}"
 
 
 class PostReaction(models.Model):
-    """A reaction (like, love, dislike) from a user on a post."""
+    """Record a user reaction on a post."""
     post = models.ForeignKey(
         'BlogPost', on_delete=models.CASCADE, related_name='reactions')
     user = models.ForeignKey(
@@ -282,6 +314,7 @@ class PostReaction(models.Model):
     updated_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """Configure post reaction metadata."""
         verbose_name = "Post Reaction"
         verbose_name_plural = "Post Reactions"
         constraints = [
@@ -290,11 +323,12 @@ class PostReaction(models.Model):
         ]
 
     def __str__(self):
+        """Return readable post reaction label."""
         return f"{self.user} reacted {self.reaction} to {self.post}"
 
 
 class CommentReaction(models.Model):
-    """A reaction (like, love, dislike) from a user on a comment."""
+    """Record a user reaction on a comment."""
     comment = models.ForeignKey(
         'Comment', on_delete=models.CASCADE, related_name='reactions')
     user = models.ForeignKey(
@@ -304,6 +338,7 @@ class CommentReaction(models.Model):
     updated_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """Configure comment reaction metadata."""
         verbose_name = "Comment Reaction"
         verbose_name_plural = "Comment Reactions"
         constraints = [
@@ -312,13 +347,15 @@ class CommentReaction(models.Model):
         ]
 
     def __str__(self):
+        """Return readable comment reaction label."""
         return f"{self.user} reacted {self.reaction} to comment {self.comment_id}"
 
 
 class CommentReport(models.Model):
-    """A report filed by a user against a comment."""
+    """Store a user report against a comment."""
 
     class Reason(models.TextChoices):
+        """List comment report reasons."""
         INAPPROPRIATE = 'inappropriate', 'Inappropriate'
         SPAM = 'spam', 'Spam'
 
@@ -332,6 +369,7 @@ class CommentReport(models.Model):
     resolved = models.BooleanField(default=False)
 
     class Meta:
+        """Configure comment report metadata."""
         verbose_name = "Comment Report"
         verbose_name_plural = "Comment Reports"
         constraints = [
@@ -341,11 +379,12 @@ class CommentReport(models.Model):
         ]
 
     def __str__(self):
+        """Return readable comment report label."""
         return f"Report on comment {self.comment_id} by {self.reported_by}"
 
 
 class ModerationActionLog(models.Model):
-    """Minimal audit log for moderation actions."""
+    """Store a moderation action audit entry."""
 
     actor = models.ForeignKey(
         User,
@@ -362,17 +401,19 @@ class ModerationActionLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """Configure moderation action log metadata."""
         ordering = ["-created_at"]
         verbose_name = "Moderation action"
         verbose_name_plural = "Moderation actions"
 
     def __str__(self):
+        """Return readable moderation log label."""
         actor_label = self.actor.get_username() if self.actor else "System"
         return f"{self.action} by {actor_label} on {self.target_model}#{self.target_id}"
 
 
 def log_moderation_action(actor, action: str, target, notes: str = "") -> None:
-    """Persist a simple moderation audit entry."""
+    """Create a moderation audit entry."""
     target_model = target.__class__.__name__
     target_id = getattr(target, "pk", 0) or 0
     target_repr = str(target)

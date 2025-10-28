@@ -1,15 +1,22 @@
+<!--
+/* ============================================================
+   *** BLOG TEMPLATE: New Post Page ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% load static %}
 {% load widget_tweaks %}
 {% block title %}
-  New Post — Game Abyss
+  New Post · Game Abyss
 {% endblock title %}
 {% block content %}
+  <!-- Render new post creation section. -->
   <section class="page-new-post container">
     <div class="row justify-content-center">
       <div class="col-md-10 col-lg-8">
         <div class="comp-card page-new-post__card">
           <div class="comp-card__body p-4">
+            <!-- Page heading and helper text. -->
             <h2 class="page-new-post__title text-center mb-2">Summon a New Chronicle</h2>
             <p class="text-center text-muted mb-4">
               Forge your entry below. Use <strong>Save Draft</strong> to keep it private and finish later.
@@ -19,16 +26,17 @@
                 Publish will push it live immediately.
               {% endif %}
             </p>
-            {# Non-field errors #}
+            <!-- Non-field errors. -->
             {% if form.non_field_errors %}
               <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
             {% endif %}
+            <!-- New post form. -->
             <form method="post"
                   enctype="multipart/form-data"
                   class="comp-form"
                   novalidate>
               {% csrf_token %}
-              {# STATUS field: visible only to staff and superusers #}
+              <!-- Status field (staff and superusers only). -->
               {% if request.user.is_staff or request.user.is_superuser %}
                 {% if form.status %}
                   <div class="mb-3">
@@ -41,7 +49,7 @@
                   </div>
                 {% endif %}
               {% endif %}
-              {# Loop through remaining fields except status #}
+              <!-- Loop remaining fields except status. -->
               {% for field in form %}
                 {% if field.name != "status" %}
                   <div class="mb-3">
@@ -58,7 +66,7 @@
                       {{ field.label }}
                       {% if field.field.required %}*{% endif %}
                     </label>
-                    {# Special hint for image field #}
+                    <!-- Image field with extra hint. -->
                     {% if field.name == "image" %}
                       {% with hint_id="hint-"|add:field.id_for_label %}
                         {% render_field field aria-describedby=hint_id %}
@@ -76,12 +84,12 @@
                         </div>
                       {% endif %}
                     {% endif %}
-                    {# Field errors #}
+                    <!-- Field errors. -->
                     {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                   </div>
                 {% endif %}
               {% endfor %}
-              {# Form actions #}
+              <!-- Form actions. -->
               <div class="d-grid gap-2 mt-4 page-new-post__actions">
                 <button type="submit"
                         name="action"
@@ -101,9 +109,11 @@
                 </a>
               </div>
             </form>
+            <!-- End new post form. -->
           </div>
         </div>
       </div>
     </div>
   </section>
+  <!-- End new post section. -->
 {% endblock content %}
