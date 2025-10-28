@@ -315,6 +315,70 @@ hr {
   color: #fff;
 }
 
+/* Pagination */
+.comp-pagination {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.comp-pagination__control,
+.comp-pagination__page {
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  color: var(--color-primary);
+  display: inline-flex;
+  font-family: var(--font-headings);
+  font-size: var(--fs-btn-sm);
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  min-width: 3rem;
+  padding: 0.45rem 1.1rem;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    background 0.3s,
+    border-color 0.3s,
+    box-shadow 0.3s,
+    color 0.3s,
+    transform 0.3s;
+}
+
+.comp-pagination__pages {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: center;
+}
+
+.comp-pagination__control:hover,
+.comp-pagination__page:hover {
+  background: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.comp-pagination__page--active {
+  background: var(--color-primary);
+  box-shadow: var(--shadow-md);
+  color: #fff;
+  cursor: default;
+  pointer-events: none;
+  transform: none;
+}
+
+.comp-pagination__control--disabled {
+  border-color: rgb(255 107 53 / 40%);
+  color: rgb(255 107 53 / 45%);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* Cards */
 .comp-card {
   background-color: var(--color-surface);

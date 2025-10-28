@@ -152,33 +152,38 @@
     </div>
     {% if latest_posts_page and latest_posts_page.paginator.num_pages > 1 %}
       <nav aria-label="Latest posts pagination" class="mt-4">
-        <ul class="pagination justify-content-center">
-          <li class="page-item{% if not latest_posts_page.has_previous %} disabled{% endif %}">
-            {% if latest_posts_page.has_previous %}
-              <a class="page-link"
-                 href="?page={{ latest_posts_page.previous_page_number }}"
-                 aria-label="Previous">
-                <span aria-hidden="true">« Previous</span>
-              </a>
-            {% else %}
-              <span class="page-link">« Previous</span>
-            {% endif %}
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">Page {{ latest_posts_page.number }} of {{ latest_posts_page.paginator.num_pages }}</span>
-          </li>
-          <li class="page-item{% if not latest_posts_page.has_next %} disabled{% endif %}">
-            {% if latest_posts_page.has_next %}
-              <a class="page-link"
-                 href="?page={{ latest_posts_page.next_page_number }}"
-                 aria-label="Next">
-                <span aria-hidden="true">Next »</span>
-              </a>
-            {% else %}
-              <span class="page-link">Next »</span>
-            {% endif %}
-          </li>
-        </ul>
+        <div class="comp-pagination">
+          {% if latest_posts_page.has_previous %}
+            <a class="comp-pagination__control"
+               href="?page={{ latest_posts_page.previous_page_number }}"
+               aria-label="Go to previous page">Previous</a>
+          {% else %}
+            <span class="comp-pagination__control comp-pagination__control--disabled"
+                  aria-disabled="true">Previous</span>
+          {% endif %}
+          <div class="comp-pagination__pages"
+               role="group"
+               aria-label="Pagination buttons">
+            {% for page_number in latest_posts_page.paginator.page_range %}
+              {% if page_number == latest_posts_page.number %}
+                <span class="comp-pagination__page comp-pagination__page--active"
+                      aria-current="page">{{ page_number }}</span>
+              {% else %}
+                <a class="comp-pagination__page"
+                   href="?page={{ page_number }}"
+                   aria-label="Go to page {{ page_number }}">{{ page_number }}</a>
+              {% endif %}
+            {% endfor %}
+          </div>
+          {% if latest_posts_page.has_next %}
+            <a class="comp-pagination__control"
+               href="?page={{ latest_posts_page.next_page_number }}"
+               aria-label="Go to next page">Next</a>
+          {% else %}
+            <span class="comp-pagination__control comp-pagination__control--disabled"
+                  aria-disabled="true">Next</span>
+          {% endif %}
+        </div>
       </nav>
     {% endif %}
   </section>
