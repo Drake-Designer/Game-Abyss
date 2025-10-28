@@ -5,11 +5,19 @@
   <div class="container align-items-center">
     <!-- Brand -->
     <a class="navbar-brand comp-navbar__brand" href="{% url 'pages:home' %}">Game Abyss</a>
-    <!-- Right cluster: desktop New Post + burger -->
+    <!-- Right cluster: desktop Logout + New Post + burger -->
     <div class="d-flex align-items-center ms-auto order-lg-2">
       {% if user.is_authenticated %}
+        <!-- Desktop Logout -->
+        <form action="{% url 'account_logout' %}"
+              method="post"
+              class="d-none d-lg-inline ms-2">
+          {% csrf_token %}
+          <button class="comp-button comp-button--outline comp-button--sm"
+                  type="submit">Logout</button>
+        </form>
         <!-- Desktop New Post -->
-        <a class="comp-button comp-button--primary comp-button--sm d-none d-lg-inline-flex comp-navbar__newpost"
+        <a class="comp-button comp-button--primary comp-button--sm d-none d-lg-inline-flex comp-navbar__newpost ms-2"
            href="{% url 'blog:new' %}">
           <i class="fa-solid fa-plus"></i>
           <span>New Post</span>
@@ -58,8 +66,8 @@
               <span>New Post</span>
             </a>
           </li>
-          <!-- Mobile Logout inside menu -->
-          <li class="nav-item comp-navbar__action">
+          <!-- Mobile Logout inside menu (with mt-2) -->
+          <li class="nav-item comp-navbar__action d-lg-none">
             <form action="{% url 'account_logout' %}" method="post" class="d-inline">
               {% csrf_token %}
               <button class="comp-button comp-button--outline comp-button--sm comp-navbar__btn mt-2"

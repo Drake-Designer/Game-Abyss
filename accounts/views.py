@@ -123,7 +123,8 @@ def profile(request, username):
 
     role_badge: dict[str, str] | None = None
     if profile_user.is_superuser:
-        role_badge = {"label": "Super Admin", "css_class": "comp-badge--admin"}
+        role_badge = {"label": "Admin",
+                      "css_class": "comp-badge--superadmin"}
     elif profile_user.is_staff:
         role_badge = {"label": "Staff", "css_class": "comp-badge--staff"}
 

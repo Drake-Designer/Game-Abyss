@@ -52,9 +52,9 @@
                 <!-- Role badge. -->
                 <td>
                   {% if u.is_superuser %}
-                    <span class="badge bg-danger">Super Admin</span>
+                    <span class="comp-badge comp-badge--superadmin">Admin</span>
                   {% elif u.is_staff %}
-                    <span class="badge bg-info">Staff</span>
+                    <span class="comp-badge comp-badge--staff">Staff</span>
                   {% else %}
                     <span class="badge bg-secondary">User</span>
                   {% endif %}
