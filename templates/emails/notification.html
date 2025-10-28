@@ -1,10 +1,22 @@
+{# ============================================================
+   *** EMAIL TEMPLATE: Generic Notification ***
+   ============================================================ #}
 {% extends "emails/base.html" %}
 {% block content %}
+  {# ============================================================
+     *** EMAIL: Greeting + Intro ***
+     ============================================================ #}
   {% if greeting %}<p class="comp-email__lead">{{ greeting }}</p>{% endif %}
   {% if intro %}<p class="comp-email__paragraph">{{ intro }}</p>{% endif %}
+  {# ============================================================
+     *** EMAIL: Body Lines ***
+     ============================================================ #}
   {% if body_lines %}
     {% for line in body_lines %}<p class="comp-email__paragraph">{{ line }}</p>{% endfor %}
   {% endif %}
+  {# ============================================================
+     *** EMAIL: Detail Items Table ***
+     ============================================================ #}
   {% if detail_items %}
     <table role="presentation"
            class="comp-email__details"
@@ -25,6 +37,9 @@
       {% endfor %}
     </table>
   {% endif %}
+  {# ============================================================
+     *** EMAIL: Call To Action ***
+     ============================================================ #}
   {% if cta.url %}
     <table role="presentation"
            class="comp-email__cta"
@@ -38,6 +53,9 @@
       </tr>
     </table>
   {% endif %}
+  {# ============================================================
+     *** EMAIL: Closing + Signature + Footer Note ***
+     ============================================================ #}
   {% if closing %}<p class="comp-email__paragraph comp-email__paragraph--spaced">{{ closing }}</p>{% endif %}
   {% if signature %}<p class="comp-email__signature">{{ signature }}</p>{% endif %}
   {% if footer_note %}<p class="comp-email__note">{{ footer_note }}</p>{% endif %}

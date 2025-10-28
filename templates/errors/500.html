@@ -1,11 +1,16 @@
+<!-- ============================================================
+     *** ERROR TEMPLATE: 500 Server Error Page ***
+     ============================================================ -->
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
   Server Error — Game Abyss
 {% endblock title %}
 {% block content %}
-  <!-- PAGE: Error 500 -->
-  <section class="page-error-500">
+  <!-- ============================================================
+       *** ERROR 500: Main Content ***
+       ============================================================ -->
+  <section class="page-error-500 text-center">
     <h1 class="page-error-404__title">
       <i class="fas fa-bolt me-2"></i>Something Went Wrong
     </h1>
@@ -18,5 +23,4 @@
       <i class="fas fa-home me-2"></i>Back to Home
     </a>
   </section>
-  <!-- END PAGE: Error 500 -->
 {% endblock content %}

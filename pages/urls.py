@@ -1,7 +1,8 @@
-"""
-URL configuration for the pages app.
+# ============================================================
+#    *** PAGES: URLs ***
+# ============================================================
 
-"""
+"""Define URL routes for the Pages app."""
 
 from django.urls import path
 from .views import HomeView, AboutView, ContactView

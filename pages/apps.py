@@ -1,12 +1,14 @@
+# ============================================================
+#   *** PAGES: App Config ***
+# ============================================================
+
+"""Configuration for the Pages app."""
+
 from django.apps import AppConfig
 
 
-"""Pages app configuration.
-
-Simple app config for the pages app (flat, static pages).
-"""
-
-
 class PagesConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'pages'
+    """App settings and metadata for the Pages app."""
+
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "pages"

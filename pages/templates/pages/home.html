@@ -1,3 +1,6 @@
+<!-- ============================================================
+     *** PAGES TEMPLATE: Home Page ***
+     ============================================================ -->
 {% extends "base.html" %}
 {% load static %}
 {% load cloudinary_extras %}
@@ -5,6 +8,9 @@
   Home - Game Abyss
 {% endblock title %}
 {% block hero %}
+  <!-- ============================================================
+       *** PAGES TEMPLATE: Home Page: Hero ***
+       ============================================================ -->
   <section class="page-home-hero">
     <div class="container">
       <div class="row align-items-center gy-4">
@@ -85,7 +91,9 @@
   </section>
 {% endblock hero %}
 {% block content %}
-  <!-- Featured grid: approved + featured -->
+  <!-- ============================================================
+       *** PAGES TEMPLATE: Home Page: Featured Posts ***
+       ============================================================ -->
   <section id="featured-posts" class="py-5">
     <div class="row mb-4">
       <div class="col">
@@ -113,7 +121,9 @@
       {% endif %}
     </div>
   </section>
-  <!-- Latest: approved, non-featured posts (no overlap with featured), paginated -->
+  <!-- ============================================================
+       *** PAGES TEMPLATE: Home Page: Latest Posts ***
+       ============================================================ -->
   <section id="latest-posts" class="py-5">
     <div class="row mb-4">
       <div class="col">

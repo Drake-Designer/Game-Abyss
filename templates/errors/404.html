@@ -1,11 +1,16 @@
+<!-- ============================================================
+     *** ERROR TEMPLATE: 404 Not Found Page ***
+     ============================================================ -->
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
   404 Not Found — Game Abyss
 {% endblock title %}
 {% block content %}
-  <!-- PAGE: Error 404 -->
-  <section class="page-error-404">
+  <!-- ============================================================
+       *** ERROR 404: Main Content ***
+       ============================================================ -->
+  <section class="page-error-404 text-center">
     <h1 class="page-error-404__title">
       <i class="fas fa-ghost me-2"></i>Lost in the Abyss
     </h1>
@@ -18,5 +23,4 @@
       <i class="fas fa-home me-2"></i>Respawn to Home
     </a>
   </section>
-  <!-- END PAGE: Error 404 -->
 {% endblock content %}

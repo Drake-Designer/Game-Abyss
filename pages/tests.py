@@ -1,3 +1,9 @@
+# ============================================================
+#    *** PAGES: Tests ***
+# ============================================================
+
+"""Unit tests for the Pages app."""
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -7,90 +13,110 @@ from blog.models import BlogPost
 from .models import HelpRequest
 
 
+# ============================================================
+#    *** PAGES: Tests: HelpRequest Model ***
+# ============================================================
+
+
 class HelpRequestModelTests(TestCase):
+    """Tests for the HelpRequest model."""
 
     def setUp(self):
+        """Create a user for associating help requests."""
         self.user = get_user_model().objects.create_user(
-            username='requester', password='pass')
+            username="requester", password="pass"
+        )
 
     def test_default_values(self):
+        """Ensure default status and priority are set correctly."""
         help_request = HelpRequest.objects.create(
             user=self.user,
-            subject='Need assistance',
-            message='I have an issue with my account.',
+            subject="Need assistance",
+            message="I have an issue with my account.",
         )
 
         self.assertEqual(help_request.status, HelpRequest.STATUS_OPEN)
         self.assertEqual(help_request.priority, HelpRequest.PRIORITY_MEDIUM)
 
     def test_string_representation(self):
+        """Ensure __str__ includes subject and human status."""
         help_request = HelpRequest.objects.create(
-            subject='Cannot post comment',
-            message='Error when submitting comment.',
+            subject="Cannot post comment",
+            message="Error when submitting comment.",
         )
 
-        self.assertIn('Cannot post comment', str(help_request))
-        self.assertIn('Open', str(help_request))
+        self.assertIn("Cannot post comment", str(help_request))
+        self.assertIn("Open", str(help_request))
+
+
+# ============================================================
+#    *** PAGES: Tests: Home View ***
+# ============================================================
 
 
 class HomeViewTests(TestCase):
+    """Tests for the home view context and ordering."""
 
     def setUp(self):
+        """Create a featured author for blog posts."""
         self.author = get_user_model().objects.create_user(
-            username='featured-author', password='pass'
+            username="featured-author", password="pass"
         )
 
     def _create_post(self, **overrides):
+        """Helper to create an approved blog post with sensible defaults."""
         defaults = {
-            'author': self.author,
-            'title': overrides.get('title', 'Echo'),
-            'body': 'Signal from the abyss',
-            'status': BlogPost.STATUS_APPROVED,
-            'featured': True,
-            'published_at': timezone.now(),
+            "author": self.author,
+            "title": overrides.get("title", "Echo"),
+            "body": "Signal from the abyss",
+            "status": BlogPost.STATUS_APPROVED,
+            "featured": True,
+            "published_at": timezone.now(),
         }
         defaults.update(overrides)
         return BlogPost.objects.create(**defaults)
 
     def test_home_separates_featured_and_latest_posts(self):
+        """Featured and latest lists should be disjoint and correctly populated."""
         featured_post = self._create_post(
-            title='Featured Signal', featured=True)
-        latest_post = self._create_post(title='Latest Signal', featured=False)
-        self._create_post(title='Pending Signal',
+            title="Featured Signal", featured=True)
+        latest_post = self._create_post(title="Latest Signal", featured=False)
+        self._create_post(title="Pending Signal",
                           status=BlogPost.STATUS_PENDING)
 
-        response = self.client.get(reverse('pages:home'))
+        response = self.client.get(reverse("pages:home"))
 
         featured_titles = [
-            post.title for post in response.context['featured_posts']]
+            post.title for post in response.context["featured_posts"]]
         latest_titles = [
-            post.title for post in response.context['latest_posts_page'].object_list
+            post.title for post in response.context["latest_posts_page"].object_list
         ]
 
         self.assertIn(featured_post.title, featured_titles)
         self.assertIn(latest_post.title, latest_titles)
         self.assertNotIn(latest_post.title, featured_titles)
         self.assertNotIn(featured_post.title, latest_titles)
-        self.assertNotContains(response, 'Pending Signal')
+        self.assertNotContains(response, "Pending Signal")
 
     def test_home_orders_featured_by_published_at_desc(self):
+        """Featured posts should be ordered by published_at desc, with sensible fallbacks."""
         newer = self._create_post(
-            title='Newer Signal', published_at=timezone.now())
+            title="Newer Signal", published_at=timezone.now())
         older = self._create_post(
-            title='Older Signal',
-            published_at=timezone.now() - timezone.timedelta(days=1)
+            title="Older Signal",
+            published_at=timezone.now() - timezone.timedelta(days=1),
         )
-        fallback_recent = self._create_post(title='Fallback Recent')
+        fallback_recent = self._create_post(title="Fallback Recent")
         BlogPost.objects.filter(
             pk=fallback_recent.pk).update(published_at=None)
-        fallback_older = self._create_post(title='Fallback Older')
+        fallback_older = self._create_post(title="Fallback Older")
         BlogPost.objects.filter(pk=fallback_older.pk).update(
             published_at=None,
             updated_at=timezone.now() - timezone.timedelta(hours=1),
         )
 
-        response = self.client.get(reverse('pages:home'))
-        featured_posts = list(response.context['featured_posts'])
+        response = self.client.get(reverse("pages:home"))
+        featured_posts = list(response.context["featured_posts"])
 
         expected_order = [
             newer.title,
@@ -102,30 +128,30 @@ class HomeViewTests(TestCase):
             [post.title for post in featured_posts], expected_order)
 
     def test_home_orders_latest_posts_by_published_at_desc(self):
+        """Latest posts list should be ordered by published_at desc, with fallbacks."""
         newer = self._create_post(
-            title='Newer Latest', featured=False, published_at=timezone.now()
+            title="Newer Latest", featured=False, published_at=timezone.now()
         )
         older = self._create_post(
-            title='Older Latest',
+            title="Older Latest",
             featured=False,
             published_at=timezone.now() - timezone.timedelta(days=1),
         )
         fallback_recent = self._create_post(
-            title='Fallback Latest Recent', featured=False
+            title="Fallback Latest Recent", featured=False
         )
         BlogPost.objects.filter(
-            pk=fallback_recent.pk
-        ).update(published_at=None)
+            pk=fallback_recent.pk).update(published_at=None)
         fallback_older = self._create_post(
-            title='Fallback Latest Older', featured=False
+            title="Fallback Latest Older", featured=False
         )
         BlogPost.objects.filter(pk=fallback_older.pk).update(
             published_at=None,
             updated_at=timezone.now() - timezone.timedelta(hours=1),
         )
 
-        response = self.client.get(reverse('pages:home'))
-        latest_posts = list(response.context['latest_posts_page'].object_list)
+        response = self.client.get(reverse("pages:home"))
+        latest_posts = list(response.context["latest_posts_page"].object_list)
 
         expected_order = [
             newer.title,
@@ -133,9 +159,9 @@ class HomeViewTests(TestCase):
             fallback_recent.title,
             fallback_older.title,
         ]
-        self.assertEqual(
-            [post.title for post in latest_posts], expected_order)
+        self.assertEqual([post.title for post in latest_posts], expected_order)
 
     def test_home_shows_placeholder_when_no_featured(self):
-        response = self.client.get(reverse('pages:home'))
-        self.assertContains(response, 'Coming Soon')
+        """Home should render a placeholder when there are no featured posts."""
+        response = self.client.get(reverse("pages:home"))
+        self.assertContains(response, "Coming Soon")

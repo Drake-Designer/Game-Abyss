@@ -1,9 +1,14 @@
+<!-- ============================================================
+     *** EMAIL BASE TEMPLATE ***
+     ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>{{ subject }}</title>
-    <!-- Meta for linters / accessibility -->
+    <!-- ============================================================
+         *** EMAIL BASE: Meta Information ***
+         ============================================================ -->
     <meta name="description"
           content="{{ subject }} | Notification from {{ site_name }}" />
     <meta name="keywords"
@@ -27,6 +32,9 @@
                  width="100%">
             <tr>
               <td class="comp-email__container">
+                <!-- ============================================================
+                     *** EMAIL BASE: Brand Section ***
+                     ============================================================ -->
                 <table role="presentation" class="comp-email__brand" align="center">
                   <tr>
                     <td align="center">
@@ -35,6 +43,9 @@
                     </td>
                   </tr>
                 </table>
+                <!-- ============================================================
+                     *** EMAIL BASE: Main Content Section ***
+                     ============================================================ -->
                 <table role="presentation" class="comp-email__content" width="100%">
                   <tr>
                     <td class="comp-email__content-inner">
@@ -43,6 +54,9 @@
                     </td>
                   </tr>
                 </table>
+                <!-- ============================================================
+                     *** EMAIL BASE: Footer Section ***
+                     ============================================================ -->
                 <table role="presentation" class="comp-email__footer" align="center">
                   <tr>
                     <td class="comp-email__support">
@@ -62,6 +76,9 @@
               </td>
             </tr>
           </table>
+          <!-- ============================================================
+               *** EMAIL BASE: Legal Notice ***
+               ============================================================ -->
           <p class="comp-email__legal">© {{ current_year }} {{ site_name }}. All transmissions reserved.</p>
         </td>
       </tr>

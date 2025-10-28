@@ -1,3 +1,9 @@
+# ============================================================
+#    *** PAGES: Views ***
+# ============================================================
+
+"""Render pages views including home, about, and contact."""
+
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
@@ -16,6 +22,11 @@ HOME_FEATURED_GALLERY_LIMIT = 10
 HOME_OTHER_POSTS_PER_PAGE = 6
 
 
+# ============================================================
+#    *** PAGES: Views: Home ***
+# ============================================================
+
+
 class HomeView(TemplateView):
     """Render the homepage with featured posts and gallery highlights."""
     template_name = "pages/home.html"
@@ -24,7 +35,7 @@ class HomeView(TemplateView):
         """Add featured posts, other posts, and gallery images to context."""
         context = super().get_context_data(**kwargs)
 
-        # Featured posts (main grid)
+        # Featured posts
         featured_qs = (
             BlogPost.objects.filter(
                 featured=True,
@@ -36,7 +47,7 @@ class HomeView(TemplateView):
         featured_posts = list(featured_qs[:HOME_FEATURED_POST_LIMIT])
         context["featured_posts"] = featured_posts
 
-        # "Latest posts" section: approved, non-featured posts ordered newest first
+        # Latest posts section
         latest_posts_qs = (
             BlogPost.objects.filter(
                 featured=False,
@@ -46,12 +57,12 @@ class HomeView(TemplateView):
             .order_by("-published_at", "-updated_at")
         )
 
-        # Paginate the "latest" posts
+        # Paginate latest posts
         page_number = self.request.GET.get("page")
         paginator = Paginator(latest_posts_qs, HOME_OTHER_POSTS_PER_PAGE)
         context["latest_posts_page"] = paginator.get_page(page_number)
 
-        # Hero carousel: only featured and approved gallery images
+        # Hero carousel images
         context["hero_gallery_images"] = (
             GalleryImage.objects.featured()
             .select_related("uploaded_by")[:HOME_FEATURED_GALLERY_LIMIT]
@@ -60,9 +71,19 @@ class HomeView(TemplateView):
         return context
 
 
+# ============================================================
+#    *** PAGES: Views: About ***
+# ============================================================
+
+
 class AboutView(TemplateView):
     """Simple about page."""
     template_name = "pages/about.html"
+
+
+# ============================================================
+#    *** PAGES: Views: Contact ***
+# ============================================================
 
 
 class ContactView(View):
@@ -112,7 +133,7 @@ class ContactView(View):
             )
             return redirect("pages:contact")
 
-            # Show error message if form is invalid
+        # Show error message if form is invalid
         messages.error(
             request,
             "We couldn't send your request. Please review the errors below and try again."

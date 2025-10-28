@@ -1,44 +1,55 @@
+# ============================================================
+#    *** PAGES: Models ***
+# ============================================================
+
+"""Define models for the Pages app."""
+
 from django.contrib.auth import get_user_model
 from django.db import models
 
 
-"""Pages app models.
-
-This module holds simple page-related models
-"""
-
-# Create your models here.
+# ============================================================
+#    *** PAGES: Models: User Reference ***
+# ============================================================
 
 User = get_user_model()
+
+
+# ============================================================
+#    *** PAGES: Models: Help Request ***
+# ============================================================
 
 
 class HelpRequest(models.Model):
     """A support/help request created by a user."""
 
-    STATUS_OPEN = 'open'
-    STATUS_IN_PROGRESS = 'in_progress'
-    STATUS_RESOLVED = 'resolved'
+    # --- Status choices ---
+    STATUS_OPEN = "open"
+    STATUS_IN_PROGRESS = "in_progress"
+    STATUS_RESOLVED = "resolved"
     STATUS_CHOICES = [
-        (STATUS_OPEN, 'Open'),
-        (STATUS_IN_PROGRESS, 'In progress'),
-        (STATUS_RESOLVED, 'Resolved'),
+        (STATUS_OPEN, "Open"),
+        (STATUS_IN_PROGRESS, "In progress"),
+        (STATUS_RESOLVED, "Resolved"),
     ]
 
-    PRIORITY_LOW = 'low'
-    PRIORITY_MEDIUM = 'medium'
-    PRIORITY_HIGH = 'high'
+    # --- Priority choices ---
+    PRIORITY_LOW = "low"
+    PRIORITY_MEDIUM = "medium"
+    PRIORITY_HIGH = "high"
     PRIORITY_CHOICES = [
-        (PRIORITY_LOW, 'Low'),
-        (PRIORITY_MEDIUM, 'Medium'),
-        (PRIORITY_HIGH, 'High'),
+        (PRIORITY_LOW, "Low"),
+        (PRIORITY_MEDIUM, "Medium"),
+        (PRIORITY_HIGH, "High"),
     ]
 
+    # --- Fields ---
     user = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='help_requests',
+        related_name="help_requests",
     )
     name = models.CharField(max_length=150, blank=True)
     email = models.EmailField(blank=True)
@@ -58,10 +69,13 @@ class HelpRequest(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
-        verbose_name = 'Help request'
-        verbose_name_plural = 'Help requests'
+        """Meta options for HelpRequest."""
+
+        ordering = ["-created_at"]
+        verbose_name = "Help request"
+        verbose_name_plural = "Help requests"
 
     def __str__(self):
-        identifier = self.subject or 'Help request'
+        """Return readable representation of the help request."""
+        identifier = self.subject or "Help request"
         return f"{identifier} ({self.get_status_display()})"

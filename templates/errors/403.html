@@ -1,16 +1,21 @@
+<!-- ============================================================
+     *** ERROR TEMPLATE: 403 Forbidden Page ***
+     ============================================================ -->
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
   403 Forbidden — Game Abyss
 {% endblock title %}
 {% block content %}
-  <!-- PAGE: Error 403 -->
-  <section class="page-error-403">
-    <h1 class="page-error-404__title">
+  <!-- ============================================================
+       *** ERROR 403: Main Content ***
+       ============================================================ -->
+  <section class="page-error-403 text-center">
+    <h1 class="page-error-403__title">
       <i class="fas fa-shield-alt me-2"></i>Access Restricted
     </h1>
-    <h2 class="page-error-404__subtitle mb-4">Permission Denied</h2>
-    <p class="page-error-404__message">
+    <h2 class="page-error-403__subtitle mb-4">Permission Denied</h2>
+    <p class="page-error-403__message">
       This signal is locked behind a security field. You do not have clearance to proceed.
     </p>
     <a href="{% url 'pages:home' %}"
@@ -18,5 +23,4 @@
       <i class="fas fa-home me-2"></i>Return to Home Base
     </a>
   </section>
-  <!-- END PAGE: Error 403 -->
 {% endblock content %}
