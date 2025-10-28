@@ -1,16 +1,24 @@
+<!--
+/* ============================================================
+   *** ACCOUNTS TEMPLATE: Staff Pending Posts ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% block title %}
   Pending posts · Staff tools · Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="py-4">
+  <!-- Render staff pending posts moderation page. -->
+  <section class="container py-4">
+    <!-- Page heading with count. -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1 class="h3 mb-0">Pending posts</h1>
       <span class="badge text-bg-secondary">{{ total_pending }} awaiting review</span>
     </div>
     {% if page_obj.object_list %}
+      <!-- Posts table. -->
       <div class="table-responsive">
-        <table class="table align-middle">
+        <table class="table table-striped align-middle">
           <thead>
             <tr>
               <th scope="col">Title</th>
@@ -22,13 +30,17 @@
           <tbody>
             {% for post in page_obj.object_list %}
               <tr>
+                <!-- Post title. -->
                 <td>
                   <a href="{{ post.get_absolute_url }}" target="_blank" rel="noopener">{{ post.title }}</a>
                 </td>
+                <!-- Post author. -->
                 <td>
                   <a href="{% url 'accounts:profile' post.author.username %}">{{ post.author.username }}</a>
                 </td>
+                <!-- Submitted date. -->
                 <td>{{ post.created_at|date:"F j, Y H:i" }}</td>
+                <!-- Action buttons. -->
                 <td class="text-end">
                   <form method="post" class="d-inline">
                     {% csrf_token %}
@@ -54,6 +66,7 @@
           </tbody>
         </table>
       </div>
+      <!-- Pagination. -->
       {% if page_obj.paginator.num_pages > 1 %}
         <nav aria-label="Pending posts pagination" class="mt-3">
           <ul class="pagination pagination-sm mb-0">
@@ -74,7 +87,9 @@
         </nav>
       {% endif %}
     {% else %}
+      <!-- Empty state message. -->
       <p class="text-muted">No pending posts. Stellar work!</p>
     {% endif %}
   </section>
+  <!-- End staff pending posts moderation page. -->
 {% endblock content %}

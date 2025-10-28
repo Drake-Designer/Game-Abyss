@@ -1,18 +1,31 @@
+<!--
+/* ============================================================
+   *** ACCOUNTS TEMPLATE: Edit Profile ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% load widget_tweaks %}
 {% block title %}
   Edit profile · Game Abyss
 {% endblock title %}
 {% block content %}
+  <!-- Render profile editing form page. -->
   <section class="page-profile-edit">
     <div class="row justify-content-center">
       <div class="col-lg-8 col-xl-7">
+        <!-- Profile edit card wrapper. -->
         <div class="comp-card">
           <div class="comp-card__body p-4">
+            <!-- Page heading. -->
             <h1 class="mb-3 text-center">Edit your profile</h1>
+            <!-- Profile form with avatar and personal details. -->
             <form method="post" enctype="multipart/form-data" class="comp-form">
               {% csrf_token %}
-              {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+              {% if form.non_field_errors %}
+                <!-- Global form errors. -->
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+              {% endif %}
+              <!-- Current avatar preview. -->
               <div class="mb-3 text-center">
                 <img src="{{ form.instance.get_avatar_url }}"
                      alt="Current avatar"
@@ -20,57 +33,71 @@
                      width="120"
                      height="120">
               </div>
+              <!-- Avatar upload field. -->
               <div class="mb-3">
                 <label for="{{ form.avatar.id_for_label }}" class="form-label">Avatar</label>
                 {% render_field form.avatar class+="form-control" %}
                 {% for error in form.avatar.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                 <div class="form-text">Upload a square image for best results.</div>
               </div>
+              <!-- First name field. -->
               <div class="mb-3">
                 <label for="{{ form.first_name.id_for_label }}" class="form-label">First name</label>
                 {% render_field form.first_name class+="form-control" %}
                 {% for error in form.first_name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
               </div>
+              <!-- Last name field. -->
               <div class="mb-3">
                 <label for="{{ form.last_name.id_for_label }}" class="form-label">Last name</label>
                 {% render_field form.last_name class+="form-control" %}
                 {% for error in form.last_name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
               </div>
+              <!-- Email field. -->
               <div class="mb-3">
                 <label for="{{ form.email.id_for_label }}" class="form-label">Email address</label>
                 {% render_field form.email class+="form-control" %}
                 {% for error in form.email.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                 <div class="form-text">We'll send a confirmation email if you add or change this address.</div>
               </div>
+              <!-- Date of birth field. -->
               <div class="mb-3">
                 <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of birth</label>
                 {% render_field form.date_of_birth class+="form-control" %}
                 {% for error in form.date_of_birth.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
               </div>
+              <!-- Bio field. -->
               <div class="mb-3">
                 <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label>
                 {% render_field form.bio class+="form-control" %}
                 {% for error in form.bio.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
               </div>
+              <!-- Favorite games field. -->
               <div class="mb-3">
                 <label for="{{ form.favorite_games.id_for_label }}" class="form-label">Favorite games</label>
                 {% render_field form.favorite_games class+="form-control" %}
                 {% for error in form.favorite_games.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
               </div>
+              <!-- Favorite genres field. -->
               <div class="mb-3">
                 <label for="{{ form.favorite_genres.id_for_label }}" class="form-label">Favorite genres</label>
                 {% render_field form.favorite_genres class+="form-control" %}
                 {% for error in form.favorite_genres.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
               </div>
+              <!-- Action buttons: cancel and save. -->
               <div class="d-flex justify-content-between gap-2">
+                <!-- Cancel button returns to profile page. -->
                 <a class="comp-button comp-button--outline"
                    href="{% url 'accounts:profile' request.user.username %}">Cancel</a>
+                <!-- Save changes button. -->
                 <button class="comp-button comp-button--primary" type="submit">Save changes</button>
               </div>
             </form>
+            <!-- End profile form. -->
           </div>
         </div>
+        <!-- End profile edit card wrapper. -->
       </div>
     </div>
   </section>
+  <!-- End profile editing page. -->
 {% endblock content %}

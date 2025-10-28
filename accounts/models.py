@@ -1,3 +1,7 @@
+# ============================================================
+# *** ACCOUNTS MODELS: UserProfile ***
+# ============================================================
+
 from django.conf import settings
 from django.db import models
 from django.templatetags.static import static
@@ -6,11 +10,14 @@ from django.templatetags.static import static
 class UserProfile(models.Model):
     """Extra profile data."""
 
+    # One-to-one link to the user model.
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="profile",
     )
+
+    # Additional profile fields.
     date_of_birth = models.DateField(blank=True, null=True)
     bio = models.TextField(blank=True)
 
@@ -23,6 +30,7 @@ class UserProfile(models.Model):
         help_text="Favorite genres separated by commas.",
     )
 
+    # Avatar image.
     avatar = models.ImageField(
         "Profile avatar",
         upload_to="avatars/",

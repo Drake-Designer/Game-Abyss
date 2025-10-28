@@ -1,12 +1,20 @@
+<!--
+/* ============================================================
+   *** ACCOUNTS TEMPLATE: Profile Page ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
   {{ profile_user.username }} · Profile · Game Abyss
 {% endblock title %}
 {% block content %}
+  <!-- Render user profile page. -->
   <section class="page-profile py-4">
+    <!-- Profile header with avatar and username. -->
     <header class="mb-4">
       <div class="d-flex flex-column flex-md-row gap-3 align-items-md-center">
+        <!-- Avatar display. -->
         <div class="shrink-0 text-center text-md-start">
           <img src="{{ profile.get_avatar_url }}"
                alt="Avatar of {{ profile_user.username }}"
@@ -14,6 +22,7 @@
                width="120"
                height="120">
         </div>
+        <!-- Username and role badge. -->
         <div>
           <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
             <h1 class="mb-0">{{ profile_user.username }}</h1>
@@ -25,6 +34,7 @@
         </div>
       </div>
       {% if is_self %}
+        <!-- Action buttons for editing and deleting profile (visible only to self). -->
         <div class="mt-3 d-flex flex-wrap gap-2">
           <a class="comp-button comp-button--primary"
              href="{% url 'accounts:profile_edit' %}">
@@ -37,6 +47,7 @@
         </div>
       {% endif %}
     </header>
+    <!-- Draft posts section (only for self). -->
     {% if is_self and draft_posts %}
       <section class="mb-4" data-testid="draft-posts">
         <div class="comp-card">
@@ -64,6 +75,7 @@
         </div>
       </section>
     {% endif %}
+    <!-- Profile details: About and Activity status. -->
     <div class="row g-4 mb-4">
       <div class="col-lg-5">
         <div class="comp-card h-100">
@@ -97,10 +109,12 @@
                 {% if last_active %}{{ last_active|date:"F j, Y H:i" }}{% endif %}
               </dd>
             </dl>
+            <!-- Bio section. -->
             <div class="mt-3">
               <h3 class="h6 text-uppercase text-muted fw-semibold mb-2">Bio</h3>
               <p class="mb-0" data-testid="profile-bio">{{ profile.bio }}</p>
             </div>
+            <!-- Favorites section. -->
             {% if has_favorites %}
               <div class="mt-3">
                 <h3 class="h6 text-uppercase text-muted fw-semibold mb-2">Favorites</h3>
@@ -119,24 +133,26 @@
           </div>
         </div>
       </div>
+      <!-- Activity status card. -->
       <div class="col-lg-7">
         <div class="comp-card h-100">
           <div class="comp-card__body">
             <h2 class="comp-card__title">Activity status</h2>
             <dl class="row mb-0">
               <dt class="col-sm-6">Public posts</dt>
-              {# djlint:off #}
-              <dd class="col-sm-6" data-testid="public-post-count">{{ stats.public_posts }}</dd>
-              {# djlint:on #}
+              <dd class="col-sm-6" data-testid="public-post-count">
+                {{ stats.public_posts }}
+              </dd>
               <dt class="col-sm-6">Approved comments</dt>
-              {# djlint:off #}
-              <dd class="col-sm-6" data-testid="approved-comment-count">{{ stats.approved_comments }}</dd>
-              {# djlint:on #}
+              <dd class="col-sm-6" data-testid="approved-comment-count">
+                {{ stats.approved_comments }}
+              </dd>
             </dl>
           </div>
         </div>
       </div>
     </div>
+    <!-- Approved posts and comments (only when not public_only). -->
     {% if not public_only %}
       <div class="row g-4">
         <div class="col-lg-6">
@@ -182,6 +198,7 @@
         </div>
       </div>
     {% endif %}
+    <!-- Staff tools (moderation). -->
     {% if show_moderation_tools %}
       <section class="mb-4 mt-4">
         <div class="comp-card">
@@ -205,4 +222,5 @@
       </section>
     {% endif %}
   </section>
+  <!-- End user profile page. -->
 {% endblock content %}

@@ -1,3 +1,7 @@
+# ============================================================
+# *** ACCOUNTS URLS: URL configuration for the accounts app ***
+# ============================================================
+
 """
 URL configuration for the accounts app.
 """
@@ -7,6 +11,9 @@ from . import views
 
 app_name = "accounts"
 
+# ============================================================
+# Public and user account views
+# ============================================================
 urlpatterns = [
     # Redirect logged-in user to their own profile
     path("profile/", views.my_profile_redirect, name="my_profile"),
@@ -21,6 +28,9 @@ urlpatterns = [
     path("password/change/", views.VerifiedEmailPasswordChangeView.as_view(),
          name="account_change_password"),
 
+    # ========================================================
+    # Staff dashboards and tools
+    # ========================================================
     # Staff dashboard
     path("staff/", views.staff_dashboard, name="staff_dashboard"),
 
@@ -39,6 +49,9 @@ urlpatterns = [
          name="staff_content_search"),
     path("staff/view-as/", views.staff_view_as_user, name="staff_view_as_user"),
 
+    # ========================================================
+    # Public profile routes
+    # ========================================================
     # Public profile by username (canonical /u/<username>/ URL)
     path("u/<str:username>/", views.profile, name="profile"),
 ]

@@ -1,24 +1,42 @@
+<!--
+/* ============================================================
+   *** ACCOUNTS TEMPLATE: Staff Dashboard ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% block title %}
   Staff dashboard · Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="py-4">
+  <!-- Render staff dashboard overview. -->
+  <section class="container py-4">
+    <!-- Page heading. -->
     <h1 class="h3 mb-4">Staff dashboard</h1>
+    <!-- Dashboard cards grid. -->
     <div class="row g-4">
+      <!-- Moderation card. -->
       <div class="col-md-6 col-lg-4">
         <div class="comp-card h-100">
           <div class="comp-card__body">
             <h2 class="comp-card__title h5">Moderation</h2>
             <ul class="list-unstyled mb-0">
               <li>
-                <a href="{% url 'accounts:staff_pending_posts' %}">Pending posts <span class="badge bg-secondary">{{ counts.pending_posts }}</span></a>
+                <a href="{% url 'accounts:staff_pending_posts' %}">
+                  Pending posts
+                  <span class="badge bg-secondary">{{ counts.pending_posts }}</span>
+                </a>
               </li>
               <li>
-                <a href="{% url 'accounts:staff_pending_comments' %}">Pending comments <span class="badge bg-secondary">{{ counts.pending_comments }}</span></a>
+                <a href="{% url 'accounts:staff_pending_comments' %}">
+                  Pending comments
+                  <span class="badge bg-secondary">{{ counts.pending_comments }}</span>
+                </a>
               </li>
               <li>
-                <a href="{% url 'accounts:staff_reports' %}">Reports <span class="badge bg-secondary">{{ counts.reports }}</span></a>
+                <a href="{% url 'accounts:staff_reports' %}">
+                  Reports
+                  <span class="badge bg-secondary">{{ counts.reports }}</span>
+                </a>
               </li>
               <li>
                 <a href="{% url 'accounts:staff_comment_moderation' %}">All comments</a>
@@ -27,6 +45,7 @@
           </div>
         </div>
       </div>
+      <!-- Content tools card. -->
       <div class="col-md-6 col-lg-4">
         <div class="comp-card h-100">
           <div class="comp-card__body">
@@ -36,15 +55,19 @@
                 <a href="{% url 'accounts:staff_featured_manager' %}">Featured posts</a>
               </li>
               <li>
-                <a href="{% url 'accounts:staff_content_search' %}">Search posts & comments</a>
+                <a href="{% url 'accounts:staff_content_search' %}">Search posts &amp; comments</a>
               </li>
               <li>
-                <a href="{% url 'accounts:staff_help_requests' %}">Help requests <span class="badge bg-secondary">{{ counts.help_requests }}</span></a>
+                <a href="{% url 'accounts:staff_help_requests' %}">
+                  Help requests
+                  <span class="badge bg-secondary">{{ counts.help_requests }}</span>
+                </a>
               </li>
             </ul>
           </div>
         </div>
       </div>
+      <!-- User management card. -->
       <div class="col-md-6 col-lg-4">
         <div class="comp-card h-100">
           <div class="comp-card__body">
@@ -61,5 +84,7 @@
         </div>
       </div>
     </div>
+    <!-- End dashboard cards grid. -->
   </section>
+  <!-- End staff dashboard overview. -->
 {% endblock content %}

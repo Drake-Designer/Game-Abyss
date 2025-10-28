@@ -1,3 +1,7 @@
+# ============================================================
+# *** ACCOUNTS FORMS: ProfileForm ***
+# ============================================================
+
 from allauth.account.models import EmailAddress
 from django import forms
 from django.contrib.auth import get_user_model
@@ -12,6 +16,7 @@ class ProfileForm(forms.ModelForm):
     - Profile fields: avatar, date_of_birth, bio, favorite_games, favorite_genres
     """
 
+    # User model fields (overridden for validation and initial values).
     first_name = forms.CharField(max_length=150, required=False)
     last_name = forms.CharField(max_length=150, required=False)
     email = forms.EmailField(required=False)
@@ -34,6 +39,7 @@ class ProfileForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # Bind current user and set initial values.
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self.fields["first_name"].initial = self.user.first_name
@@ -45,10 +51,11 @@ class ProfileForm(forms.ModelForm):
 
     @staticmethod
     def _normalize_email(email: str | None) -> str:
+        """Normalize email to lowercase and strip whitespace."""
         return str(email).strip().lower() if email else ""
 
     def clean_email(self):
-        """Check uniqueness in User and EmailAddress."""
+        """Ensure email is unique across User and EmailAddress tables."""
         email = self.cleaned_data.get("email")
         if not email:
             return ""
@@ -63,23 +70,29 @@ class ProfileForm(forms.ModelForm):
         return email
 
     def clean_favorite_games(self):
+        """Strip leading and trailing spaces from favorite_games field."""
         return self.cleaned_data.get("favorite_games", "").strip()
 
     def clean_favorite_genres(self):
+        """Strip leading and trailing spaces from favorite_genres field."""
         return self.cleaned_data.get("favorite_genres", "").strip()
 
     def save(self, commit=True):
-        """Save profile and sync basic User fields."""
+        """
+        Save profile and sync linked User fields (first_name, last_name, email).
+        """
         profile: UserProfile = super().save(commit=False)
         profile.user = self.user
 
         User = get_user_model()
         if isinstance(self.user, User):
+            # Sync user first and last name.
             self.user.first_name = self.cleaned_data.get(
                 "first_name", "") or ""
             self.user.last_name = self.cleaned_data.get("last_name", "") or ""
             update_fields = ["first_name", "last_name"]
 
+            # Handle email changes.
             new_email = self.cleaned_data.get("email", "") or ""
             self.new_email = self._normalize_email(new_email)
             self.email_changed = self.new_email != self._initial_email

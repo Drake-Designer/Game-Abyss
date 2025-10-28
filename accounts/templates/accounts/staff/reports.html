@@ -1,11 +1,19 @@
+<!--
+/* ============================================================
+   *** ACCOUNTS TEMPLATE: Staff Comment Reports ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% block title %}
   Comment reports · Staff tools · Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="py-4">
+  <!-- Render staff comment reports management page. -->
+  <section class="container py-4">
+    <!-- Page heading. -->
     <h1 class="h3 mb-3">Reported comments</h1>
     {% if reports %}
+      <!-- Reports table. -->
       <form method="post">
         {% csrf_token %}
         <div class="table-responsive">
@@ -24,17 +32,22 @@
             <tbody>
               {% for report in reports %}
                 <tr class="{% if report.resolved %}table-light{% else %}table-warning{% endif %}">
+                  <!-- Reported comment. -->
                   <td>
                     <a href="{{ report.comment.post.get_absolute_url }}#comment-{{ report.comment.id }}"
                        target="_blank"
                        rel="noopener">{{ report.comment.body|truncatewords:12 }}</a>
                   </td>
+                  <!-- Reporter. -->
                   <td>
                     <a href="{% url 'accounts:profile' report.reported_by.username %}">{{ report.reported_by.username }}</a>
                   </td>
+                  <!-- Report details. -->
                   <td>{{ report.get_reason_display }}</td>
                   <td>{{ report.notes|default:"—" }}</td>
+                  <!-- Created date. -->
                   <td>{{ report.created_at|date:"F j, Y H:i" }}</td>
+                  <!-- Resolution status. -->
                   <td>
                     {% if report.resolved %}
                       <span class="badge bg-success">Yes</span>
@@ -42,6 +55,7 @@
                       <span class="badge bg-danger">No</span>
                     {% endif %}
                   </td>
+                  <!-- Action buttons. -->
                   <td>
                     {% if not report.resolved %}
                       <button type="submit"
@@ -61,7 +75,9 @@
         </div>
       </form>
     {% else %}
+      <!-- Empty state message. -->
       <p class="text-muted">No reports found.</p>
     {% endif %}
   </section>
+  <!-- End staff comment reports management page. -->
 {% endblock content %}

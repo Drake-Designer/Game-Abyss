@@ -1,3 +1,7 @@
+# ============================================================
+# *** ACCOUNTS SIGNALS: Account lifecycle events ***
+# ============================================================
+
 """Signals for account lifecycle events."""
 
 from django.contrib.auth import get_user_model
@@ -41,9 +45,7 @@ def notify_staff_user_registered(sender, instance, created, **kwargs):
     if not created:
         return
     subject = f"New user registered: {instance.username}"
-    detail_items = [
-        {"label": "Username", "value": instance.username},
-    ]
+    detail_items = [{"label": "Username", "value": instance.username}]
     if instance.email:
         detail_items.append({"label": "Email", "value": instance.email})
     if instance.get_full_name():
@@ -69,9 +71,7 @@ def notify_staff_user_registered(sender, instance, created, **kwargs):
 def notify_staff_user_deleted(sender, instance, **kwargs):
     """Notify staff when a user account is deleted."""
     subject = f"User account deleted: {instance.username}"
-    detail_items = [
-        {"label": "Username", "value": instance.username},
-    ]
+    detail_items = [{"label": "Username", "value": instance.username}]
     if instance.email:
         detail_items.append({"label": "Email", "value": instance.email})
 

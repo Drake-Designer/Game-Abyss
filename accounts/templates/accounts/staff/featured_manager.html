@@ -1,13 +1,22 @@
+<!--
+/* ============================================================
+   *** ACCOUNTS TEMPLATE: Featured Posts Manager ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% block title %}
   Featured posts · Staff tools · Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="py-4">
+  <!-- Render featured posts management table. -->
+  <section class="container py-4">
+    <!-- Page heading. -->
     <h1 class="h3 mb-3">Featured posts</h1>
     {% if posts %}
+      <!-- Feature selection form. -->
       <form method="post">
         {% csrf_token %}
+        <!-- Posts table. -->
         <div class="table-responsive">
           <table class="table table-striped align-middle">
             <thead>
@@ -39,12 +48,15 @@
             </tbody>
           </table>
         </div>
+        <!-- Submit actions. -->
         <div class="mt-3">
           <button type="submit" class="btn btn-primary">Update featured</button>
         </div>
       </form>
     {% else %}
-      <p class="text-muted">No posts available to feature.</p>
+      <!-- Empty state. -->
+      <p class="text-muted mb-0">No posts available to feature.</p>
     {% endif %}
   </section>
+  <!-- End featured posts management table. -->
 {% endblock content %}

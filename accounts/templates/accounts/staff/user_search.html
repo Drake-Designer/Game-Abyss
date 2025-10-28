@@ -1,10 +1,18 @@
+<!--
+/* ============================================================
+   *** ACCOUNTS TEMPLATE: Staff User Search ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% block title %}
   User search · Staff tools · Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="py-4">
+  <!-- Render staff user search page. -->
+  <section class="container py-4">
+    <!-- Page heading. -->
     <h1 class="h3 mb-3">User search</h1>
+    <!-- Search form. -->
     <form method="get" class="mb-4">
       <div class="input-group">
         <input type="text"
@@ -16,6 +24,7 @@
       </div>
     </form>
     {% if users %}
+      <!-- Users table. -->
       <div class="table-responsive">
         <table class="table table-striped align-middle">
           <thead>
@@ -31,12 +40,16 @@
           <tbody>
             {% for u in users %}
               <tr>
+                <!-- Username with profile link. -->
                 <td>
                   <a href="{% url 'accounts:profile' u.username %}">{{ u.username }}</a>
                 </td>
+                <!-- User email. -->
                 <td>{{ u.email|default:"—" }}</td>
+                <!-- Dates. -->
                 <td>{{ u.date_joined|date:"F j, Y" }}</td>
                 <td>{{ u.last_login|date:"F j, Y H:i"|default:"—" }}</td>
+                <!-- Role badge. -->
                 <td>
                   {% if u.is_superuser %}
                     <span class="badge bg-danger">Super Admin</span>
@@ -46,6 +59,7 @@
                     <span class="badge bg-secondary">User</span>
                   {% endif %}
                 </td>
+                <!-- Action buttons. -->
                 <td>
                   <a href="{% url 'accounts:profile' u.username %}"
                      class="btn btn-sm btn-outline-primary">View</a>
@@ -63,7 +77,9 @@
         </table>
       </div>
     {% elif request.GET.q %}
+      <!-- Empty state message for no results. -->
       <p class="text-muted">No users found for your search.</p>
     {% endif %}
   </section>
+  <!-- End staff user search page. -->
 {% endblock content %}

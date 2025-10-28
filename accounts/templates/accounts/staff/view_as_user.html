@@ -1,11 +1,19 @@
+<!--
+/* ============================================================
+   *** ACCOUNTS TEMPLATE: Staff View As User ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% block title %}
   View as user · Staff tools · Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="py-4">
+  <!-- Render staff view-as-user preview page. -->
+  <section class="container py-4">
+    <!-- Page heading. -->
     <h1 class="h3 mb-3">View site as another user</h1>
     <p class="text-muted">Preview what a player sees without impersonating them.</p>
+    <!-- Search form for username. -->
     <form class="row g-2 mb-4" method="get">
       <div class="col-sm-8 col-lg-6">
         <input class="form-control"
@@ -19,6 +27,7 @@
       </div>
     </form>
     {% if preview_user %}
+      <!-- User profile preview card. -->
       <div class="comp-card mb-4">
         <div class="comp-card__body">
           <div class="d-flex gap-3 align-items-start">
@@ -35,17 +44,20 @@
             </div>
           </div>
           {% if preview_profile.bio %}
+            <!-- User bio. -->
             <div class="mt-3">
               <h3 class="h6 text-uppercase text-muted fw-semibold">Bio</h3>
               <p class="mb-0">{{ preview_profile.bio }}</p>
             </div>
           {% endif %}
           {% if preview_profile.favorites %}
+            <!-- User favorites. -->
             <div class="mt-3">
               <h3 class="h6 text-uppercase text-muted fw-semibold">Favorite games or genres</h3>
               <p class="mb-0">{{ preview_profile.favorites }}</p>
             </div>
           {% endif %}
+          <!-- Public stats. -->
           <div class="mt-3">
             <h3 class="h6 text-uppercase text-muted fw-semibold">Public stats</h3>
             <ul class="list-inline mb-0">
@@ -59,6 +71,7 @@
           </div>
         </div>
       </div>
+      <!-- User posts and comments preview. -->
       <div class="row g-4">
         <div class="col-lg-6">
           <div class="comp-card h-100">
@@ -105,7 +118,9 @@
         </div>
       </div>
     {% elif username %}
+      <!-- No user found warning. -->
       <div class="alert alert-warning">No user named “{{ username }}” was found.</div>
     {% endif %}
   </section>
+  <!-- End staff view-as-user preview page. -->
 {% endblock content %}

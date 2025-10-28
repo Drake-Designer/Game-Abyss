@@ -1,3 +1,7 @@
+# ============================================================
+# *** ACCOUNTS UTILS: Utility helpers for account features ***
+# ============================================================
+
 """Utility helpers for account-related features."""
 
 from functools import wraps
@@ -11,6 +15,10 @@ from django.contrib.admin.views.decorators import staff_member_required
 
 from blog.models import BlogPost, Comment, CommentReport, log_moderation_action
 
+
+# ============================================================
+# Email verification checks
+# ============================================================
 
 EMAIL_VERIFICATION_REQUIRED_MESSAGE = (
     "Please verify your email address before continuing. "
@@ -57,6 +65,10 @@ def verified_email_required(view_func):
 
     return _wrapped
 
+
+# ============================================================
+# Moderation helpers
+# ============================================================
 
 def approve_post(actor, post: BlogPost, notes: str = "") -> None:
     """Mark a blog post as approved."""

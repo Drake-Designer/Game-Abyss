@@ -1,10 +1,18 @@
+<!--
+/* ============================================================
+   *** BLOG TEMPLATE: Staff · Content Search ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% block title %}
   Content search · Staff tools · Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="py-4">
+  <!-- Render staff content search page. -->
+  <section class="container py-4">
+    <!-- Page heading. -->
     <h1 class="h3 mb-3">Content search</h1>
+    <!-- Search form. -->
     <form method="get" class="row g-2 mb-4">
       <div class="col-sm-8 col-lg-6">
         <input type="text"
@@ -18,7 +26,9 @@
       </div>
     </form>
     {% if query %}
+      <!-- Results grid. -->
       <div class="row g-4">
+        <!-- Posts column. -->
         <div class="col-lg-6">
           <div class="comp-card h-100">
             <div class="comp-card__body">
@@ -29,9 +39,11 @@
                     <li class="mb-3 border-bottom pb-2">
                       <a href="{{ post.get_absolute_url }}"
                          target="_blank"
+                         rel="noopener"
                          class="fw-semibold">{{ post.title }}</a>
                       <div class="small text-muted">
-                        By <a href="{% url 'accounts:profile' post.author.username %}">{{ post.author.username }}</a>
+                        By
+                        <a href="{% url 'accounts:profile' post.author.username %}">{{ post.author.username }}</a>
                         · {{ post.created_at|date:"F j, Y" }}
                       </div>
                     </li>
@@ -43,6 +55,7 @@
             </div>
           </div>
         </div>
+        <!-- Comments column. -->
         <div class="col-lg-6">
           <div class="comp-card h-100">
             <div class="comp-card__body">
@@ -52,9 +65,11 @@
                   {% for comment in comments %}
                     <li class="mb-3 border-bottom pb-2">
                       <a href="{{ comment.post.get_absolute_url }}#comment-{{ comment.id }}"
-                         target="_blank">{{ comment.body|truncatewords:20 }}</a>
+                         target="_blank"
+                         rel="noopener">{{ comment.body|truncatewords:20 }}</a>
                       <div class="small text-muted">
-                        By <a href="{% url 'accounts:profile' comment.author.username %}">{{ comment.author.username }}</a>
+                        By
+                        <a href="{% url 'accounts:profile' comment.author.username %}">{{ comment.author.username }}</a>
                         on “{{ comment.post.title }}”
                       </div>
                     </li>
@@ -68,7 +83,9 @@
         </div>
       </div>
     {% else %}
+      <!-- Empty state when no search query provided. -->
       <p class="text-muted">Enter a search term to explore content.</p>
     {% endif %}
   </section>
+  <!-- End staff content search page. -->
 {% endblock content %}

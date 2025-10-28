@@ -51,25 +51,27 @@
         </div>
       {% endwith %}
       <!-- Post owner actions. -->
-      {% if user.is_authenticated and (post.can_edit or post.can_delete) %}
-        <div class="d-flex flex-wrap gap-2 mb-4">
-          {% if post.can_edit %}
-            <a class="btn btn-outline-primary"
-               href="{% url 'blog:edit_post' post.pk %}?next={{ request.get_full_path }}">
-              <i class="fas fa-pen"></i> Edit post
-            </a>
-          {% endif %}
-          {% if post.can_delete %}
-            <form method="post"
-                  action="{% url 'blog:delete_post' post.pk %}"
-                  onsubmit="return confirm('Delete this post?');">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-outline-danger">
-                <i class="fas fa-trash"></i> Delete post
-              </button>
-            </form>
-          {% endif %}
-        </div>
+      {% if user.is_authenticated %}
+        {% if post.can_edit or post.can_delete %}
+          <div class="d-flex flex-wrap gap-2 mb-4">
+            {% if post.can_edit %}
+              <a class="btn btn-outline-primary"
+                 href="{% url 'blog:edit_post' post.pk %}?next={{ request.get_full_path }}">
+                <i class="fas fa-pen"></i> Edit post
+              </a>
+            {% endif %}
+            {% if post.can_delete %}
+              <form method="post"
+                    action="{% url 'blog:delete_post' post.pk %}"
+                    onsubmit="return confirm('Delete this post?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">
+                  <i class="fas fa-trash"></i> Delete post
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        {% endif %}
       {% endif %}
       <!-- Post hero media. -->
       {% if post.image %}

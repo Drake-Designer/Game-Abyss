@@ -1,3 +1,7 @@
+# ============================================================
+# *** ACCOUNTS VIEWS: Controllers and staff tools ***
+# ============================================================
+
 from datetime import datetime
 
 from allauth.account.models import EmailAddress
@@ -22,11 +26,13 @@ User = get_user_model()
 
 
 def _get_profile(user):
+    """Fetch or create the user's profile."""
     profile, _ = UserProfile.objects.get_or_create(user=user)
     return profile
 
 
 def _process_email_change(request, user, new_email: str):
+    """Upsert EmailAddress, reset verification, and send confirmation."""
     normalized_email = new_email or ""
     if not normalized_email:
         EmailAddress.objects.filter(user=user).delete()
@@ -62,7 +68,7 @@ def _process_email_change(request, user, new_email: str):
 
 
 def profile(request, username):
-    """Show a user's public profile page. If not logged in, show a login or sign up call to action."""
+    """Show a user's public profile page or CTA for unauthenticated viewers."""
     profile_user = get_object_or_404(
         User.objects.select_related("profile"), username=username
     )
@@ -213,7 +219,7 @@ def profile(request, username):
 
 @login_required
 def profile_edit(request):
-    """Let the logged in user update their profile and email. On success, redirect back to their profile."""
+    """Update profile and email, then redirect to the profile page."""
     profile_obj = _get_profile(request.user)
 
     if request.method == "POST":
@@ -235,7 +241,7 @@ def profile_edit(request):
 @login_required
 @verified_email_required
 def profile_delete(request):
-    """Delete the current user's account after confirming the password. Logs out and redirects to home."""
+    """Delete the current user's account after password confirmation."""
     if request.method == "POST":
         password = (request.POST.get("confirm_password") or "").strip()
         if not request.user.check_password(password):
@@ -256,12 +262,12 @@ def profile_delete(request):
 
 @login_required
 def my_profile_redirect(request):
-    """Shortcut that redirects the logged in user to their own profile page."""
+    """Redirect the logged in user to their own profile page."""
     return redirect("accounts:profile", request.user.username)
 
 
 class VerifiedEmailPasswordChangeView(PasswordChangeView):
-    """Password change view that only allows access if the user's email is verified."""
+    """Password change view that requires a verified email."""
 
     def dispatch(self, request, *args, **kwargs):
         response = ensure_verified_email(request)
@@ -272,7 +278,7 @@ class VerifiedEmailPasswordChangeView(PasswordChangeView):
 
 @staff_member_required
 def staff_dashboard(request):
-    """Staff overview with counters and quick links to common moderation tasks."""
+    """Staff overview with counters and quick links to moderation tasks."""
     counters = {
         "pending_posts": BlogPost.objects.filter(status=BlogPost.STATUS_PENDING).count(),
         "pending_comments": Comment.objects.filter(status=Comment.STATUS_PENDING).count(),
@@ -328,7 +334,7 @@ def staff_dashboard(request):
 
 @staff_member_required
 def staff_pending_posts(request):
-    """Moderate pending posts. Approve, reject, or delete items from a paginated list."""
+    """Moderate pending posts with approve, reject, or delete actions."""
     if request.method == "POST":
         post_id = request.POST.get("post_id")
         action = request.POST.get("action") or ""
@@ -367,7 +373,7 @@ def staff_pending_posts(request):
 
 @staff_member_required
 def staff_pending_comments(request):
-    """Moderate pending comments. Approve, reject, or delete items from a paginated list."""
+    """Moderate pending comments with approve, reject, or delete actions."""
     if request.method == "POST":
         comment_id = request.POST.get("comment_id")
         action = request.POST.get("action") or ""
@@ -406,7 +412,7 @@ def staff_pending_comments(request):
 
 @staff_member_required
 def staff_reports(request):
-    """Handle user reports on comments. Resolve, reject, or delete the related comment."""
+    """Handle comment reports by resolving, rejecting, or deleting comments."""
     if request.method == "POST":
         report_id = request.POST.get("report_id")
         action = request.POST.get("action") or ""
@@ -458,7 +464,7 @@ def staff_reports(request):
 
 @staff_member_required
 def staff_help_requests(request):
-    """Track and update user help requests. Mark items as in progress or resolved."""
+    """Track and update help requests with resolve or progress actions."""
     if request.method == "POST":
         req_id = request.POST.get("request_id")
         action = request.POST.get("action") or ""
@@ -487,7 +493,7 @@ def staff_help_requests(request):
 
 @staff_member_required
 def staff_user_search(request):
-    """Search users by username or email and show a paginated list of results."""
+    """Search users by username or email and list results."""
     query = (request.GET.get("q") or "").strip()
     results = User.objects.none()
     if query:
@@ -507,7 +513,7 @@ def staff_user_search(request):
 
 @staff_member_required
 def staff_featured_manager(request):
-    """Toggle the featured flag on posts and browse featured content."""
+    """Toggle featured flag on posts and browse featured content."""
     if request.method == "POST":
         post_id = request.POST.get("post_id")
         action = request.POST.get("action") or ""
@@ -545,7 +551,7 @@ def staff_featured_manager(request):
 
 @staff_member_required
 def staff_content_search(request):
-    """Search posts and comments by a free text query and show recent matches."""
+    """Search posts and comments by a free text query and return recent matches."""
     query = (request.GET.get("q") or "").strip()
     posts, comments = [], []
     if query:
@@ -572,7 +578,7 @@ def staff_content_search(request):
 
 @staff_member_required
 def staff_view_as_user(request):
-    """Preview a user's public profile as seen by others to help with moderation."""
+    """Preview a user's public profile to assist moderation decisions."""
     username = (request.GET.get("username") or "").strip()
     preview_user, preview_profile = None, None
     preview_posts, preview_comments, preview_stats, last_active = [], [], {}, None

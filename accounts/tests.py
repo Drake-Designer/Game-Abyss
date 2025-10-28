@@ -1,3 +1,11 @@
+# /* ============================================================
+#    *** ACCOUNTS: Tests ***
+#    ============================================================ */
+"""Exercise account views, forms, and utilities."""
+
+# /* ============================================================
+#    *** ACCOUNTS: Tests: Imports ***
+#    ============================================================ */
 from datetime import date
 
 from allauth.account.models import EmailAddress
@@ -13,7 +21,13 @@ from blog.models import BlogPost, Comment, PostReaction, ReactionType
 from .models import UserProfile
 
 
+# /* ============================================================
+#    *** ACCOUNTS: Tests: Helpers ***
+#    ============================================================ */
+
+
 def _verify_email(user):
+    """Mark a user's email address as verified."""
     if not user.email:
         return
     EmailAddress.objects.update_or_create(
@@ -23,12 +37,21 @@ def _verify_email(user):
     )
 
 
+# /* ============================================================
+#    *** ACCOUNTS: Tests: Profile Edit Email ***
+#    ============================================================ */
+
+
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 class ProfileEditEmailTests(TestCase):
+    """Test email changes through the profile edit view."""
+
     def setUp(self):
+        """Clear the email outbox before each test."""
         mail.outbox.clear()
 
     def _post_profile_form(self, user, email):
+        """Submit the profile form with the provided email."""
         self.client.force_login(user)
         response = self.client.post(
             reverse("accounts:profile_edit"),
@@ -43,6 +66,7 @@ class ProfileEditEmailTests(TestCase):
         return response
 
     def test_user_without_email_can_add_one_and_requires_verification(self):
+        """Ensure adding a first email triggers verification."""
         user = get_user_model().objects.create_user(
             username="noemail", password="test-pass"
         )
@@ -66,6 +90,7 @@ class ProfileEditEmailTests(TestCase):
         self.assertIn("new@example.com", mail.outbox[0].to)
 
     def test_email_change_requires_reverification(self):
+        """Ensure updating an email requires reverification."""
         user = get_user_model().objects.create_user(
             username="withmail",
             email="old@example.com",
@@ -99,8 +124,16 @@ class ProfileEditEmailTests(TestCase):
         self.assertIn("updated@example.com", mail.outbox[0].to)
 
 
+# /* ============================================================
+#    *** ACCOUNTS: Tests: Profile Deletion ***
+#    ============================================================ */
+
+
 class ProfileDeleteViewTests(TestCase):
+    """Test account deletion behavior from the profile view."""
+
     def setUp(self):
+        """Create a user with related content for deletion tests."""
         self.user = get_user_model().objects.create_user(
             username="deleteme",
             email="deleteme@example.com",
@@ -124,6 +157,7 @@ class ProfileDeleteViewTests(TestCase):
         _verify_email(self.user)
 
     def test_requires_correct_password(self):
+        """Confirm deletion fails with an incorrect password."""
         self.client.force_login(self.user)
 
         response = self.client.post(
@@ -138,6 +172,7 @@ class ProfileDeleteViewTests(TestCase):
         )
 
     def test_deletes_user_and_related_content_with_correct_password(self):
+        """Ensure deletion removes the user and related objects."""
         self.client.force_login(self.user)
 
         response = self.client.post(
@@ -156,8 +191,16 @@ class ProfileDeleteViewTests(TestCase):
             pk=self.reaction.pk).exists())
 
 
+# /* ============================================================
+#    *** ACCOUNTS: Tests: Email Verification Guards ***
+#    ============================================================ */
+
+
 class EmailVerificationRequirementTests(TestCase):
+    """Test access guards that require verified email addresses."""
+
     def setUp(self):
+        """Create a logged-in user with an unverified email."""
         self.user = get_user_model().objects.create_user(
             username="pending", email="pending@example.com", password="secret",
         )
@@ -170,14 +213,17 @@ class EmailVerificationRequirementTests(TestCase):
         self.client.force_login(self.user)
 
     def test_profile_delete_redirects_when_email_unverified(self):
+        """Ensure the delete view redirects when email is unverified."""
         response = self.client.get(reverse("accounts:profile_delete"))
         self.assertRedirects(response, reverse("account_email"))
 
     def test_password_change_redirects_when_email_unverified(self):
+        """Ensure the password change view redirects until verified."""
         response = self.client.get(reverse("account_change_password"))
         self.assertRedirects(response, reverse("account_email"))
 
     def test_access_allowed_after_verification(self):
+        """Confirm access is granted once the email is verified."""
         EmailAddress.objects.filter(user=self.user).update(verified=True)
 
         response = self.client.get(reverse("accounts:profile_delete"))
@@ -187,8 +233,16 @@ class EmailVerificationRequirementTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
+# /* ============================================================
+#    *** ACCOUNTS: Tests: Draft Visibility ***
+#    ============================================================ */
+
+
 class ProfileDraftVisibilityTests(TestCase):
+    """Test visibility of draft content on profile pages."""
+
     def setUp(self):
+        """Prepare users and posts for draft visibility checks."""
         self.author = get_user_model().objects.create_user(
             username="author", email="author@example.com", password="secret"
         )
@@ -212,6 +266,7 @@ class ProfileDraftVisibilityTests(TestCase):
         )
 
     def test_author_can_see_draft_section(self):
+        """Ensure authors see their draft section."""
         self.client.force_login(self.author)
 
         response = self.client.get(
@@ -224,6 +279,7 @@ class ProfileDraftVisibilityTests(TestCase):
         self.assertContains(response, "Visible post")
 
     def test_other_user_cannot_see_drafts(self):
+        """Confirm other users cannot see drafts."""
         self.client.force_login(self.other_user)
 
         response = self.client.get(
@@ -239,6 +295,7 @@ class ProfileDraftVisibilityTests(TestCase):
         self.assertNotContains(response, "Visible post")
 
     def test_staff_user_cannot_see_drafts(self):
+        """Confirm staff viewers cannot see another user's drafts."""
         self.client.force_login(self.staff_user)
 
         response = self.client.get(
@@ -254,6 +311,7 @@ class ProfileDraftVisibilityTests(TestCase):
         self.assertNotContains(response, "Visible post")
 
     def test_staff_owner_sees_moderation_tools_placeholder(self):
+        """Ensure staff owners see the moderation tools placeholder."""
         self.client.force_login(self.staff_user)
 
         response = self.client.get(
@@ -264,8 +322,16 @@ class ProfileDraftVisibilityTests(TestCase):
         self.assertContains(response, "moderation and admin")
 
 
+# /* ============================================================
+#    *** ACCOUNTS: Tests: Public Profile View ***
+#    ============================================================ */
+
+
 class ProfilePublicViewTests(TestCase):
+    """Test the public profile view for different audiences."""
+
     def setUp(self):
+        """Create users, profile data, and sample content."""
         User = get_user_model()
         self.author = User.objects.create_user(
             username="profile_author",
@@ -318,12 +384,14 @@ class ProfilePublicViewTests(TestCase):
         )
 
     def test_profile_url_pattern(self):
+        """Ensure the profile URL pattern matches /u/<username>/."""
         self.assertEqual(
             reverse("accounts:profile", args=[self.author.username]),
             f"/u/{self.author.username}/",
         )
 
     def test_public_profile_shows_only_public_content(self):
+        """Confirm public viewers only see public content."""
         self.client.force_login(self.viewer)
 
         response = self.client.get(
@@ -332,7 +400,8 @@ class ProfilePublicViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Approved posts")
-        self.assertNotContains(response, self.approved_post.title)
+        we_dont_want = self.approved_post.title
+        self.assertNotContains(response, we_dont_want)
         self.assertNotContains(response, self.pending_post.title)
         self.assertNotContains(response, self.draft_post.title)
         self.assertNotContains(response, "Approved comments</h2>")
@@ -340,15 +409,14 @@ class ProfilePublicViewTests(TestCase):
         self.assertContains(response, 'data-testid="approved-comment-count">1')
 
     def test_public_profile_shows_profile_metadata(self):
+        """Ensure public viewers see limited profile metadata."""
         self.client.force_login(self.viewer)
 
         response = self.client.get(
             reverse("accounts:profile", args=[self.author.username])
         )
 
-        formatted_dob = date_format(
-            self.author_profile.date_of_birth, "F j"
-        )
+        formatted_dob = date_format(self.author_profile.date_of_birth, "F j")
         joined = date_format(self.author.date_joined, "F j, Y")
         self.assertContains(response, "Nickname")
         self.assertContains(response, self.author.username)
@@ -367,6 +435,7 @@ class ProfilePublicViewTests(TestCase):
         self.assertNotContains(response, "No activity recorded")
 
     def test_owner_sees_full_profile_details(self):
+        """Confirm owners see full profile details."""
         self.client.force_login(self.author)
 
         response = self.client.get(
@@ -383,13 +452,15 @@ class ProfilePublicViewTests(TestCase):
         self.assertContains(response, "Approved feedback")
 
     def test_unauthenticated_user_sees_login_cta(self):
+        """Ensure anonymous users see the login call to action."""
         response = self.client.get(
             reverse("accounts:profile", args=[self.author.username])
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(
-            response, "Register or log in to view this content")
+            response, "Register or log in to view this content"
+        )
         self.assertContains(response, "Sign up")
         self.assertContains(response, "Log in")
         if response.context is not None:
@@ -398,6 +469,7 @@ class ProfilePublicViewTests(TestCase):
             )
 
     def test_profile_hides_role_badge_for_regular_user(self):
+        """Confirm regular users do not see a role badge."""
         self.client.force_login(self.viewer)
 
         response = self.client.get(
@@ -407,6 +479,7 @@ class ProfilePublicViewTests(TestCase):
         self.assertNotContains(response, 'data-testid="role-badge"')
 
     def test_profile_shows_role_badge_for_staff_user(self):
+        """Ensure staff profiles display a staff badge."""
         staff_user = get_user_model().objects.create_user(
             username="staffer",
             email="staffer@example.com",
@@ -425,6 +498,7 @@ class ProfilePublicViewTests(TestCase):
         self.assertContains(response, "Staff")
 
     def test_profile_shows_admin_badge_for_superuser(self):
+        """Ensure superuser profiles display the admin badge."""
         admin_user = get_user_model().objects.create_superuser(
             username="overseer",
             email="overseer@example.com",
@@ -442,6 +516,7 @@ class ProfilePublicViewTests(TestCase):
         self.assertContains(response, "Super Admin")
 
     def test_profile_owner_sees_their_role_badge(self):
+        """Confirm owners still see their own role badge."""
         admin_user = get_user_model().objects.create_superuser(
             username="stellar", email="stellar@example.com", password="secret"
         )
@@ -456,6 +531,7 @@ class ProfilePublicViewTests(TestCase):
         self.assertContains(response, "Super Admin")
 
     def test_authenticated_user_can_open_other_profile(self):
+        """Ensure authenticated users can view other profiles."""
         self.client.force_login(self.viewer)
 
         response = self.client.get(
@@ -465,13 +541,22 @@ class ProfilePublicViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_profile_404_for_unknown_user(self):
+        """Confirm the profile view returns 404 for unknown users."""
         response = self.client.get(reverse("accounts:profile", args=["ghost"]))
 
         self.assertEqual(response.status_code, 404)
 
 
+# /* ============================================================
+#    *** ACCOUNTS: Tests: Favorites ***
+#    ============================================================ */
+
+
 class ProfileFavoritesTests(TestCase):
+    """Test rendering of favorite games and genres."""
+
     def setUp(self):
+        """Create users with and without favorites."""
         User = get_user_model()
         self.user = User.objects.create_user(
             username="favuser",
@@ -485,6 +570,7 @@ class ProfileFavoritesTests(TestCase):
         )
 
     def test_favorites_render_in_profile(self):
+        """Ensure favorites appear on the profile page."""
         self.client.force_login(self.user)
 
         response = self.client.get(
@@ -495,6 +581,7 @@ class ProfileFavoritesTests(TestCase):
         self.assertContains(response, "RPG")
 
     def test_favorites_section_hidden_if_empty(self):
+        """Confirm the favorites section hides when empty."""
         empty_user = get_user_model().objects.create_user(
             username="nofav",
             email="nofav@example.com",

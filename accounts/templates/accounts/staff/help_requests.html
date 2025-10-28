@@ -1,11 +1,19 @@
+<!--
+/* ============================================================
+   *** ACCOUNTS TEMPLATE: User Help Requests ***
+   ============================================================ */
+-->
 {% extends "base.html" %}
 {% block title %}
   Help requests · Staff tools · Game Abyss
 {% endblock title %}
 {% block content %}
-  <section class="py-4">
+  <!-- Render staff help requests management page. -->
+  <section class="container py-4">
+    <!-- Page heading. -->
     <h1 class="h3 mb-3">User help requests</h1>
     {% if requests %}
+      <!-- Requests table. -->
       <div class="table-responsive">
         <table class="table table-striped align-middle">
           <thead>
@@ -21,12 +29,16 @@
           <tbody>
             {% for req in requests %}
               <tr>
+                <!-- Request user. -->
                 <td>
                   <a href="{% url 'accounts:profile' req.user.username %}">{{ req.user.username }}</a>
                 </td>
+                <!-- Request subject and message. -->
                 <td>{{ req.subject }}</td>
                 <td>{{ req.message|truncatewords:15 }}</td>
+                <!-- Created date. -->
                 <td>{{ req.created_at|date:"F j, Y H:i" }}</td>
+                <!-- Status badge. -->
                 <td>
                   {% if req.resolved %}
                     <span class="badge bg-success">Resolved</span>
@@ -34,6 +46,7 @@
                     <span class="badge bg-warning">Pending</span>
                   {% endif %}
                 </td>
+                <!-- Action buttons. -->
                 <td>
                   {% if not req.resolved %}
                     <form method="post" class="d-inline">
@@ -58,7 +71,9 @@
         </table>
       </div>
     {% else %}
+      <!-- Empty state message. -->
       <p class="text-muted">No help requests at the moment.</p>
     {% endif %}
   </section>
+  <!-- End staff help requests management page. -->
 {% endblock content %}
