@@ -24,7 +24,46 @@
           </div>
         </div>
       </div>
+      {% if is_self %}
+        <div class="mt-3 d-flex flex-wrap gap-2">
+          <a class="comp-button comp-button--primary"
+             href="{% url 'accounts:profile_edit' %}">
+            <i class="fa-solid fa-pen-to-square"></i><span>Edit profile</span>
+          </a>
+          <a class="comp-button comp-button--danger"
+             href="{% url 'accounts:profile_delete' %}">
+            <i class="fa-solid fa-user-slash"></i><span>Delete account</span>
+          </a>
+        </div>
+      {% endif %}
     </header>
+    {% if is_self and draft_posts %}
+      <section class="mb-4" data-testid="draft-posts">
+        <div class="comp-card">
+          <div class="comp-card__body">
+            <h2 class="comp-card__title">Draft posts</h2>
+            <ul class="list-unstyled mb-0">
+              {% for post in draft_posts %}
+                <li class="mb-3 border-bottom pb-2">
+                  <div class="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-md-center">
+                    <div>
+                      <div class="fw-semibold">{{ post.title }}</div>
+                      <div class="small text-muted">Last updated {{ post.updated_at|date:"F j, Y H:i" }}</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                      <a class="comp-button comp-button--outline comp-button--sm"
+                         href="{% url 'blog:edit_post' post.pk %}">
+                        <i class="fa-solid fa-pen"></i><span>Continue editing</span>
+                      </a>
+                    </div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </section>
+    {% endif %}
     <div class="row g-4 mb-4">
       <div class="col-lg-5">
         <div class="comp-card h-100">
@@ -49,7 +88,7 @@
               </dd>
               <dt class="col-sm-5 text-uppercase text-muted small">Date of birth</dt>
               <dd class="col-sm-7 mb-0" data-testid="profile-birthdate">
-                {% if profile.date_of_birth %}{{ profile.date_of_birth|date:"F j" }}{% endif %}
+                {% if profile.date_of_birth %}{{ profile.date_of_birth|date:"F j, Y" }}{% endif %}
               </dd>
               <dt class="col-sm-5 text-uppercase text-muted small">Last active</dt>
               <dd class="col-sm-7 mb-0" data-testid="profile-last-active">
@@ -84,13 +123,13 @@
             <h2 class="comp-card__title">Activity status</h2>
             <dl class="row mb-0">
               <dt class="col-sm-6">Public posts</dt>
-              <dd class="col-sm-6" data-testid="public-post-count">
-                {{ stats.public_posts }}
-              </dd>
+              {# djlint:off #}
+              <dd class="col-sm-6" data-testid="public-post-count">{{ stats.public_posts }}</dd>
+              {# djlint:on #}
               <dt class="col-sm-6">Approved comments</dt>
-              <dd class="col-sm-6" data-testid="approved-comment-count">
-                {{ stats.approved_comments }}
-              </dd>
+              {# djlint:off #}
+              <dd class="col-sm-6" data-testid="approved-comment-count">{{ stats.approved_comments }}</dd>
+              {# djlint:on #}
             </dl>
           </div>
         </div>
@@ -144,14 +183,19 @@
         <div class="comp-card">
           <div class="comp-card__body">
             <h2 class="comp-card__title">Staff tools</h2>
-            <div class="d-flex flex-wrap gap-2">
-              {% for tool in staff_tools %}
-                <a class="comp-button comp-button--outline" href="{{ tool.url }}">
-                  <i class="fa-solid {{ tool.icon }}"></i><span>{{ tool.label }}</span>
-                  {% if tool.count != None %}<span class="badge bg-secondary ms-2">{{ tool.count }}</span>{% endif %}
-                </a>
-              {% endfor %}
-            </div>
+            <p class="text-muted">Use these moderation and admin tools to keep the community healthy.</p>
+            {% if staff_tools %}
+              <div class="d-flex flex-wrap gap-2">
+                {% for tool in staff_tools %}
+                  <a class="comp-button comp-button--outline" href="{{ tool.url }}">
+                    <i class="fa-solid {{ tool.icon }}"></i><span>{{ tool.label }}</span>
+                    {% if tool.count != None %}<span class="badge bg-secondary ms-2">{{ tool.count }}</span>{% endif %}
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="mb-0 text-muted">Use these tools for moderation and admin tasks.</p>
+            {% endif %}
           </div>
         </div>
       </section>

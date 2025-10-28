@@ -30,18 +30,28 @@ except ImportError:
     pass
 
 
+# Detect when the Django test suite is running so we can provide sensible
+# defaults for required settings like the ``SECRET_KEY``.  The previous
+# behaviour raised a ``RuntimeError`` whenever ``SECRET_KEY`` was missing from
+# the environment which caused the entire test suite to abort before any tests
+# ran.  For CI and local development it is acceptable to fall back to a
+# deterministic test key, mirroring Django's own recommendation, while still
+# requiring the variable to be present in production.
+RUNNING_TESTS = len(sys.argv) > 1 and sys.argv[1] == "test"
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
-    raise RuntimeError(
-        "SECRET_KEY is not set. Set it in env.py (local) or in Heroku Config Vars."
-    )
+    if RUNNING_TESTS:
+        SECRET_KEY = "django-insecure-test-key"
+    else:
+        raise RuntimeError(
+            "SECRET_KEY is not set. Set it in env.py (local) or in Heroku Config Vars."
+        )
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG is True by default locally, False when DEBUG=False in Heroku
 DEBUG = os.environ.get("DEBUG", "True") == "True"
-
-RUNNING_TESTS = len(sys.argv) > 1 and sys.argv[1] == "test"
 
 # Allowed hosts
 _alh = os.environ.get("ALLOWED_HOSTS", "")

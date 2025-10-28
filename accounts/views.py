@@ -85,9 +85,12 @@ def profile(request, username):
             .order_by("-updated_at")
         )
 
-    Paginator(approved_posts_qs, 5).get_page(request.GET.get("post_page"))
-    Paginator(approved_comments_qs, 5).get_page(
-        request.GET.get("comment_page"))
+    posts_page = Paginator(approved_posts_qs, 5).get_page(
+        request.GET.get("post_page")
+    )
+    comments_page = Paginator(approved_comments_qs, 5).get_page(
+        request.GET.get("comment_page")
+    )
 
     public_post_count = approved_posts_qs.count()
     approved_comment_count = approved_comments_qs.count()
@@ -96,7 +99,7 @@ def profile(request, username):
 
     role_badge: dict[str, str] | None = None
     if profile_user.is_superuser:
-        role_badge = {"label": "Admin", "css_class": "comp-badge--admin"}
+        role_badge = {"label": "Super Admin", "css_class": "comp-badge--admin"}
     elif profile_user.is_staff:
         role_badge = {"label": "Staff", "css_class": "comp-badge--staff"}
 
@@ -115,6 +118,52 @@ def profile(request, username):
     last_active = max(
         last_active_candidates) if last_active_candidates else None
 
+    stats = {
+        "public_posts": public_post_count,
+        "approved_comments": approved_comment_count,
+    }
+
+    has_favorites = bool(
+        (profile_obj.favorite_games or "").strip()
+        or (profile_obj.favorite_genres or "").strip()
+    )
+
+    show_moderation_tools = is_self and profile_user.is_staff
+    staff_tools: list[dict[str, str | int | None]] = []
+    if show_moderation_tools:
+        staff_tools = [
+            {
+                "label": "Pending posts",
+                "url": reverse("accounts:staff_pending_posts"),
+                "icon": "fa-newspaper",
+                "count": BlogPost.objects.filter(
+                    status=BlogPost.STATUS_PENDING
+                ).count(),
+            },
+            {
+                "label": "Pending comments",
+                "url": reverse("accounts:staff_pending_comments"),
+                "icon": "fa-comments",
+                "count": Comment.objects.filter(
+                    status=Comment.STATUS_PENDING
+                ).count(),
+            },
+            {
+                "label": "Reports",
+                "url": reverse("accounts:staff_reports"),
+                "icon": "fa-triangle-exclamation",
+                "count": CommentReport.objects.filter(resolved=False).count(),
+            },
+            {
+                "label": "Help requests",
+                "url": reverse("accounts:staff_help_requests"),
+                "icon": "fa-life-ring",
+                "count": HelpRequest.objects.exclude(
+                    status=HelpRequest.STATUS_RESOLVED
+                ).count(),
+            },
+        ]
+
     context = {
         "profile_user": profile_user,
         "profile": profile_obj,
@@ -122,11 +171,16 @@ def profile(request, username):
         "full_name": full_name_value if full_name_value else None,
         "approved_posts": list(approved_posts_qs),
         "approved_comments": list(approved_comments_qs),
-        "public_post_count": public_post_count,
-        "approved_comment_count": approved_comment_count,
         "role_badge": role_badge,
         "member_since": profile_user.date_joined,
         "last_active": last_active,
+        "draft_posts": draft_posts,
+        "posts_page": posts_page,
+        "comments_page": comments_page,
+        "stats": stats,
+        "has_favorites": has_favorites,
+        "show_moderation_tools": show_moderation_tools,
+        "staff_tools": staff_tools,
     }
     return render(request, "accounts/profile.html", context)
 
