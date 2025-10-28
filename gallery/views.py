@@ -1,6 +1,9 @@
-from django.shortcuts import render
+# ============================================================
+#   *** GALLERY: Views ***
+# ============================================================
 
-# Create your views here.
+"""Define views for the gallery app."""
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
@@ -11,6 +14,11 @@ from .forms import GalleryImageForm
 from .models import GalleryImage
 
 
+# ============================================================
+#   *** GALLERY: Views: List View ***
+# ============================================================
+
+
 class GalleryListView(ListView):
     """Public gallery listing of approved images."""
 
@@ -19,11 +27,17 @@ class GalleryListView(ListView):
     context_object_name = "images"
 
     def get_queryset(self):
+        """Return approved gallery images ordered by creation date."""
         return (
             GalleryImage.objects.approved()
             .select_related("uploaded_by")
             .order_by("-created_at")
         )
+
+
+# ============================================================
+#   *** GALLERY: Views: Upload View ***
+# ============================================================
 
 
 class GalleryUploadView(LoginRequiredMixin, CreateView):
@@ -35,6 +49,7 @@ class GalleryUploadView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("gallery:list")
 
     def form_valid(self, form):
+        """Handle saving of uploaded images with moderation logic."""
         gallery_image = form.save(commit=False)
         gallery_image.uploaded_by = self.request.user
 

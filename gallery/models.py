@@ -1,15 +1,28 @@
+# ============================================================
+#   *** GALLERY: Models ***
+# ============================================================
+
+"""Define database models for the gallery app."""
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+
+
+# ============================================================
+#   *** GALLERY: Models: QuerySet ***
+# ============================================================
 
 
 class GalleryImageQuerySet(models.QuerySet):
     """Custom queryset with helpers for gallery moderation states."""
 
     def approved(self):
+        """Return only approved images."""
         return self.filter(status=self.model.Status.APPROVED)
 
     def featured(self):
+        """Return approved and featured images, ordered by featured_at and created_at."""
         return (
             self.approved()
             .filter(is_featured=True)
@@ -17,10 +30,16 @@ class GalleryImageQuerySet(models.QuerySet):
         )
 
 
+# ============================================================
+#   *** GALLERY: Models: GalleryImage ***
+# ============================================================
+
+
 class GalleryImage(models.Model):
     """Single image entry for the community gallery."""
 
     class Status(models.TextChoices):
+        """Moderation states for gallery images."""
         PENDING = "PENDING", "Pending"
         APPROVED = "APPROVED", "Approved"
         REJECTED = "REJECTED", "Rejected"
@@ -48,11 +67,12 @@ class GalleryImage(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
+        """Return a readable representation of the image with status."""
         base = self.title or self.image.name
         return f"{base} ({self.get_status_display()})"
 
     def mark_featured(self):
-        """Ensure featured timestamp stays in sync."""
+        """Ensure featured timestamp and status stay in sync."""
         if self.is_featured and self.status != self.Status.APPROVED:
             self.status = self.Status.APPROVED
         if self.is_featured and not self.featured_at:
@@ -61,5 +81,6 @@ class GalleryImage(models.Model):
             self.featured_at = None
 
     def save(self, *args, **kwargs):
+        """Override save to enforce featured state consistency."""
         self.mark_featured()
         super().save(*args, **kwargs)

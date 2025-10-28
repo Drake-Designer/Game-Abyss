@@ -1,3 +1,9 @@
+# ============================================================
+#   *** GALLERY: URLs ***
+# ============================================================
+
+"""Define URL routes for the gallery app."""
+
 from django.urls import path
 
 from .views import GalleryListView, GalleryUploadView

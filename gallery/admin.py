@@ -1,12 +1,23 @@
+# ============================================================
+#   *** GALLERY: Admin ***
+# ============================================================
+
+"""Configure the gallery admin interface."""
+
 from django.contrib import admin
 from django.utils import timezone
 
 from .models import GalleryImage
 
 
+# ============================================================
+#   *** GALLERY: Admin: Gallery Image Admin ***
+# ============================================================
+
+
 @admin.register(GalleryImage)
 class GalleryImageAdmin(admin.ModelAdmin):
-    """Administrative interface with moderation shortcuts."""
+    """Manage gallery images for staff users."""
 
     list_display = (
         "id",
@@ -25,12 +36,14 @@ class GalleryImageAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
     def preview_title(self, obj):
+        """Show the display title for the image."""
         return obj.title or obj.image.name
 
     preview_title.short_description = "Title"
 
     @admin.action(description="Approve selected images")
     def approve_images(self, request, queryset):
+        """Approve selected gallery images."""
         featured_ids = list(
             queryset.filter(is_featured=True).values_list("pk", flat=True)
         )
@@ -43,6 +56,7 @@ class GalleryImageAdmin(admin.ModelAdmin):
 
     @admin.action(description="Reject selected images")
     def reject_images(self, request, queryset):
+        """Reject selected gallery images."""
         image_ids = list(queryset.values_list("pk", flat=True))
         updated = queryset.update(
             status=GalleryImage.Status.REJECTED, is_featured=False)
@@ -53,6 +67,7 @@ class GalleryImageAdmin(admin.ModelAdmin):
 
     @admin.action(description="Toggle featured state")
     def toggle_featured(self, request, queryset):
+        """Toggle the featured status for images."""
         toggled = 0
         for image in queryset:
             image.is_featured = not image.is_featured
@@ -70,6 +85,7 @@ class GalleryImageAdmin(admin.ModelAdmin):
             request, f"Toggled featured flag for {toggled} image(s).")
 
     def save_model(self, request, obj, form, change):
+        """Ensure featured metadata stays in sync."""
         if obj.is_featured and obj.status != GalleryImage.Status.APPROVED:
             obj.status = GalleryImage.Status.APPROVED
         if obj.is_featured:
