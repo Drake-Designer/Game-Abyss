@@ -334,27 +334,6 @@ hr {
   transform: translateY(-1px);
 }
 
-.comp-card__image-wrap {
-  background-color: var(--color-surface);
-  border-radius: var(--radius) var(--radius) 0 0;
-  overflow: hidden;
-  position: relative;
-  aspect-ratio: 16 / 9;
-}
-
-@supports not (aspect-ratio: 16 / 9) {
-  .comp-card__image-wrap {
-    padding-top: 56.25%;
-  }
-
-  .comp-card__image {
-    height: 100%;
-    inset: 0;
-    position: absolute;
-    width: 100%;
-  }
-}
-
 .comp-card__image {
   border: 0;
   display: block;
@@ -970,12 +949,6 @@ select::-ms-expand {
   margin-top: 1rem;
 }
 
-.page-post-detail__image {
-  display: block;
-  height: auto;
-  max-width: 100%;
-}
-
 .page-post-detail__comments-title {
   color: var(--color-secondary);
   font-family: var(--font-headings);
@@ -1334,122 +1307,5 @@ select::-ms-expand {
 
   50% {
     transform: translateY(-3px) scale(1.1);
-  }
-}
-
-/* ============================================================
-   MEDIA QUERIES
-   ============================================================ */
-
-/* Phones */
-@media (width <= 576px) {
-  .page-home-hero__image {
-    border-radius: var(--hero-radius);
-    max-height: 250px;
-  }
-
-  .page-error-404,
-  .page-error-500 {
-    min-height: 60vh;
-    padding: 1rem;
-  }
-
-  .comp-navbar__link {
-    border-radius: calc(var(--radius) / 1.5);
-    margin: 0.15rem 0.5rem;
-  }
-
-  .comp-navbar__link:active {
-    background-color: rgb(255 107 53 / 12%);
-  }
-
-  .comp-music-toggle {
-    font-size: 1rem;
-    height: 42px;
-    width: 42px;
-  }
-
-  .page-new-post__actions {
-    grid-template-columns: 1fr;
-  }
-
-  /* Gallery images height on small screens */
-  .page-gallery-list .comp-gallery-card__image {
-    height: 200px;
-  }
-}
-
-/* Collapsed navbar & medium screens */
-@media (width <= 991.98px) {
-  .comp-music-toggle {
-    font-size: 1.1rem;
-    height: 45px;
-    width: 45px;
-  }
-
-  .comp-navbar__collapse {
-    background: linear-gradient(90deg, var(--color-surface) 0%, #0f0f18 100%);
-    border-top: 1px solid rgb(255 107 53 / 20%);
-    margin-top: 0.25rem;
-    padding: 0.5rem 0;
-  }
-
-  .comp-navbar__action {
-    padding: 0.25rem 0.5rem;
-  }
-
-  .comp-navbar__btn {
-    border-width: 2px;
-    display: inline-flex;
-    inline-size: clamp(180px, 60vw, 240px);
-    justify-content: center;
-    margin-inline: auto;
-  }
-
-  .comp-navbar__action + .comp-navbar__action .comp-navbar__btn {
-    margin-top: 0.4rem;
-  }
-
-  /* Gallery images height on medium screens */
-  .page-gallery-list .comp-gallery-card__image {
-    height: 220px;
-  }
-}
-
-/* Tablets and up */
-@media (width >= 768px) {
-  .page-home-hero__image {
-    border-radius: var(--hero-radius);
-    max-height: 350px;
-  }
-
-  .page-error-404,
-  .page-error-500 {
-    min-height: 70vh;
-  }
-}
-
-/* Desktops */
-@media (width >= 992px) {
-  .page-home-hero__image {
-    border-radius: var(--hero-radius);
-    max-height: 400px;
-  }
-
-  .comp-navbar__toggler {
-    display: none;
-  }
-}
-
-/* Cloudinary aspect ratio overrides */
-@media (width <= 991.98px) {
-  .comp-card__image-wrap {
-    aspect-ratio: 4 / 3;
-  }
-
-  @supports not (aspect-ratio: 16 / 9) {
-    .comp-card__image-wrap {
-      padding-top: 75%;
-    }
   }
 }
