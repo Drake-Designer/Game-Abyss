@@ -1026,6 +1026,37 @@ select::-ms-expand {
   margin-top: 0.75rem;
 }
 
+/* ============================================================
+   BLOG – EDIT POST PAGE
+   ============================================================ */
+
+.page-blog-edit-post__actions {
+  align-items: stretch;
+}
+
+.page-blog-edit-post__actions .comp-button {
+  width: 100%;
+}
+
+.page-blog-edit-post__actions-right {
+  width: 100%;
+}
+
+@media (width >= 768px) {
+  .page-blog-edit-post__actions {
+    align-items: center;
+  }
+
+  .page-blog-edit-post__actions .comp-button {
+    width: auto;
+  }
+
+  .page-blog-edit-post__actions-right {
+    justify-content: flex-end;
+    width: auto;
+  }
+}
+
 /* Contact & About */
 .page-contact .comp-card__title,
 .page-about .comp-card__title {
