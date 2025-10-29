@@ -379,6 +379,70 @@ hr {
   pointer-events: none;
 }
 
+/* ------------------------------------------------------------
+   Home page posts sections
+   ------------------------------------------------------------ */
+.page-home-posts {
+  position: relative;
+  padding: 0.5rem 0 0;
+}
+
+.page-home-posts::after {
+  background: linear-gradient(135deg, rgb(10 10 15 / 65%), rgb(26 26 36 / 80%));
+  border-radius: var(--radius);
+  content: '';
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+}
+
+/* stato loading come modifier BEM, non .is-loading */
+.page-home-posts--loading::after {
+  opacity: 0.65;
+}
+
+.page-home-posts__spinner {
+  align-items: center;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 0.2s ease;
+  z-index: 2;
+}
+
+.page-home-posts--loading .page-home-posts__spinner {
+  opacity: 1;
+}
+
+/* niente .spinner-border: usa una tua classe */
+.page-home-posts__spinner-border {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-width: 0.35rem;
+}
+
+.page-home-posts__list {
+  position: relative;
+}
+
+.page-home-posts__pagination {
+  position: relative;
+  z-index: 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-home-posts::after,
+  .page-home-posts__spinner {
+    transition: none;
+  }
+}
+
 /* Cards */
 .comp-card {
   background-color: var(--color-surface);

@@ -1,6 +1,6 @@
-/**
- * Game Abyss - Background Music Player
- */
+/* ============================================================
+   *** SCRIPT: Game Abyss - Background Music Player ***
+   ============================================================ */
 ;(function () {
   'use strict'
 

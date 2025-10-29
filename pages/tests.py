@@ -116,7 +116,9 @@ class HomeViewTests(TestCase):
         )
 
         response = self.client.get(reverse("pages:home"))
-        featured_posts = list(response.context["featured_posts"])
+        featured_posts = list(
+            response.context["featured_posts_page"].object_list
+        )
 
         expected_order = [
             newer.title,
@@ -165,3 +167,50 @@ class HomeViewTests(TestCase):
         """Home should render a placeholder when there are no featured posts."""
         response = self.client.get(reverse("pages:home"))
         self.assertContains(response, "Coming Soon")
+
+
+def test_home_posts_partial_requires_ajax_header(self):
+    """The partial endpoint should reject non-AJAX requests."""
+
+    response = self.client.get(
+        reverse("pages:home_posts_partial"),
+        {"section": "featured", "page": 1},
+    )
+
+    self.assertEqual(response.status_code, 400)
+
+
+def test_home_posts_partial_renders_featured_posts(self):
+    """Featured partial should include the featured post titles in the payload."""
+
+    featured_post = self._create_post(title="Partial Featured")
+
+    response = self.client.get(
+        reverse("pages:home_posts_partial"),
+        {"section": "featured", "page": 1},
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    self.assertEqual(response.status_code, 200)
+    payload = response.json()
+    self.assertIn("posts_html", payload)
+    self.assertIn(featured_post.title, payload["posts_html"])
+    self.assertEqual(payload["page"], 1)
+
+
+def test_home_posts_partial_renders_latest_posts(self):
+    """Latest partial should include the latest post titles in the payload."""
+
+    latest_post = self._create_post(title="Partial Latest", featured=False)
+
+    response = self.client.get(
+        reverse("pages:home_posts_partial"),
+        {"section": "latest", "page": 1},
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    self.assertEqual(response.status_code, 200)
+    payload = response.json()
+    self.assertIn("posts_html", payload)
+    self.assertIn(latest_post.title, payload["posts_html"])
+    self.assertEqual(payload["page"], 1)

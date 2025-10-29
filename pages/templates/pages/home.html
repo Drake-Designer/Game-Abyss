@@ -97,28 +97,35 @@
   <section id="featured-posts" class="py-5">
     <div class="row mb-4">
       <div class="col">
-        <h2 class="text-center mb-4">
+        <h2 id="featured-posts-title" class="text-center mb-4">
           <i class="fas fa-fire me-2 text-primary"></i>Featured Posts
         </h2>
       </div>
     </div>
-    <div class="row gy-4">
-      {% if featured_posts %}
-        {% for post in featured_posts %}
-          <div class="col-md-6 col-lg-4">{% include "shared/_post_card.html" with post=post %}</div>
-        {% endfor %}
-      {% else %}
-        <div class="col-md-6 col-lg-4 mx-auto">
-          <div class="comp-card">
-            <div class="comp-card__body text-center">
-              <h3 class="comp-card__title">
-                <i class="fas fa-hourglass-half me-2 text-secondary"></i> Coming Soon
-              </h3>
-              <p class="comp-card__text">New echoes from the abyss will rise here once posts are created.</p>
-            </div>
-          </div>
-        </div>
-      {% endif %}
+    <div class="page-home-posts"
+         role="region"
+         aria-labelledby="featured-posts-title"
+         tabindex="-1"
+         data-home-section="featured"
+         data-pagination-url="{% url 'pages:home_posts_partial' %}"
+         data-page-param="featured_page">
+      <div class="page-home-posts__spinner"
+           role="status"
+           aria-live="polite"
+           aria-hidden="true">
+        <div class="spinner-border page-home-posts__spinner-border text-primary"
+             role="presentation"></div>
+        <span class="visually-hidden">Loading featured posts…</span>
+      </div>
+      <div class="row gy-4 page-home-posts__list"
+           id="featured-posts-list"
+           data-posts-list
+           aria-live="polite">
+        {% include "pages/partials/_home_posts_list.html" with posts_page=featured_posts_page section="featured" %}
+      </div>
+      <div class="page-home-posts__pagination" data-pagination>
+        {% include "pages/partials/_home_posts_pagination.html" with posts_page=featured_posts_page section="featured" page_param="featured_page" anchor_id="featured-posts" list_id="featured-posts-list" %}
+      </div>
     </div>
   </section>
   <!-- ============================================================
@@ -127,64 +134,39 @@
   <section id="latest-posts" class="py-5">
     <div class="row mb-4">
       <div class="col">
-        <h2 class="text-center mb-4">
+        <h2 id="latest-posts-title" class="text-center mb-4">
           <i class="fas fa-scroll me-2 text-primary"></i>Latest Posts
         </h2>
       </div>
     </div>
-    <div class="row gy-4">
-      {% if latest_posts_page and latest_posts_page.object_list %}
-        {% for post in latest_posts_page %}
-          <div class="col-md-6 col-lg-4">{% include "shared/_post_card.html" with post=post %}</div>
-        {% endfor %}
-      {% else %}
-        <div class="col-md-6 col-lg-4 mx-auto">
-          <div class="comp-card">
-            <div class="comp-card__body text-center">
-              <h3 class="comp-card__title">
-                <i class="fas fa-ghost me-2 text-secondary"></i> No Posts Yet
-              </h3>
-              <p class="comp-card__text">Once new tales emerge from the abyss, they will appear here.</p>
-            </div>
-          </div>
-        </div>
-      {% endif %}
+    <div class="page-home-posts"
+         role="region"
+         aria-labelledby="latest-posts-title"
+         tabindex="-1"
+         data-home-section="latest"
+         data-pagination-url="{% url 'pages:home_posts_partial' %}"
+         data-page-param="latest_page">
+      <div class="page-home-posts__spinner"
+           role="status"
+           aria-live="polite"
+           aria-hidden="true">
+        <div class="spinner-border page-home-posts__spinner-border text-primary"
+             role="presentation"></div>
+        <span class="visually-hidden">Loading latest posts…</span>
+      </div>
+      <div class="row gy-4 page-home-posts__list"
+           id="latest-posts-list"
+           data-posts-list
+           aria-live="polite">
+        {% include "pages/partials/_home_posts_list.html" with posts_page=latest_posts_page section="latest" %}
+      </div>
+      <div class="page-home-posts__pagination" data-pagination>
+        {% include "pages/partials/_home_posts_pagination.html" with posts_page=latest_posts_page section="latest" page_param="latest_page" anchor_id="latest-posts" list_id="latest-posts-list" %}
+      </div>
     </div>
-    {% if latest_posts_page and latest_posts_page.paginator.num_pages > 1 %}
-      <nav aria-label="Latest posts pagination" class="mt-4">
-        <div class="comp-pagination">
-          {% if latest_posts_page.has_previous %}
-            <a class="comp-pagination__control"
-               href="?page={{ latest_posts_page.previous_page_number }}"
-               aria-label="Go to previous page">Previous</a>
-          {% else %}
-            <span class="comp-pagination__control comp-pagination__control--disabled"
-                  aria-disabled="true">Previous</span>
-          {% endif %}
-          <div class="comp-pagination__pages"
-               role="group"
-               aria-label="Pagination buttons">
-            {% for page_number in latest_posts_page.paginator.page_range %}
-              {% if page_number == latest_posts_page.number %}
-                <span class="comp-pagination__page comp-pagination__page--active"
-                      aria-current="page">{{ page_number }}</span>
-              {% else %}
-                <a class="comp-pagination__page"
-                   href="?page={{ page_number }}"
-                   aria-label="Go to page {{ page_number }}">{{ page_number }}</a>
-              {% endif %}
-            {% endfor %}
-          </div>
-          {% if latest_posts_page.has_next %}
-            <a class="comp-pagination__control"
-               href="?page={{ latest_posts_page.next_page_number }}"
-               aria-label="Go to next page">Next</a>
-          {% else %}
-            <span class="comp-pagination__control comp-pagination__control--disabled"
-                  aria-disabled="true">Next</span>
-          {% endif %}
-        </div>
-      </nav>
-    {% endif %}
   </section>
 {% endblock content %}
+{% block extra_scripts %}
+  {{ block.super }}
+  <script src="{% static 'js/home-pagination.js' %}" defer></script>
+{% endblock extra_scripts %}

@@ -1,0 +1,27 @@
+<!-- ============================================================
+     *** PARTIAL: Home Posts List ***
+     ============================================================ -->
+{% load static %}
+{% if posts_page and posts_page.object_list %}
+  {% for post in posts_page %}
+    <div class="col-md-6 col-lg-4">{% include "shared/_post_card.html" with post=post %}</div>
+  {% endfor %}
+{% else %}
+  <div class="col-md-6 col-lg-4 mx-auto">
+    <div class="comp-card">
+      <div class="comp-card__body text-center">
+        {% if section == "featured" %}
+          <h3 class="comp-card__title">
+            <i class="fas fa-hourglass-half me-2 text-secondary"></i> Coming Soon
+          </h3>
+          <p class="comp-card__text">New echoes from the abyss will rise here once posts are created.</p>
+        {% else %}
+          <h3 class="comp-card__title">
+            <i class="fas fa-ghost me-2 text-secondary"></i> No Posts Yet
+          </h3>
+          <p class="comp-card__text">Once new tales emerge from the abyss, they will appear here.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endif %}

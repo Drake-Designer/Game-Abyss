@@ -1,0 +1,45 @@
+<!-- ============================================================
+     *** PARTIAL: Home Posts Pagination ***
+     ============================================================ -->
+{% if posts_page and posts_page.paginator.num_pages > 1 %}
+  <nav aria-label="{{ section|capfirst }} posts pagination" class="mt-4">
+    <div class="comp-pagination">
+      {% if posts_page.has_previous %}
+        <a class="comp-pagination__control"
+           href="?{{ page_param }}={{ posts_page.previous_page_number }}#{{ anchor_id }}"
+           data-pagination-link
+           aria-controls="{{ list_id }}"
+           aria-label="Go to previous page">Previous</a>
+      {% else %}
+        <span class="comp-pagination__control comp-pagination__control--disabled"
+              aria-disabled="true">Previous</span>
+      {% endif %}
+      <div class="comp-pagination__pages"
+           role="group"
+           aria-label="{{ section|capfirst }} pagination buttons">
+        {% for page_number in posts_page.paginator.page_range %}
+          {% if page_number == posts_page.number %}
+            <span class="comp-pagination__page comp-pagination__page--active"
+                  aria-current="page">{{ page_number }}</span>
+          {% else %}
+            <a class="comp-pagination__page"
+               href="?{{ page_param }}={{ page_number }}#{{ anchor_id }}"
+               data-pagination-link
+               aria-controls="{{ list_id }}"
+               aria-label="Go to page {{ page_number }}">{{ page_number }}</a>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% if posts_page.has_next %}
+        <a class="comp-pagination__control"
+           href="?{{ page_param }}={{ posts_page.next_page_number }}#{{ anchor_id }}"
+           data-pagination-link
+           aria-controls="{{ list_id }}"
+           aria-label="Go to next page">Next</a>
+      {% else %}
+        <span class="comp-pagination__control comp-pagination__control--disabled"
+              aria-disabled="true">Next</span>
+      {% endif %}
+    </div>
+  </nav>
+{% endif %}
