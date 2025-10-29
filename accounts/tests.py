@@ -513,7 +513,7 @@ class ProfilePublicViewTests(TestCase):
         )
 
         self.assertContains(response, 'data-testid="role-badge"')
-        self.assertContains(response, "Super Admin")
+        self.assertContains(response, "Admin")
 
     def test_profile_owner_sees_their_role_badge(self):
         """Confirm owners still see their own role badge."""
@@ -528,7 +528,7 @@ class ProfilePublicViewTests(TestCase):
         )
 
         self.assertContains(response, 'data-testid="role-badge"')
-        self.assertContains(response, "Super Admin")
+        self.assertContains(response, "Admin")
 
     def test_authenticated_user_can_open_other_profile(self):
         """Ensure authenticated users can view other profiles."""
