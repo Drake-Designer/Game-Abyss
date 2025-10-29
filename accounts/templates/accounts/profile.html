@@ -164,7 +164,8 @@
                   {% for post in posts_page %}
                     <li class="mb-3 border-bottom pb-2">
                       <div>
-                        <a class="fw-semibold" href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                        <a class="fw-semibold page-profile__approved-link"
+                           href="{{ post.get_absolute_url }}">{{ post.title }}</a>
                       </div>
                     </li>
                   {% endfor %}
@@ -183,7 +184,7 @@
                 <ul class="list-unstyled mb-0">
                   {% for comment in comments_page %}
                     <li class="mb-3 border-bottom pb-2">
-                      <a class="fw-semibold"
+                      <a class="fw-semibold page-profile__approved-link"
                          href="{{ comment.post.get_absolute_url }}#comment-{{ comment.id }}">
                         {{ comment.body|truncatewords:6 }}
                       </a>
