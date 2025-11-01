@@ -2,6 +2,8 @@
 # *** ACCOUNTS FORMS: ProfileForm ***
 # ============================================================
 
+"""Forms for editing user profiles and associated user fields."""
+
 from allauth.account.models import EmailAddress
 from django import forms
 from django.contrib.auth import get_user_model
@@ -39,9 +41,12 @@ class ProfileForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        # Bind current user and set initial values.
-        self.user = kwargs.pop("user")
+        """Initialize the form with the current user context."""
+        self.user = kwargs.pop("user", None)
+        if self.user is None:
+            raise ValueError("ProfileForm requires a 'user' keyword argument.")
         super().__init__(*args, **kwargs)
+
         self.fields["first_name"].initial = self.user.first_name
         self.fields["last_name"].initial = self.user.last_name
         self.fields["email"].initial = self.user.email
@@ -55,13 +60,14 @@ class ProfileForm(forms.ModelForm):
         return str(email).strip().lower() if email else ""
 
     def clean_email(self):
-        """Ensure email is unique across User and EmailAddress tables."""
+        """Ensure the email is unique across User and EmailAddress tables."""
         email = self.cleaned_data.get("email")
         if not email:
             return ""
         email = self._normalize_email(email)
-        User = get_user_model()
-        if User.objects.filter(email__iexact=email).exclude(pk=self.user.pk).exists():
+        user_model = get_user_model()
+
+        if user_model.objects.filter(email__iexact=email).exclude(pk=self.user.pk).exists():
             raise forms.ValidationError(
                 "This email address is already in use.")
         if EmailAddress.objects.filter(email__iexact=email).exclude(user=self.user).exists():
@@ -77,15 +83,16 @@ class ProfileForm(forms.ModelForm):
         """Strip leading and trailing spaces from favorite_genres field."""
         return self.cleaned_data.get("favorite_genres", "").strip()
 
-    def save(self, commit=True):
+    def save(self, commit: bool = True):
         """
-        Save profile and sync linked User fields (first_name, last_name, email).
+        Save profile and synchronize linked User fields
+        (first_name, last_name, email).
         """
         profile: UserProfile = super().save(commit=False)
         profile.user = self.user
 
-        User = get_user_model()
-        if isinstance(self.user, User):
+        user_model = get_user_model()
+        if isinstance(self.user, user_model):
             # Sync user first and last name.
             self.user.first_name = self.cleaned_data.get(
                 "first_name", "") or ""
@@ -96,6 +103,7 @@ class ProfileForm(forms.ModelForm):
             new_email = self.cleaned_data.get("email", "") or ""
             self.new_email = self._normalize_email(new_email)
             self.email_changed = self.new_email != self._initial_email
+
             if self.email_changed:
                 self.user.email = self.new_email
                 update_fields.append("email")
@@ -105,4 +113,5 @@ class ProfileForm(forms.ModelForm):
 
         if commit:
             profile.save()
+
         return profile

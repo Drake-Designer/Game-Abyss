@@ -48,6 +48,9 @@ class GalleryUploadView(LoginRequiredMixin, CreateView):
     template_name = "gallery/upload.html"
     success_url = reverse_lazy("gallery:list")
 
+    # Pre-dichiariamo l'attributo per Pylint
+    object = None  # type: GalleryImage | None
+
     def form_valid(self, form):
         """Handle saving of uploaded images with moderation logic."""
         gallery_image = form.save(commit=False)

@@ -4,6 +4,8 @@
 
 """
 URL configuration for the accounts app.
+Defines all routes for user profiles, authentication helpers,
+and staff moderation dashboards.
 """
 
 from django.urls import path
@@ -11,30 +13,23 @@ from . import views
 
 app_name = "accounts"
 
-# ============================================================
-# Public and user account views
-# ============================================================
 urlpatterns = [
-    # Redirect logged-in user to their own profile
+    # ========================================================
+    # User profile management
+    # ========================================================
     path("profile/", views.my_profile_redirect, name="my_profile"),
-
-    # Edit profile details
     path("profile/edit/", views.profile_edit, name="profile_edit"),
-
-    # Delete user profile + cascade delete posts and comments
     path("profile/delete/", views.profile_delete, name="profile_delete"),
-
-    # Password change (requires verified email)
-    path("password/change/", views.VerifiedEmailPasswordChangeView.as_view(),
-         name="account_change_password"),
+    path(
+        "password/change/",
+        views.VerifiedEmailPasswordChangeView.as_view(),
+        name="account_change_password",
+    ),
 
     # ========================================================
-    # Staff dashboards and tools
+    # Staff dashboards and moderation tools
     # ========================================================
-    # Staff dashboard
     path("staff/", views.staff_dashboard, name="staff_dashboard"),
-
-    # Staff tooling
     path("staff/moderation/posts/", views.staff_pending_posts,
          name="staff_pending_posts"),
     path("staff/moderation/comments/", views.staff_pending_comments,
@@ -52,6 +47,5 @@ urlpatterns = [
     # ========================================================
     # Public profile routes
     # ========================================================
-    # Public profile by username (canonical /u/<username>/ URL)
     path("u/<str:username>/", views.profile, name="profile"),
 ]

@@ -6,11 +6,10 @@ from django.apps import AppConfig
 
 
 class AccountsConfig(AppConfig):
-    # Default primary key field type.
+    """Configuration class for the Accounts app."""
     default_auto_field = "django.db.models.BigAutoField"
-    # App name reference.
     name = "accounts"
 
-    def ready(self) -> None:  # pragma: no cover - signal registration
-        # Import signals to ensure they are registered when the app is ready.
-        from . import signals  # noqa: F401
+    def ready(self) -> None:  # pragma: no cover
+        """Import signals when the app is ready."""
+        from . import signals  # pylint: disable=import-outside-toplevel, unused-import

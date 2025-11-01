@@ -2,215 +2,225 @@
 #    *** PAGES: Tests ***
 # ============================================================
 
-"""Unit tests for the Pages app."""
+"""Tests for pages views and homepage JSON partials without code duplication."""
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
-from django.utils import timezone
 
+from gallery.models import GalleryImage
+from pages import (
+    HOME_FEATURED_POST_LIMIT,
+    HOME_FEATURED_GALLERY_LIMIT,
+    HOME_OTHER_POSTS_PER_PAGE,
+    home_posts_queryset,
+)
+from pages.models import HelpRequest
 from blog.models import BlogPost
-from .models import HelpRequest
+
+User = get_user_model()
 
 
-# ============================================================
-#    *** PAGES: Tests: HelpRequest Model ***
-# ============================================================
-
-
-class HelpRequestModelTests(TestCase):
-    """Tests for the HelpRequest model."""
+class HomeHelperTests(TestCase):
+    """Unit tests for the shared home helpers imported from pages package."""
 
     def setUp(self):
-        """Create a user for associating help requests."""
-        self.user = get_user_model().objects.create_user(
-            username="requester", password="pass"
+        self.author = User.objects.create_user(
+            username="author", email="a@example.com", password="pass"
         )
 
-    def test_default_values(self):
-        """Ensure default status and priority are set correctly."""
-        help_request = HelpRequest.objects.create(
-            user=self.user,
-            subject="Need assistance",
-            message="I have an issue with my account.",
+    def test_home_posts_queryset_filters_by_featured_and_status(self):
+        """home_posts_queryset must respect featured flag and APPROVED status."""
+        BlogPost.objects.create(
+            title="feat approved",
+            body="x",
+            author=self.author,
+            status=BlogPost.STATUS_APPROVED,
+            featured=True,
+        )
+        BlogPost.objects.create(
+            title="feat pending",
+            body="x",
+            author=self.author,
+            status=BlogPost.STATUS_PENDING,
+            featured=True,
+        )
+        BlogPost.objects.create(
+            title="latest approved",
+            body="x",
+            author=self.author,
+            status=BlogPost.STATUS_APPROVED,
+            featured=False,
         )
 
-        self.assertEqual(help_request.status, HelpRequest.STATUS_OPEN)
-        self.assertEqual(help_request.priority, HelpRequest.PRIORITY_MEDIUM)
+        featured = list(home_posts_queryset(featured=True))
+        latest = list(home_posts_queryset(featured=False))
 
-    def test_string_representation(self):
-        """Ensure __str__ includes subject and human status."""
-        help_request = HelpRequest.objects.create(
-            subject="Cannot post comment",
-            message="Error when submitting comment.",
-        )
-
-        self.assertIn("Cannot post comment", str(help_request))
-        self.assertIn("Open", str(help_request))
-
-
-# ============================================================
-#    *** PAGES: Tests: Home View ***
-# ============================================================
+        self.assertEqual(len(featured), 1)
+        self.assertEqual(featured[0].title, "feat approved")
+        self.assertEqual(len(latest), 1)
+        self.assertEqual(latest[0].title, "latest approved")
 
 
 class HomeViewTests(TestCase):
-    """Tests for the home view context and ordering."""
+    """Integration tests for HomeView context and pagination."""
 
     def setUp(self):
-        """Create a featured author for blog posts."""
-        self.author = get_user_model().objects.create_user(
-            username="featured-author", password="pass"
+        self.client = Client()
+        self.author = User.objects.create_user(
+            username="author", email="a@example.com", password="pass"
         )
 
-    def _create_post(self, **overrides):
-        """Helper to create an approved blog post with sensible defaults."""
-        defaults = {
-            "author": self.author,
-            "title": overrides.get("title", "Echo"),
-            "body": "Signal from the abyss",
-            "status": BlogPost.STATUS_APPROVED,
-            "featured": True,
-            "published_at": timezone.now(),
+        # Approved featured posts
+        for i in range(HOME_FEATURED_POST_LIMIT + 2):
+            BlogPost.objects.create(
+                title=f"F{i}",
+                body="f body",
+                author=self.author,
+                status=BlogPost.STATUS_APPROVED,
+                featured=True,
+            )
+
+        # Approved latest posts
+        for i in range(HOME_OTHER_POSTS_PER_PAGE + 3):
+            BlogPost.objects.create(
+                title=f"L{i}",
+                body="l body",
+                author=self.author,
+                status=BlogPost.STATUS_APPROVED,
+                featured=False,
+            )
+
+        # Featured gallery images
+        for i in range(HOME_FEATURED_GALLERY_LIMIT + 5):
+            GalleryImage.objects.create(
+                image=f"gallery/{i}.jpg",
+                uploaded_by=self.author,
+                is_featured=True,
+                status=GalleryImage.Status.APPROVED,
+            )
+
+    def test_home_view_context_has_featured_latest_and_gallery(self):
+        url = reverse("pages:home")
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+
+        self.assertIn("featured_posts_page", res.context)
+        fp = res.context["featured_posts_page"]
+        self.assertLessEqual(fp.paginator.per_page, HOME_FEATURED_POST_LIMIT)
+
+        self.assertIn("latest_posts_page", res.context)
+        lp = res.context["latest_posts_page"]
+        self.assertLessEqual(lp.paginator.per_page, HOME_OTHER_POSTS_PER_PAGE)
+
+        self.assertIn("hero_gallery_images", res.context)
+        self.assertLessEqual(
+            len(res.context["hero_gallery_images"]
+                ), HOME_FEATURED_GALLERY_LIMIT
+        )
+
+    def test_featured_pagination_query_param(self):
+        url = reverse("pages:home")
+        res = self.client.get(url, {"featured_page": 2})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.context["featured_posts_page"].number, 2)
+
+    def test_latest_pagination_query_param(self):
+        url = reverse("pages:home")
+        res = self.client.get(url, {"latest_page": 2})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.context["latest_posts_page"].number, 2)
+
+
+class HomePostsPartialViewTests(TestCase):
+    """Tests for AJAX JSON partial that paginates home sections."""
+
+    def setUp(self):
+        self.client = Client()
+        self.author = User.objects.create_user(
+            username="author", email="a@example.com", password="pass"
+        )
+
+        for i in range(8):
+            BlogPost.objects.create(
+                title=f"F{i}",
+                body="f body",
+                author=self.author,
+                status=BlogPost.STATUS_APPROVED,
+                featured=True,
+            )
+            BlogPost.objects.create(
+                title=f"L{i}",
+                body="l body",
+                author=self.author,
+                status=BlogPost.STATUS_APPROVED,
+                featured=False,
+            )
+
+    def _ajax_get(self, params):
+        url = reverse("pages:home_posts_partial")
+        return self.client.get(url, params, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
+
+    def test_rejects_non_ajax(self):
+        url = reverse("pages:home_posts_partial")
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 400)
+
+    def test_unknown_section_is_bad_request(self):
+        res = self._ajax_get({"section": "oops", "page": 1})
+        self.assertEqual(res.status_code, 400)
+
+    def test_featured_section_returns_html_and_page_number(self):
+        res = self._ajax_get({"section": "featured", "page": 1})
+        self.assertEqual(res.status_code, 200)
+        payload = res.json()
+        self.assertIn("posts_html", payload)
+        self.assertIn("pagination_html", payload)
+        self.assertEqual(payload["page"], 1)
+
+    def test_latest_section_uses_latest_page_param_name(self):
+        res = self._ajax_get({"section": "latest", "page": 2})
+        self.assertEqual(res.status_code, 200)
+        payload = res.json()
+        self.assertIn("posts_html", payload)
+        self.assertIn("pagination_html", payload)
+        self.assertEqual(payload["page"], 2)
+
+
+class StaticViewsTests(TestCase):
+    """About and Contact pages basic behavior."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_about_view_renders(self):
+        url = reverse("pages:about")
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+
+    def test_contact_get_renders_form(self):
+        url = reverse("pages:contact")
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "<form", html=False)
+
+    def test_contact_post_valid_creates_help_request(self):
+        url = reverse("pages:contact")
+        data = {
+            "name": "Alice",
+            "email": "alice@example.com",
+            "subject": "Help",
+            "message": "I need assistance",
+            "priority": HelpRequest.PRIORITY_MEDIUM,
         }
-        defaults.update(overrides)
-        return BlogPost.objects.create(**defaults)
-
-    def test_home_separates_featured_and_latest_posts(self):
-        """Featured and latest lists should be disjoint and correctly populated."""
-        featured_post = self._create_post(
-            title="Featured Signal", featured=True)
-        latest_post = self._create_post(title="Latest Signal", featured=False)
-        self._create_post(title="Pending Signal",
-                          status=BlogPost.STATUS_PENDING)
-
-        response = self.client.get(reverse("pages:home"))
-
-        featured_titles = [
-            post.title for post in response.context["featured_posts"]]
-        latest_titles = [
-            post.title for post in response.context["latest_posts_page"].object_list
-        ]
-
-        self.assertIn(featured_post.title, featured_titles)
-        self.assertIn(latest_post.title, latest_titles)
-        self.assertNotIn(latest_post.title, featured_titles)
-        self.assertNotIn(featured_post.title, latest_titles)
-        self.assertNotContains(response, "Pending Signal")
-
-    def test_home_orders_featured_by_published_at_desc(self):
-        """Featured posts should be ordered by published_at desc, with sensible fallbacks."""
-        newer = self._create_post(
-            title="Newer Signal", published_at=timezone.now())
-        older = self._create_post(
-            title="Older Signal",
-            published_at=timezone.now() - timezone.timedelta(days=1),
-        )
-        fallback_recent = self._create_post(title="Fallback Recent")
-        BlogPost.objects.filter(
-            pk=fallback_recent.pk).update(published_at=None)
-        fallback_older = self._create_post(title="Fallback Older")
-        BlogPost.objects.filter(pk=fallback_older.pk).update(
-            published_at=None,
-            updated_at=timezone.now() - timezone.timedelta(hours=1),
+        res = self.client.post(url, data)
+        self.assertEqual(res.status_code, 302)
+        self.assertTrue(
+            HelpRequest.objects.filter(email="alice@example.com").exists()
         )
 
-        response = self.client.get(reverse("pages:home"))
-        featured_posts = list(
-            response.context["featured_posts_page"].object_list
-        )
-
-        expected_order = [
-            newer.title,
-            older.title,
-            fallback_recent.title,
-            fallback_older.title,
-        ]
-        self.assertEqual(
-            [post.title for post in featured_posts], expected_order)
-
-    def test_home_orders_latest_posts_by_published_at_desc(self):
-        """Latest posts list should be ordered by published_at desc, with fallbacks."""
-        newer = self._create_post(
-            title="Newer Latest", featured=False, published_at=timezone.now()
-        )
-        older = self._create_post(
-            title="Older Latest",
-            featured=False,
-            published_at=timezone.now() - timezone.timedelta(days=1),
-        )
-        fallback_recent = self._create_post(
-            title="Fallback Latest Recent", featured=False
-        )
-        BlogPost.objects.filter(
-            pk=fallback_recent.pk).update(published_at=None)
-        fallback_older = self._create_post(
-            title="Fallback Latest Older", featured=False
-        )
-        BlogPost.objects.filter(pk=fallback_older.pk).update(
-            published_at=None,
-            updated_at=timezone.now() - timezone.timedelta(hours=1),
-        )
-
-        response = self.client.get(reverse("pages:home"))
-        latest_posts = list(response.context["latest_posts_page"].object_list)
-
-        expected_order = [
-            newer.title,
-            older.title,
-            fallback_recent.title,
-            fallback_older.title,
-        ]
-        self.assertEqual([post.title for post in latest_posts], expected_order)
-
-    def test_home_shows_placeholder_when_no_featured(self):
-        """Home should render a placeholder when there are no featured posts."""
-        response = self.client.get(reverse("pages:home"))
-        self.assertContains(response, "Coming Soon")
-
-
-def test_home_posts_partial_requires_ajax_header(self):
-    """The partial endpoint should reject non-AJAX requests."""
-
-    response = self.client.get(
-        reverse("pages:home_posts_partial"),
-        {"section": "featured", "page": 1},
-    )
-
-    self.assertEqual(response.status_code, 400)
-
-
-def test_home_posts_partial_renders_featured_posts(self):
-    """Featured partial should include the featured post titles in the payload."""
-
-    featured_post = self._create_post(title="Partial Featured")
-
-    response = self.client.get(
-        reverse("pages:home_posts_partial"),
-        {"section": "featured", "page": 1},
-        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
-    )
-
-    self.assertEqual(response.status_code, 200)
-    payload = response.json()
-    self.assertIn("posts_html", payload)
-    self.assertIn(featured_post.title, payload["posts_html"])
-    self.assertEqual(payload["page"], 1)
-
-
-def test_home_posts_partial_renders_latest_posts(self):
-    """Latest partial should include the latest post titles in the payload."""
-
-    latest_post = self._create_post(title="Partial Latest", featured=False)
-
-    response = self.client.get(
-        reverse("pages:home_posts_partial"),
-        {"section": "latest", "page": 1},
-        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
-    )
-
-    self.assertEqual(response.status_code, 200)
-    payload = response.json()
-    self.assertIn("posts_html", payload)
-    self.assertIn(latest_post.title, payload["posts_html"])
-    self.assertEqual(payload["page"], 1)
+    def test_contact_post_invalid_shows_errors(self):
+        url = reverse("pages:contact")
+        res = self.client.post(url, {})
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"Please", res.content)

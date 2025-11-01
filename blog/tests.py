@@ -2,6 +2,7 @@
 #    *** BLOG: Tests ***
 #    ============================================================ */
 """Exercise blog app behavior."""
+# pylint: disable=too-many-lines
 
 # /* ============================================================
 #    *** BLOG: Tests: Imports ***
@@ -19,8 +20,6 @@ from .models import BlogPost, Comment, CommentReport, PostReaction, ReactionType
 # /* ============================================================
 #    *** BLOG: Tests: Helpers ***
 #    ============================================================ */
-
-
 def verify_users(*users):
     """Mark provided users as verified."""
     for user in users:
@@ -33,19 +32,18 @@ def verify_users(*users):
             defaults={"verified": True, "primary": True},
         )
 
+
 # /* ============================================================
 #    *** BLOG: Tests: Blog Post Model Tests ***
 #    ============================================================ */
-
-
 class BlogPostModelTests(TestCase):
     """Verify blog post model helpers."""
 
     def setUp(self):
         """Create a test author."""
-        self.user = get_user_model().objects.create_user(
-            username="author", password="pass"
-        )
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
+            username="author", password="pass")
 
     def test_slug_unique_for_same_day_pending(self):
         """Ensure pending posts with same title get unique slugs."""
@@ -53,13 +51,11 @@ class BlogPostModelTests(TestCase):
             author=self.user,
             title="My Duplicate Title",
             body="content",
-            # status defaults to PENDING
         )
         second = BlogPost.objects.create(
             author=self.user,
             title="My Duplicate Title",
             body="another content",
-            # status defaults to PENDING
         )
 
         self.assertNotEqual(first.slug, "")
@@ -96,35 +92,28 @@ class BlogPostModelTests(TestCase):
             body="body",
             status=BlogPost.STATUS_PENDING,
         )
-        # Initially pending -> no published_at
         self.assertIsNone(post.published_at)
 
-        # Approve -> published_at set automatically
         post.status = BlogPost.STATUS_APPROVED
         post.save()
         self.assertIsNotNone(post.published_at)
 
-        # Back to pending -> published_at cleared
         post.status = BlogPost.STATUS_PENDING
         post.save()
         self.assertIsNone(post.published_at)
 
-        # Approve again -> published_at set again
         post.status = BlogPost.STATUS_APPROVED
         post.save()
         self.assertIsNotNone(post.published_at)
 
-        # Draft -> published_at cleared
         post.status = BlogPost.STATUS_DRAFT
         post.save()
         self.assertIsNone(post.published_at)
 
-        # Approve again -> published_at set again
         post.status = BlogPost.STATUS_APPROVED
         post.save()
         self.assertIsNotNone(post.published_at)
 
-        # Reject -> published_at cleared
         post.status = BlogPost.STATUS_REJECTED
         post.save()
         self.assertIsNone(post.published_at)
@@ -133,26 +122,24 @@ class BlogPostModelTests(TestCase):
 # /* ============================================================
 #    *** BLOG: Tests: Draft Workflow View Tests ***
 #    ============================================================ */
-
-
 class DraftWorkflowViewTests(TestCase):
     """Verify draft workflow views."""
 
     def setUp(self):
         """Create users for draft workflow scenarios."""
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username="drafty",
             email="drafty@example.com",
             password="pass",
         )
-        self.staff = User.objects.create_user(
+        self.staff = user_model.objects.create_user(
             username="draft_staff",
             email="draft-staff@example.com",
             password="pass",
             is_staff=True,
         )
-        self.other = User.objects.create_user(
+        self.other = user_model.objects.create_user(
             username="lurker",
             email="lurker@example.com",
             password="pass",
@@ -174,9 +161,8 @@ class DraftWorkflowViewTests(TestCase):
         )
         post = BlogPost.objects.get(title="Draft Title")
         self.assertEqual(post.status, BlogPost.STATUS_DRAFT)
-        self.assertRedirects(
-            response, reverse("blog:edit_post", args=[post.pk])
-        )
+        self.assertRedirects(response, reverse(
+            "blog:edit_post", args=[post.pk]))
 
     def test_new_post_publish_sets_pending_for_regular_user(self):
         """Ensure publishing sets pending for regular users."""
@@ -222,7 +208,6 @@ class DraftWorkflowViewTests(TestCase):
         )
         detail_url = post.get_absolute_url()
 
-        # Author can view their draft
         self.client.force_login(self.user)
         response = self.client.get(detail_url)
         self.assertEqual(response.status_code, 200)
@@ -232,13 +217,11 @@ class DraftWorkflowViewTests(TestCase):
         self.assertNotContains(response, "Submit Comment")
         self.client.logout()
 
-        # Other regular users cannot see the draft
         self.client.force_login(self.other)
         response = self.client.get(detail_url)
         self.assertEqual(response.status_code, 404)
         self.client.logout()
 
-        # Staff can view the draft
         self.client.force_login(self.staff)
         response = self.client.get(detail_url)
         self.assertEqual(response.status_code, 200)
@@ -295,19 +278,18 @@ class DraftWorkflowViewTests(TestCase):
         self.assertIn("author", form.fields)
         self.assertContains(response, 'id="id_author"')
 
+
 # /* ============================================================
 #    *** BLOG: Tests: Comment Model Tests ***
 #    ============================================================ */
-
-
 class CommentModelTests(TestCase):
     """Verify comment model behavior."""
 
     def setUp(self):
         """Create a user and base post."""
-        self.user = get_user_model().objects.create_user(
-            username="commenter", password="pass"
-        )
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
+            username="commenter", password="pass")
         self.post = BlogPost.objects.create(
             author=self.user,
             title="Test Post",
@@ -342,27 +324,25 @@ class CommentModelTests(TestCase):
         self.assertIn(approved, approved_comments)
         self.assertNotIn(pending, approved_comments)
 
+
 # /* ============================================================
 #    *** BLOG: Tests: Notification Email Tests ***
 #    ============================================================ */
-
-
 class NotificationEmailTests(TestCase):
     """Verify notification emails fire correctly."""
 
     def setUp(self):
         """Create users used for email notifications."""
-        User = get_user_model()
-        # Ensure there is at least one superuser with the target email
-        self.team = User.objects.create_superuser(
+        user_model = get_user_model()
+        self.team = user_model.objects.create_superuser(
             username="council",
             email="team.gameabyss@gmail.com",
             password="pass",
         )
-        self.author = User.objects.create_user(
+        self.author = user_model.objects.create_user(
             username="author", email="author@example.com", password="pass"
         )
-        self.commenter = User.objects.create_user(
+        self.commenter = user_model.objects.create_user(
             username="commenter", email="commenter@example.com", password="pass"
         )
         verify_users(self.team, self.author, self.commenter)
@@ -370,7 +350,6 @@ class NotificationEmailTests(TestCase):
     def test_post_creation_sends_notification_email(self):
         """Ensure creating a post sends a notification email."""
         mail.outbox = []
-        # Execute on_commit callbacks immediately inside tests
         with self.captureOnCommitCallbacks(execute=True):
             BlogPost.objects.create(
                 author=self.author,
@@ -429,24 +408,23 @@ class NotificationEmailTests(TestCase):
         self.assertIn("team.gameabyss@gmail.com", email.to)
         self.assertIn("Comment reported", email.subject)
 
+
 # /* ============================================================
 #    *** BLOG: Tests: Comment Report Flow Tests ***
 #    ============================================================ */
-
-
 class CommentReportFlowTests(TestCase):
     """Verify comment reporting flow."""
 
     def setUp(self):
         """Create staff, reporter, and author users."""
-        User = get_user_model()
-        self.staff = User.objects.create_user(
+        user_model = get_user_model()
+        self.staff = user_model.objects.create_user(
             username="staff", email="staff@example.com", password="pass", is_staff=True
         )
-        self.reporter = User.objects.create_user(
+        self.reporter = user_model.objects.create_user(
             username="reporter", email="reporter@example.com", password="pass"
         )
-        self.comment_author = User.objects.create_user(
+        self.comment_author = user_model.objects.create_user(
             username="comment_author", email="commenter@example.com", password="pass"
         )
         verify_users(self.staff, self.reporter, self.comment_author)
@@ -480,28 +458,26 @@ class CommentReportFlowTests(TestCase):
         self.assertEqual(CommentReport.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 1)
 
-        # Second attempt should not create a duplicate report or new email
         with self.captureOnCommitCallbacks(execute=True):
             response = self.client.post(report_url, payload)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(CommentReport.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 1)
 
+
 # /* ============================================================
 #    *** BLOG: Tests: Auto Approval Tests ***
 #    ============================================================ */
-
-
 class AutoApprovalTests(TestCase):
     """Verify auto approval rules for staff."""
 
     def setUp(self):
         """Create staff and superuser accounts."""
-        User = get_user_model()
-        self.staff = User.objects.create_user(
+        user_model = get_user_model()
+        self.staff = user_model.objects.create_user(
             username="staff", email="staff@example.com", password="pass", is_staff=True
         )
-        self.superuser = User.objects.create_superuser(
+        self.superuser = user_model.objects.create_superuser(
             username="overlord", email="overlord@example.com", password="pass"
         )
         verify_users(self.staff, self.superuser)
@@ -546,24 +522,23 @@ class AutoApprovalTests(TestCase):
         self.assertEqual(comment.status, Comment.STATUS_APPROVED)
         self.assertEqual(comment.author, self.superuser)
 
+
 # /* ============================================================
 #    *** BLOG: Tests: Comment Moderation UI Tests ***
 #    ============================================================ */
-
-
 class CommentModerationUITests(TestCase):
     """Verify moderation controls in the UI."""
 
     def setUp(self):
         """Create users and content for moderation tests."""
-        User = get_user_model()
-        self.staff = User.objects.create_user(
+        user_model = get_user_model()
+        self.staff = user_model.objects.create_user(
             username="staff", email="staff@example.com", password="pass", is_staff=True
         )
-        self.post_author = User.objects.create_user(
+        self.post_author = user_model.objects.create_user(
             username="poster", email="poster@example.com", password="pass"
         )
-        self.comment_author = User.objects.create_user(
+        self.comment_author = user_model.objects.create_user(
             username="commenter", email="commenter@example.com", password="pass"
         )
         verify_users(self.staff, self.post_author, self.comment_author)
@@ -595,24 +570,23 @@ class CommentModerationUITests(TestCase):
             reverse("blog:report_comment", args=[self.comment.pk]),
         )
 
+
 # /* ============================================================
 #    *** BLOG: Tests: Comment Deletion Permissions Tests ***
 #    ============================================================ */
-
-
 class CommentDeletionPermissionsTests(TestCase):
     """Verify deletion permissions for comments."""
 
     def setUp(self):
         """Create staff and user comments for deletion checks."""
-        User = get_user_model()
-        self.staff = User.objects.create_user(
+        user_model = get_user_model()
+        self.staff = user_model.objects.create_user(
             username="staff", email="staff@example.com", password="pass", is_staff=True
         )
-        self.user_one = User.objects.create_user(
+        self.user_one = user_model.objects.create_user(
             username="userone", email="userone@example.com", password="pass"
         )
-        self.user_two = User.objects.create_user(
+        self.user_two = user_model.objects.create_user(
             username="usertwo", email="usertwo@example.com", password="pass"
         )
         verify_users(self.staff, self.user_one, self.user_two)
@@ -642,7 +616,8 @@ class CommentDeletionPermissionsTests(TestCase):
         other_delete_url = reverse(
             "blog:delete_comment", args=[self.comment_two.pk])
         response = self.client.post(
-            other_delete_url, {"next": self.post.get_absolute_url()})
+            other_delete_url, {"next": self.post.get_absolute_url()}
+        )
         self.assertEqual(response.status_code, 403)
         self.assertTemplateUsed(response, "errors/403.html")
         self.assertTrue(Comment.objects.filter(
@@ -651,7 +626,8 @@ class CommentDeletionPermissionsTests(TestCase):
         own_delete_url = reverse("blog:delete_comment", args=[
                                  self.comment_one.pk])
         response = self.client.post(
-            own_delete_url, {"next": self.post.get_absolute_url()})
+            own_delete_url, {"next": self.post.get_absolute_url()}
+        )
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Comment.objects.filter(
             pk=self.comment_one.pk).exists())
@@ -661,32 +637,32 @@ class CommentDeletionPermissionsTests(TestCase):
         self.client.login(username="staff", password="pass")
         delete_url = reverse("blog:delete_comment", args=[self.comment_two.pk])
         response = self.client.post(
-            delete_url, {"next": self.post.get_absolute_url()})
+            delete_url, {"next": self.post.get_absolute_url()}
+        )
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Comment.objects.filter(
             pk=self.comment_two.pk).exists())
 
+
 # /* ============================================================
 #    *** BLOG: Tests: Post Deletion Tests ***
 #    ============================================================ */
-
-
 class PostDeletionTests(TestCase):
     """Verify deletion permissions for posts."""
 
     def setUp(self):
         """Create users and a post for deletion scenarios."""
-        User = get_user_model()
-        self.author = User.objects.create_user(
+        user_model = get_user_model()
+        self.author = user_model.objects.create_user(
             username="author", email="author@example.com", password="pass"
         )
-        self.regular = User.objects.create_user(
+        self.regular = user_model.objects.create_user(
             username="regular", email="regular@example.com", password="pass"
         )
-        self.staff = User.objects.create_user(
+        self.staff = user_model.objects.create_user(
             username="staff", email="staff@example.com", password="pass", is_staff=True
         )
-        self.superuser = User.objects.create_superuser(
+        self.superuser = user_model.objects.create_superuser(
             username="admin", email="admin@example.com", password="pass"
         )
         verify_users(self.author, self.regular, self.staff, self.superuser)
@@ -702,8 +678,7 @@ class PostDeletionTests(TestCase):
         """Ensure authors can delete their own posts."""
         self.client.login(username="author", password="pass")
         response = self.client.post(
-            reverse("blog:delete_post", args=[self.post.pk])
-        )
+            reverse("blog:delete_post", args=[self.post.pk]))
         self.assertRedirects(response, reverse("blog:index"))
         self.assertFalse(BlogPost.objects.filter(pk=self.post.pk).exists())
 
@@ -711,8 +686,7 @@ class PostDeletionTests(TestCase):
         """Ensure regular users cannot delete others' posts."""
         self.client.login(username="regular", password="pass")
         response = self.client.post(
-            reverse("blog:delete_post", args=[self.post.pk])
-        )
+            reverse("blog:delete_post", args=[self.post.pk]))
         self.assertEqual(response.status_code, 403)
         self.assertTemplateUsed(response, "errors/403.html")
         self.assertTrue(BlogPost.objects.filter(pk=self.post.pk).exists())
@@ -721,8 +695,7 @@ class PostDeletionTests(TestCase):
         """Ensure staff can delete any post."""
         self.client.login(username="staff", password="pass")
         response = self.client.post(
-            reverse("blog:delete_post", args=[self.post.pk])
-        )
+            reverse("blog:delete_post", args=[self.post.pk]))
         self.assertRedirects(response, reverse("blog:index"))
         self.assertFalse(BlogPost.objects.filter(pk=self.post.pk).exists())
 
@@ -749,27 +722,26 @@ class PostDeletionTests(TestCase):
                 else:
                     self.assertNotContains(response, delete_url)
 
+
 # /* ============================================================
 #    *** BLOG: Tests: Post and Comment Edit Permissions Tests ***
 #    ============================================================ */
-
-
 class PostCommentEditPermissionsTests(TestCase):
     """Verify edit permissions for posts and comments."""
 
     def setUp(self):
         """Create users, a post, and a comment for edit checks."""
-        User = get_user_model()
-        self.author = User.objects.create_user(
+        user_model = get_user_model()
+        self.author = user_model.objects.create_user(
             username="author", email="author@example.com", password="pass"
         )
-        self.other = User.objects.create_user(
+        self.other = user_model.objects.create_user(
             username="other", email="other@example.com", password="pass"
         )
-        self.staff = User.objects.create_user(
+        self.staff = user_model.objects.create_user(
             username="staff", email="staff@example.com", password="pass", is_staff=True
         )
-        self.superuser = User.objects.create_superuser(
+        self.superuser = user_model.objects.create_superuser(
             username="admin", email="admin@example.com", password="pass"
         )
         verify_users(self.author, self.other, self.staff, self.superuser)
@@ -814,16 +786,14 @@ class PostCommentEditPermissionsTests(TestCase):
         """Ensure staff cannot edit another user's post."""
         self.client.login(username="staff", password="pass")
         response = self.client.get(
-            reverse("blog:edit_post", args=[self.post.pk])
-        )
+            reverse("blog:edit_post", args=[self.post.pk]))
         self.assertEqual(response.status_code, 403)
 
     def test_superuser_cannot_edit_other_users_post(self):
         """Ensure superusers cannot edit another user's post."""
         self.client.login(username="admin", password="pass")
         response = self.client.get(
-            reverse("blog:edit_post", args=[self.post.pk])
-        )
+            reverse("blog:edit_post", args=[self.post.pk]))
         self.assertEqual(response.status_code, 403)
 
     def test_author_can_edit_own_comment(self):
@@ -838,7 +808,6 @@ class PostCommentEditPermissionsTests(TestCase):
         )
         self.assertRedirects(response, self.post.get_absolute_url())
         self.comment.refresh_from_db()
-        we = self.comment.body
         self.assertEqual(self.comment.body, "Updated comment body")
 
     def test_other_user_cannot_edit_comment(self):
@@ -852,21 +821,18 @@ class PostCommentEditPermissionsTests(TestCase):
         """Ensure staff cannot edit another user's comment."""
         self.client.login(username="staff", password="pass")
         response = self.client.get(
-            reverse("blog:edit_comment", args=[self.comment.pk])
-        )
+            reverse("blog:edit_comment", args=[self.comment.pk]))
         self.assertEqual(response.status_code, 403)
 
     def test_superuser_cannot_edit_other_users_comment(self):
         """Ensure superusers cannot edit another user's comment."""
         self.client.login(username="admin", password="pass")
         response = self.client.get(
-            reverse("blog:edit_comment", args=[self.comment.pk])
-        )
+            reverse("blog:edit_comment", args=[self.comment.pk]))
         self.assertEqual(response.status_code, 403)
 
     def test_staff_and_superuser_can_edit_their_own_posts_and_comments(self):
         """Ensure staff and superusers can edit their own content."""
-        # Staff edits own post
         staff_post = BlogPost.objects.create(
             author=self.staff,
             title="Staff Post",
@@ -888,7 +854,6 @@ class PostCommentEditPermissionsTests(TestCase):
         staff_post.refresh_from_db()
         self.assertEqual(staff_post.title, "Staff Updated")
 
-        # Superuser edits own comment
         super_post = BlogPost.objects.create(
             author=self.superuser,
             title="Super Post",
@@ -911,18 +876,17 @@ class PostCommentEditPermissionsTests(TestCase):
         super_comment.refresh_from_db()
         self.assertEqual(super_comment.body, "Super updated")
 
+
 # /* ============================================================
 #    *** BLOG: Tests: Content Creation Access Tests ***
 #    ============================================================ */
-
-
 class ContentCreationAccessTests(TestCase):
     """Verify access control for new post creation."""
 
     def setUp(self):
         """Create a verified user for access checks."""
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username="creator", email="creator@example.com", password="pass"
         )
         verify_users(self.user)
@@ -940,21 +904,20 @@ class ContentCreationAccessTests(TestCase):
         response = self.client.get(reverse("blog:new"))
         self.assertEqual(response.status_code, 200)
 
+
 # /* ============================================================
 #    *** BLOG: Tests: Email Verification Enforcement Tests ***
 #    ============================================================ */
-
-
 class EmailVerificationEnforcementTests(TestCase):
     """Verify actions enforced by email verification."""
 
     def setUp(self):
         """Create users with varying email verification states."""
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username="verifier", email="verifier@example.com", password="pass"
         )
-        self.other = User.objects.create_user(
+        self.other = user_model.objects.create_user(
             username="author", email="author@example.com", password="pass"
         )
         verify_users(self.other)
@@ -995,8 +958,10 @@ class EmailVerificationEnforcementTests(TestCase):
                 "next": self.post.get_absolute_url()},
         )
         self.assertRedirects(response, reverse("account_email"))
-        self.assertFalse(PostReaction.objects.filter(
-            user=self.user, post=self.post).exists())
+        self.assertFalse(
+            PostReaction.objects.filter(
+                user=self.user, post=self.post).exists()
+        )
 
     def test_actions_allowed_after_email_verified(self):
         """Ensure verified users can perform content actions."""
@@ -1021,5 +986,7 @@ class EmailVerificationEnforcementTests(TestCase):
                 "next": self.post.get_absolute_url()},
         )
         self.assertRedirects(response, self.post.get_absolute_url())
-        self.assertTrue(PostReaction.objects.filter(
-            user=self.user, post=self.post).exists())
+        self.assertTrue(
+            PostReaction.objects.filter(
+                user=self.user, post=self.post).exists()
+        )

@@ -3,6 +3,8 @@
 # ============================================================
 
 """Define database models for the gallery app."""
+# pylint: disable=too-many-ancestors
+
 
 from django.conf import settings
 from django.db import models
@@ -35,7 +37,7 @@ class GalleryImageQuerySet(models.QuerySet):
 # ============================================================
 
 
-class GalleryImage(models.Model):
+class GalleryImage(models.Model):  # pylint: disable=too-many-ancestors
     """Single image entry for the community gallery."""
 
     class Status(models.TextChoices):

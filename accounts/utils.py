@@ -5,16 +5,15 @@
 """Utility helpers for account-related features."""
 
 from functools import wraps
+from typing import Callable, Optional
 
 from allauth.account.models import EmailAddress
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.contrib.admin.views.decorators import staff_member_required
 
 from blog.models import BlogPost, Comment, CommentReport, log_moderation_action
-
 
 # ============================================================
 # Email verification checks
@@ -31,6 +30,7 @@ def user_email_is_verified(user) -> bool:
     """Return True when the user has at least one verified email address."""
     email = getattr(user, "email", "") or ""
     if not email:
+        # If the account has no email, do not block flows
         return True
 
     email_qs = EmailAddress.objects.filter(user=user)
@@ -40,7 +40,7 @@ def user_email_is_verified(user) -> bool:
     return email_qs.filter(verified=True).exists()
 
 
-def ensure_verified_email(request: HttpRequest) -> HttpResponse | None:
+def ensure_verified_email(request: HttpRequest) -> Optional[HttpResponse]:
     """Redirect to the email management page when verification is required."""
     user = getattr(request, "user", None)
     if not user or not user.is_authenticated:
@@ -53,7 +53,7 @@ def ensure_verified_email(request: HttpRequest) -> HttpResponse | None:
     return redirect(reverse("account_email"))
 
 
-def verified_email_required(view_func):
+def verified_email_required(view_func: Callable) -> Callable:
     """Decorator ensuring the logged-in user has a verified email address."""
 
     @wraps(view_func)
@@ -73,33 +73,34 @@ def verified_email_required(view_func):
 def approve_post(actor, post: BlogPost, notes: str = "") -> None:
     """Mark a blog post as approved."""
     post.status = BlogPost.STATUS_APPROVED
-    post.save()
+    post.save(update_fields=["status", "updated_at"])
     log_moderation_action(actor, "approve_post", post, notes)
 
 
 def reject_post(actor, post: BlogPost, notes: str = "") -> None:
     """Mark a blog post as rejected."""
     post.status = BlogPost.STATUS_REJECTED
-    post.save()
+    post.save(update_fields=["status", "updated_at"])
     log_moderation_action(actor, "reject_post", post, notes)
 
 
 def approve_comment(actor, comment: Comment, notes: str = "") -> None:
     """Mark a comment as approved."""
     comment.status = Comment.STATUS_APPROVED
-    comment.save()
+    comment.save(update_fields=["status", "updated_at"])
     log_moderation_action(actor, "approve_comment", comment, notes)
 
 
 def reject_comment(actor, comment: Comment, notes: str = "") -> None:
     """Mark a comment as rejected."""
     comment.status = Comment.STATUS_REJECTED
-    comment.save()
+    comment.save(update_fields=["status", "updated_at"])
     log_moderation_action(actor, "reject_comment", comment, notes)
 
 
 def resolve_report(actor, report: CommentReport, notes: str = "") -> None:
     """Mark a report as resolved."""
     report.resolved = True
-    report.save()
+    report.save(update_fields=["resolved", "updated_at"] if hasattr(
+        report, "updated_at") else ["resolved"])
     log_moderation_action(actor, "resolve_report", report, notes)

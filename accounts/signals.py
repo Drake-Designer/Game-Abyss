@@ -2,9 +2,10 @@
 # *** ACCOUNTS SIGNALS: Account lifecycle events ***
 # ============================================================
 
-"""Signals for account lifecycle events."""
+"""Signal handlers for account lifecycle events (create/delete users)."""
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.signals import user_logged_in
 from django.db.models import Q
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -15,7 +16,7 @@ from core.emailing import build_absolute_uri, send_styled_email
 User = get_user_model()
 
 
-def _collect_staff_recipients(exclude_user_ids=None):
+def _collect_staff_recipients(exclude_user_ids=None) -> list[str]:
     """Return unique email addresses for all staff and superusers."""
     qs = User.objects.filter(Q(is_staff=True) | Q(
         is_superuser=True)).exclude(email="")
@@ -25,7 +26,7 @@ def _collect_staff_recipients(exclude_user_ids=None):
     return list(set(emails))
 
 
-def _notify_staff(subject, context, exclude_user_ids=None):
+def _notify_staff(subject: str, context: dict, exclude_user_ids=None) -> None:
     """Send a styled notification to all staff and superusers."""
     recipients = _collect_staff_recipients(exclude_user_ids)
     if not recipients:
@@ -39,8 +40,12 @@ def _notify_staff(subject, context, exclude_user_ids=None):
     )
 
 
+# ============================================================
+# Account creation/deletion signals
+# ============================================================
+
 @receiver(post_save, sender=User, dispatch_uid="accounts_user_created_notify")
-def notify_staff_user_registered(sender, instance, created, **kwargs):
+def notify_staff_user_registered(sender, instance, created, **kwargs):  # pylint: disable=unused-argument
     """Notify staff when a new user account is created."""
     if not created:
         return
@@ -53,8 +58,7 @@ def notify_staff_user_registered(sender, instance, created, **kwargs):
             {"label": "Name", "value": instance.get_full_name()})
 
     profile_url = build_absolute_uri(
-        reverse("admin:auth_user_change", args=[instance.pk])
-    )
+        reverse("admin:auth_user_change", args=[instance.pk]))
     context = {
         "greeting": "Hello Council,",
         "intro": "A new explorer has registered on Game Abyss.",
@@ -68,7 +72,7 @@ def notify_staff_user_registered(sender, instance, created, **kwargs):
 
 
 @receiver(post_delete, sender=User, dispatch_uid="accounts_user_deleted_notify")
-def notify_staff_user_deleted(sender, instance, **kwargs):
+def notify_staff_user_deleted(sender, instance, **kwargs):  # pylint: disable=unused-argument
     """Notify staff when a user account is deleted."""
     subject = f"User account deleted: {instance.username}"
     detail_items = [{"label": "Username", "value": instance.username}]
@@ -86,3 +90,25 @@ def notify_staff_user_deleted(sender, instance, **kwargs):
         "footer_note": "Notification for Game Abyss staff.",
     }
     _notify_staff(subject, context)
+
+
+# ============================================================
+# Login signal (optional)
+# ============================================================
+
+@receiver(user_logged_in, dispatch_uid="accounts_user_logged_in_notify")
+def notify_staff_user_logged_in(sender, request, user, **kwargs):  # pylint: disable=unused-argument
+    """Optional: notify staff on user login. Comment out to avoid noise."""
+    subject = f"User logged in: {user.username}"
+    context = {
+        "greeting": "Hey team,",
+        "intro": f"{user.username} has just logged in to Game Abyss.",
+        "detail_items": [
+            {"label": "Username", "value": user.username},
+            {"label": "Email", "value": user.email or "N/A"},
+        ],
+        "closing": "All systems operational.",
+        "signature": "Game Abyss Alerts",
+        "footer_note": "Login activity notification.",
+    }
+    _notify_staff(subject, context, exclude_user_ids=[user.pk])

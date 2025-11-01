@@ -1,0 +1,17 @@
+[MASTER]
+load-plugins = pylint_django
+ignore = migrations, tests
+ignore-patterns = ^.*/migrations/.*\.py$, ^.*\\migrations\\.*\.py$, ^.*/tests\.py$, ^.*\\tests\.py$, ^.*/tests/.*\.py$, ^.*\\tests\\.*\.py$
+jobs = 0
+
+[MESSAGES CONTROL]
+disable =
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring
+
+[FORMAT]
+max-line-length = 100
+
+[TYPECHECK]
+django-settings-module = core.settings

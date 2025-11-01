@@ -23,9 +23,10 @@ from .models import BlogPost, Comment, CommentReport
 # /* ============================================================
 #    *** BLOG: Signals: Handlers ***
 #    ============================================================ */
-
 @receiver(post_save, sender=BlogPost, dispatch_uid="blog_post_created_notify")
-def on_post_created(sender, instance: BlogPost, created: bool, **kwargs):
+def on_post_created(
+    _sender, instance: BlogPost, created: bool, **_kwargs
+) -> None:
     """Notify superadmins when a new post is created."""
     if not created:
         return
@@ -33,7 +34,9 @@ def on_post_created(sender, instance: BlogPost, created: bool, **kwargs):
 
 
 @receiver(post_save, sender=Comment, dispatch_uid="blog_comment_created_notify")
-def on_comment_created(sender, instance: Comment, created: bool, **kwargs):
+def on_comment_created(
+    _sender, instance: Comment, created: bool, **_kwargs
+) -> None:
     """Notify superadmins when a new comment is created."""
     if not created:
         return
@@ -45,7 +48,9 @@ def on_comment_created(sender, instance: Comment, created: bool, **kwargs):
     sender=CommentReport,
     dispatch_uid="blog_comment_report_created_notify",
 )
-def on_comment_report_created(sender, instance: CommentReport, created: bool, **kwargs):
+def on_comment_report_created(
+    _sender, instance: CommentReport, created: bool, **_kwargs
+) -> None:
     """Notify staff when a comment is reported."""
     if not created:
         return

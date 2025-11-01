@@ -2,13 +2,12 @@
 # *** ACCOUNTS VIEWS: Controllers and staff tools ***
 # ============================================================
 
-from datetime import datetime
-
 from allauth.account.models import EmailAddress
 from allauth.account.views import PasswordChangeView
 from django.contrib import messages
 from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from django.db import models
 from django.db.models import Q
@@ -20,59 +19,118 @@ from blog.models import BlogPost, Comment, CommentReport, log_moderation_action
 from pages.models import HelpRequest
 from .forms import ProfileForm
 from .models import UserProfile
-from .utils import ensure_verified_email, staff_member_required, verified_email_required
+from .utils import ensure_verified_email, verified_email_required
 
 User = get_user_model()
 
 
+# -----------------------------------------------------------
+# Helpers
+# -----------------------------------------------------------
+
 def _get_profile(user):
     """Fetch or create the user's profile."""
-    profile, _ = UserProfile.objects.get_or_create(user=user)
-    return profile
+    user_profile, _ = UserProfile.objects.get_or_create(user=user)
+    return user_profile
 
 
-def _process_email_change(request, user, new_email: str):
+def _process_email_change(request, user, new_email):
     """Upsert EmailAddress, reset verification, and send confirmation."""
-    normalized_email = new_email or ""
-    if not normalized_email:
+    normalized = new_email.strip().lower() if new_email else ""
+    if not normalized:
         EmailAddress.objects.filter(user=user).delete()
         return
 
     EmailAddress.objects.filter(user=user).exclude(
-        email__iexact=normalized_email).delete()
+        email__iexact=normalized
+    ).delete()
 
-    email_qs = EmailAddress.objects.filter(
-        user=user, email__iexact=normalized_email)
-    email_address = email_qs.first() or EmailAddress(user=user)
-
-    changed_fields: list[str] = []
-    if email_address.email != normalized_email:
-        email_address.email = normalized_email
-        changed_fields.append("email")
-    if not email_address.primary:
-        email_address.primary = True
-        changed_fields.append("primary")
-    if email_address.verified:
-        email_address.verified = False
-        changed_fields.append("verified")
-
-    if email_address.pk is None:
-        email_address.save()
-    elif changed_fields:
-        email_address.save(update_fields=changed_fields)
-
-    email_address.send_confirmation(request=request)
-    messages.info(
-        request, "We've sent a confirmation email. Please verify the new address to activate it."
+    email_record = (
+        EmailAddress.objects.filter(
+            user=user, email__iexact=normalized).first()
+        or EmailAddress(user=user)
     )
 
+    changed = []
+    if email_record.email != normalized:
+        email_record.email = normalized
+        changed.append("email")
+    if not email_record.primary:
+        email_record.primary = True
+        changed.append("primary")
+    if email_record.verified:
+        email_record.verified = False
+        changed.append("verified")
+
+    if email_record.pk is None:
+        email_record.save()
+    elif changed:
+        email_record.save(update_fields=changed)
+
+    email_record.send_confirmation(request=request)
+    messages.info(
+        request,
+        "We've sent a confirmation email. Please verify the new address to activate it.",
+    )
+
+
+def _compute_last_active(user, posts, comments, drafts, is_self):
+    """Compute a best-effort 'last active' timestamp."""
+    candidates = []
+    if user.last_login:
+        candidates.append(user.last_login)
+    latest_post = posts.first()
+    if latest_post:
+        candidates.append(latest_post.published_at or latest_post.created_at)
+    latest_comment = comments.first()
+    if latest_comment:
+        candidates.append(latest_comment.created_at)
+    if is_self and drafts:
+        candidates.append(drafts[0].updated_at)
+    return max(candidates) if candidates else None
+
+
+def _build_staff_tools():
+    """Build staff tool cards with counters."""
+    return [
+        {
+            "label": "Pending posts",
+            "url": reverse("accounts:staff_pending_posts"),
+            "icon": "fa-newspaper",
+            "count": BlogPost.objects.filter(status=BlogPost.STATUS_PENDING).count(),
+        },
+        {
+            "label": "Pending comments",
+            "url": reverse("accounts:staff_pending_comments"),
+            "icon": "fa-comments",
+            "count": Comment.objects.filter(status=Comment.STATUS_PENDING).count(),
+        },
+        {
+            "label": "Reports",
+            "url": reverse("accounts:staff_reports"),
+            "icon": "fa-triangle-exclamation",
+            "count": CommentReport.objects.filter(resolved=False).count(),
+        },
+        {
+            "label": "Help requests",
+            "url": reverse("accounts:staff_help_requests"),
+            "icon": "fa-life-ring",
+            "count": HelpRequest.objects.exclude(
+                status=HelpRequest.STATUS_RESOLVED
+            ).count(),
+        },
+    ]
+
+
+# -----------------------------------------------------------
+# Public and profile views
+# -----------------------------------------------------------
 
 def profile(request, username):
     """Show a user's public profile page or CTA for unauthenticated viewers."""
     profile_user = get_object_or_404(
         User.objects.select_related("profile"), username=username
     )
-
     if not request.user.is_authenticated:
         return render(
             request,
@@ -83,138 +141,81 @@ def profile(request, username):
             },
         )
 
-    profile_obj = _get_profile(profile_user)
     is_self = request.user.pk == profile_user.pk
-    public_only = not is_self
+    profile_obj = _get_profile(profile_user)
 
-    approved_posts_qs = (
+    approved_posts = (
         profile_user.blog_posts.filter(status=BlogPost.STATUS_APPROVED)
         .select_related("author")
         .order_by("-published_at", "-created_at")
     )
-    approved_comments_qs = (
+    approved_comments = (
         profile_user.comments.filter(status=Comment.STATUS_APPROVED)
         .select_related("post", "post__author", "author")
         .order_by("-created_at")
     )
 
-    draft_posts: list[BlogPost] = []
-    if is_self:
-        draft_posts = list(
+    draft_posts = (
+        list(
             profile_user.blog_posts.filter(status=BlogPost.STATUS_DRAFT)
             .select_related("author")
             .order_by("-updated_at")
         )
+        if is_self
+        else []
+    )
 
-    posts_page = None
-    comments_page = None
-    if not public_only:
-        posts_page = Paginator(approved_posts_qs, 5).get_page(
-            request.GET.get("post_page")
-        )
-        comments_page = Paginator(approved_comments_qs, 5).get_page(
-            request.GET.get("comment_page")
-        )
+    posts_page = (
+        Paginator(approved_posts, 5).get_page(request.GET.get("post_page"))
+        if is_self
+        else None
+    )
+    comments_page = (
+        Paginator(approved_comments, 5).get_page(
+            request.GET.get("comment_page"))
+        if is_self
+        else None
+    )
 
-    public_post_count = approved_posts_qs.count()
-    approved_comment_count = approved_comments_qs.count()
-
-    full_name_value = (profile_user.get_full_name() or "").strip()
-
-    role_badge: dict[str, str] | None = None
+    role_badge = None
     if profile_user.is_superuser:
-        role_badge = {"label": "Admin",
-                      "css_class": "comp-badge--superadmin"}
+        role_badge = {"label": "Admin", "css_class": "comp-badge--superadmin"}
     elif profile_user.is_staff:
         role_badge = {"label": "Staff", "css_class": "comp-badge--staff"}
-
-    last_active_candidates: list[datetime] = []
-    if profile_user.last_login:
-        last_active_candidates.append(profile_user.last_login)
-    latest_post = approved_posts_qs.first()
-    if latest_post:
-        last_active_candidates.append(
-            latest_post.published_at or latest_post.created_at
-        )
-    latest_comment = approved_comments_qs.first()
-    if latest_comment:
-        last_active_candidates.append(latest_comment.created_at)
-    if is_self and draft_posts:
-        last_active_candidates.append(draft_posts[0].updated_at)
-    last_active = max(
-        last_active_candidates) if last_active_candidates else None
-
-    stats = {
-        "public_posts": public_post_count,
-        "approved_comments": approved_comment_count,
-    }
 
     has_favorites = bool(
         (profile_obj.favorite_games or "").strip()
         or (profile_obj.favorite_genres or "").strip()
     )
 
-    date_of_birth_display: str | None = None
+    dob_display = None
     if profile_obj.date_of_birth:
         dob_format = "F j, Y" if is_self else "F j"
-        date_of_birth_display = date_format(
-            profile_obj.date_of_birth, dob_format)
-
-    show_moderation_tools = is_self and profile_user.is_staff
-    staff_tools: list[dict[str, str | int | None]] = []
-    if show_moderation_tools:
-        staff_tools = [
-            {
-                "label": "Pending posts",
-                "url": reverse("accounts:staff_pending_posts"),
-                "icon": "fa-newspaper",
-                "count": BlogPost.objects.filter(
-                    status=BlogPost.STATUS_PENDING
-                ).count(),
-            },
-            {
-                "label": "Pending comments",
-                "url": reverse("accounts:staff_pending_comments"),
-                "icon": "fa-comments",
-                "count": Comment.objects.filter(
-                    status=Comment.STATUS_PENDING
-                ).count(),
-            },
-            {
-                "label": "Reports",
-                "url": reverse("accounts:staff_reports"),
-                "icon": "fa-triangle-exclamation",
-                "count": CommentReport.objects.filter(resolved=False).count(),
-            },
-            {
-                "label": "Help requests",
-                "url": reverse("accounts:staff_help_requests"),
-                "icon": "fa-life-ring",
-                "count": HelpRequest.objects.exclude(
-                    status=HelpRequest.STATUS_RESOLVED
-                ).count(),
-            },
-        ]
+        dob_display = date_format(profile_obj.date_of_birth, dob_format)
 
     context = {
         "profile_user": profile_user,
         "profile": profile_obj,
         "is_self": is_self,
-        "public_only": public_only,
+        "public_only": not is_self,
         "role_badge": role_badge,
         "member_since": profile_user.date_joined,
-        "last_active": last_active,
-        "stats": stats,
+        "last_active": _compute_last_active(
+            profile_user, approved_posts, approved_comments, draft_posts, is_self
+        ),
+        "stats": {
+            "public_posts": approved_posts.count(),
+            "approved_comments": approved_comments.count(),
+        },
         "has_favorites": has_favorites,
-        "date_of_birth_display": date_of_birth_display,
-        "full_name": full_name_value if is_self and full_name_value else None,
-        "draft_posts": draft_posts if is_self else [],
+        "date_of_birth_display": dob_display,
+        "full_name": (profile_user.get_full_name() or "").strip() if is_self else None,
+        "draft_posts": draft_posts,
         "posts_page": posts_page,
         "comments_page": comments_page,
-        "show_moderation_tools": show_moderation_tools,
-        "staff_tools": staff_tools if show_moderation_tools else [],
+        "show_moderation_tools": is_self and profile_user.is_staff,
+        "staff_tools": _build_staff_tools() if (is_self and profile_user.is_staff) else [],
     }
-
     return render(request, "accounts/profile.html", context)
 
 
@@ -222,14 +223,13 @@ def profile(request, username):
 def profile_edit(request):
     """Update profile and email, then redirect to the profile page."""
     profile_obj = _get_profile(request.user)
-
     if request.method == "POST":
         form = ProfileForm(
             request.POST, request.FILES, instance=profile_obj, user=request.user
         )
         if form.is_valid():
             form.save()
-            if form.email_changed:
+            if getattr(form, "email_changed", False):
                 _process_email_change(request, request.user, form.new_email)
             messages.success(request, "Profile updated.")
             return redirect("accounts:profile", request.user.username)
@@ -246,9 +246,7 @@ def profile_delete(request):
     if request.method == "POST":
         password = (request.POST.get("confirm_password") or "").strip()
         if not request.user.check_password(password):
-            messages.error(
-                request, "Incorrect password. Your account was not deleted."
-            )
+            messages.error(request, "Incorrect password. Account not deleted.")
             return redirect("accounts:profile_delete")
 
         user = request.user
@@ -276,6 +274,10 @@ class VerifiedEmailPasswordChangeView(PasswordChangeView):
             return response
         return super().dispatch(request, *args, **kwargs)
 
+
+# -----------------------------------------------------------
+# Staff tools
+# -----------------------------------------------------------
 
 @staff_member_required
 def staff_dashboard(request):
@@ -311,8 +313,11 @@ def staff_dashboard(request):
             "url": reverse("accounts:staff_help_requests"),
             "icon": "fa-life-ring",
         },
-        {"label": "User search", "url": reverse(
-            "accounts:staff_user_search"), "icon": "fa-users"},
+        {
+            "label": "User search",
+            "url": reverse("accounts:staff_user_search"),
+            "icon": "fa-users",
+        },
         {
             "label": "Featured manager",
             "url": reverse("accounts:staff_featured_manager"),
@@ -608,17 +613,16 @@ def staff_view_as_user(request):
             "approved_comments": comments_qs.count(),
         }
 
-        last_active_candidates: list[datetime] = []
+        candidates = []
         if preview_user.last_login:
-            last_active_candidates.append(preview_user.last_login)
+            candidates.append(preview_user.last_login)
         if preview_posts:
-            last_active_candidates.append(
-                preview_posts[0].published_at or preview_posts[0].created_at
-            )
+            candidates.append(
+                preview_posts[0].published_at or preview_posts[0].created_at)
         if preview_comments:
-            last_active_candidates.append(preview_comments[0].created_at)
-        if last_active_candidates:
-            last_active = max(last_active_candidates)
+            candidates.append(preview_comments[0].created_at)
+        if candidates:
+            last_active = max(candidates)
 
     context = {
         "username": username,

@@ -15,30 +15,31 @@ from . import views
 #    *** BLOG: URLs: Patterns ***
 #    ============================================================ */
 
-app_name = "blog"
+# Django expects app_name to be lowercase; silence Pylint for naming rule
+app_name = "blog"  # pylint: disable=invalid-name
 
 urlpatterns = [
-    # List approved posts on the homepage.
+    # List approved posts on the homepage
     path("", views.post_list, name="index"),
 
-    # Filter posts by tag slug.
+    # Filter posts by tag slug
     path("tag/<slug:tag_slug>/", views.post_list, name="tag"),
 
-    # Create a new post entry.
+    # Create a new post
     path("new/", views.new_post, name="new"),
 
-    # Manage post level actions.
+    # Post actions
     path("posts/<int:pk>/edit/", views.edit_post, name="edit_post"),
     path("posts/<int:pk>/delete/", views.delete_post, name="delete_post"),
     path("posts/<int:pk>/react/", views.react_to_post, name="react_post"),
 
-    # Manage comment level actions.
+    # Comment actions
     path("comments/<int:pk>/edit/", views.edit_comment, name="edit_comment"),
     path("comments/<int:pk>/react/", views.react_to_comment, name="react_comment"),
     path("comments/<int:pk>/report/", views.report_comment, name="report_comment"),
     path("comments/<int:pk>/delete/", views.delete_comment, name="delete_comment"),
 
-    # Show a single post detail entry.
+    # Single post detail
     path(
         "<int:year>/<int:month>/<int:day>/<slug:slug>/",
         views.post_detail,
@@ -46,5 +47,4 @@ urlpatterns = [
     ),
 ]
 
-# Define custom forbidden handler.
-handler403 = "core.views.permission_denied_view"
+# Global error handlers should remain in core/urls.py, not here.

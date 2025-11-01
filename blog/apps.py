@@ -6,6 +6,7 @@
 # /* ============================================================
 #    *** BLOG: AppConfig: Imports ***
 #    ============================================================ */
+from importlib import import_module
 from django.apps import AppConfig
 
 
@@ -17,10 +18,13 @@ class BlogConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "blog"
 
-    def ready(self):
-        """Import signal handlers when the app is ready."""
+    def ready(self) -> None:
+        """
+        Import signal handlers when the app is ready.
+        Kept inside ready() to avoid import side effects at import time.
+        """
         try:
-            import blog.signals  # noqa: F401
+            import_module("blog.signals")  # noqa: F401  imported for side effects
         except ImportError:
-            # Safe to ignore if signals module is missing during setup
+            # Signals are optional during early setup or testing
             pass

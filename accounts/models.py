@@ -2,13 +2,15 @@
 # *** ACCOUNTS MODELS: UserProfile ***
 # ============================================================
 
+"""Profile model with additional user information."""
+
 from django.conf import settings
 from django.db import models
 from django.templatetags.static import static
 
 
 class UserProfile(models.Model):
-    """Extra profile data."""
+    """Extra profile data linked to the user."""
 
     # One-to-one link to the user model.
     user = models.OneToOneField(
@@ -51,10 +53,16 @@ class UserProfile(models.Model):
         return bool(self.avatar)
 
     def get_avatar_url(self) -> str:
-        """Return avatar URL or a static fallback if missing or broken."""
+        """
+        Return avatar URL or a static fallback if missing or not accessible.
+
+        Avoid broad exception: handle only known cases.
+        """
         if self.avatar:
             try:
                 return self.avatar.url
-            except Exception:
+            except (ValueError, FileNotFoundError):
+                # ValueError: file not available or not saved
+                # FileNotFoundError: file missing on storage
                 pass
         return static("images/default-avatar.png")
