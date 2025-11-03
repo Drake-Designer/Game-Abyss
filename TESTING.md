@@ -89,6 +89,34 @@ I used the official [W3C CSS Validation Service](https://jigsaw.w3.org/css-valid
 
 ---
 
+### Accessibility Testing (WAVE)
+
+I used the [WAVE (Web Accessibility Evaluation Tool)](https://wave.webaim.org/) browser extension for Chrome to test the accessibility of the deployed site.
+
+**Test Details:**
+- **Tool:** WAVE Extension for Chrome
+- **URL Tested:** [https://game-abyss-a25a8ac090c2.herokuapp.com/](https://game-abyss-a25a8ac090c2.herokuapp.com/)
+- **Date:** November 2025
+
+**Results:**
+- ✅ **Zero Errors** - No accessibility errors detected
+- ✅ **Proper ARIA Labels** - All interactive elements have appropriate labels
+- ✅ **Semantic HTML** - Correct use of heading hierarchy and landmarks
+- ✅ **Contrast Compliance** - All text meets WCAG contrast requirements
+- ✅ **Keyboard Navigation** - All interactive elements are keyboard accessible
+- ⚠️ **Minor Alerts** - Some redundant links and very small text badges (expected for design elements)
+
+![WAVE Accessibility Test Results](documentation/validation/wave.png)
+
+**Key Achievements:**
+- No critical accessibility issues
+- All form fields properly labeled
+- Navigation is fully keyboard accessible
+- Color contrast meets WCAG AA standards
+- Screen reader friendly structure
+
+---
+
 ### Python Code Quality
 
 I used [Pylint](https://pylint.pycqa.org/) to check all Python code quality and ensure best practices were followed.
@@ -99,7 +127,7 @@ The codebase achieved a **perfect score of 10.00/10**, demonstrating excellent c
 
 **Result:** `Your code has been rated at 10.00/10`
 
-![Pylint Test Results](documentation/pylint-tests.png)
+![Pylint Test Results](documentation/validation/pylint-tests.png)
 
 The screenshot shows multiple runs across all modules (accounts, blog, pages, gallery, core, manage.py), each scoring a perfect **10.00/10**.
 

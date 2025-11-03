@@ -16,7 +16,7 @@
 
 ##  [Visit Game Abyss Live](https://game-abyss-a25a8ac090c2.herokuapp.com/)
 
-![Game Abyss Screenshot](documentation/am-i-responsive.png)
+![Game Abyss Screenshot](documentation/validation/am-i-responsive.png)
 
 ---
 
@@ -481,13 +481,13 @@ The wireframes were simple sketches, but they gave me a clear roadmap for the te
 
 **Desktop Wireframes - Windows PC (27" Display, QHD 2560x1440)**
 
-![Desktop Wireframes](documentation/wireframes-desktop.png)
+![Desktop Wireframes](documentation/wireframes/wireframes-desktop.png)
 
 **Mobile Wireframes - Multiple Devices**
 
 Testing across different screen sizes: iPhone 15 Pro (6.1"), iPad Pro 12.9", and Samsung Galaxy S24 (6.2")
 
-![Mobile Device Wireframes](documentation/wireframes-mobile-devices.png)
+![Mobile Device Wireframes](documentation/wireframes/wireframes-mobile-devices.png)
 
 ### Color Palette
 
