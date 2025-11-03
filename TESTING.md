@@ -117,6 +117,59 @@ I used the [WAVE (Web Accessibility Evaluation Tool)](https://wave.webaim.org/) 
 
 ---
 
+### Performance Testing (Lighthouse)
+
+I used [Google Lighthouse](https://developers.google.com/web/tools/lighthouse) built into Chrome DevTools to test the performance, accessibility, best practices, and SEO of the deployed site.
+
+**Test Details:**
+- **Tool:** Lighthouse in Chrome DevTools
+- **URL Tested:** [https://game-abyss-a25a8ac090c2.herokuapp.com/](https://game-abyss-a25a8ac090c2.herokuapp.com/)
+- **Date:** November 2025
+- **Lighthouse Version:** 12.8.2
+
+#### Desktop Performance
+
+![Lighthouse Desktop Results](documentation/validation/lighthouse-desktop.png)
+
+**Scores:**
+- 🟢 **Performance: 75** - Good performance with optimizations in place
+- 🟢 **Accessibility: 98** - Excellent accessibility compliance
+- 🟢 **Best Practices: 100** - Perfect adherence to web standards
+- 🟢 **SEO: 75** - Good search engine optimization
+
+**Key Metrics:**
+- **First Contentful Paint (FCP):** 0.8s
+- **Largest Contentful Paint (LCP):** 7.6s (optimized with Cloudinary transforms)
+- **Total Blocking Time (TBT):** 0ms
+- **Cumulative Layout Shift (CLS):** 0.004
+- **Speed Index (SI):** 0.8s
+
+#### Mobile Performance
+
+![Lighthouse Mobile Results](documentation/validation/lighthouse-mobile.png)
+
+**Mobile-Specific Optimizations:**
+- Responsive images using Cloudinary CDN
+- Lazy loading for below-the-fold content
+- Mobile-first CSS with Bootstrap 5
+- Touch-friendly navigation and buttons
+
+**Performance Improvements Implemented:**
+1. ✅ **Image Optimization** - Cloudinary automatic format conversion (WebP/AVIF) and compression
+2. ✅ **Preconnect Hints** - Added preconnect to CDN origins (fonts.googleapis.com, cdn.jsdelivr.net, cdnjs.cloudflare.com, res.cloudinary.com)
+3. ✅ **Font Display Swap** - Applied font-display: swap to prevent invisible text
+4. ✅ **Lazy Loading** - Audio preload set to "none" to reduce initial page load
+5. ✅ **Resource Prioritization** - Added fetchpriority="high" to LCP image (hero carousel)
+6. ✅ **Responsive Images** - Proper sizing with width/height attributes to prevent layout shifts
+
+**Areas for Future Optimization:**
+- Further reduce unused CSS from Bootstrap
+- Consider self-hosting critical fonts
+- Implement more aggressive image compression for gallery uploads
+- Add service worker for offline functionality
+
+---
+
 ### Python Code Quality
 
 I used [Pylint](https://pylint.pycqa.org/) to check all Python code quality and ensure best practices were followed.
