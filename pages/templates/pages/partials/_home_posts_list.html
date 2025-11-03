@@ -1,7 +1,7 @@
 <!-- ============================================================
      *** PARTIAL: Home Posts List ***
      ============================================================ -->
-{% load static %}
+{% load static datetime_extras %}
 {% if posts_page and posts_page.object_list %}
   {% for post in posts_page %}
     <div class="col-md-6 col-lg-4">{% include "shared/_post_card.html" with post=post %}</div>

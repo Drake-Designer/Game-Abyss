@@ -1,7 +1,7 @@
 <!-- ============================================================
      *** SHARED TEMPLATE: Post Card ***
      ============================================================ -->
-{% load cloudinary_extras %}
+{% load cloudinary_extras datetime_extras %}
 <article class="comp-card h-100" aria-labelledby="post-{{ post.pk }}-title">
   {% if post.image %}
     <picture>
@@ -34,7 +34,7 @@
           </a>
         {% endwith %}
       </div>
-      <time datetime="{{ post.published_at|default:post.updated_at|date:'c' }}"
+      <time datetime="{{ post.published_at|default:post.updated_at|rfc3339_seconds }}"
             class="d-flex align-items-center gap-1">
         <i class="fas fa-calendar-alt"></i>
         {{ post.published_at|default:post.updated_at|date:"F j, Y" }}

@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "widget_tweaks",
     # Local apps
+    "core",
     "pages",
     "accounts",
     "blog",

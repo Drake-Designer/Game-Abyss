@@ -4,7 +4,7 @@
    ============================================================ */
 -->
 {% extends "base.html" %}
-{% load static %}
+{% load static datetime_extras %}
 {% load cloudinary_extras %}
 {% block title %}
   Post - Game Abyss
@@ -44,7 +44,7 @@
               </a>
             {% endwith %}
           </div>
-          <time datetime="{{ display_date|date:'c' }}"
+          <time datetime="{{ display_date|rfc3339_seconds }}"
                 class="d-flex align-items-center gap-1">
             <i class="fas fa-calendar-alt"></i> {{ display_date|date:"F j, Y" }}
           </time>
@@ -140,7 +140,7 @@
                       </a>
                     {% endwith %}
                   </div>
-                  <time datetime="{{ comment.created_at|date:'c' }}"
+                  <time datetime="{{ comment.created_at|rfc3339_seconds }}"
                         class="d-flex align-items-center gap-1">
                     <i class="fas fa-clock"></i> {{ comment.created_at|date:"F j, Y H:i" }}
                   </time>

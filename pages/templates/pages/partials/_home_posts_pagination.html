@@ -1,6 +1,7 @@
 <!-- ============================================================
      *** PARTIAL: Home Posts Pagination ***
      ============================================================ -->
+{% load datetime_extras %}
 {% if posts_page and posts_page.paginator.num_pages > 1 %}
   <nav aria-label="{{ section|capfirst }} posts pagination" class="mt-4">
     <div class="comp-pagination">
