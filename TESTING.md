@@ -53,6 +53,99 @@ To be confident in the responsive design, I tested the deployed site on:
 
 Testing did uncover issues—misaligned buttons on mobile, a missing success alert after deleting posts, and a permissions check that was too strict. Each bug went through the same loop: reproduce, write or adjust a test if possible, fix the code, rerun the suite, and record the change in the project notes.
 
+## Validation
+
+### HTML Validation
+
+I used the official [W3C Markup Validation Service](https://validator.w3.org/) to validate all HTML pages.
+
+| Page                | Validator                                                                                                                                            | Result | Notes                                                                                                                   |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Home                | [HTML Validator](https://validator.w3.org/nu/?doc=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2F)                                           | Pass   | No errors or warnings found.                                                                                            |
+| About               | [HTML Validator](https://validator.w3.org/nu/?doc=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2Fabout%2F)                                   | Pass   | No errors or warnings found.                                                                                            |
+| Contact             | [HTML Validator](https://validator.w3.org/nu/?doc=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2Fcontact%2F)                                 | Pass   | Fixed: Added missing `id` attribute to help text element for proper `aria-describedby` reference in form field.         |
+| Blog                | [HTML Validator](https://validator.w3.org/nu/?doc=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2Fblog%2F)                                    | Pass   | No errors or warnings found.                                                                                            |
+| Gallery             | [HTML Validator](https://validator.w3.org/nu/?doc=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2Fgallery%2F)                                 | Pass   | No errors or warnings found.                                                                                            |
+| New Post            | [HTML Validator](https://validator.w3.org/nu/?doc=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2Fblog%2Fnew%2F)                              | Pass   | Requires authentication. No errors or warnings found.                                                                   |
+| Login               | [HTML Validator](https://validator.w3.org/nu/?doc=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2Faccounts%2Flogin%2F)                        | Pass   | No errors or warnings found.                                                                                            |
+| Sign Up             | [HTML Validator](https://validator.w3.org/nu/?doc=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2Faccounts%2Fsignup%2F)                       | Pass   | No errors or warnings found.                                                                                            |
+| Password Reset      | [HTML Validator](https://validator.w3.org/nu/?doc=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2Faccounts%2Fpassword%2Freset%2F)            | Pass   | No errors or warnings found.                                                                                            |
+| Password Reset Done | [HTML Validator](https://validator.w3.org/nu/?doc=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2Faccounts%2Fpassword%2Freset%2Fdone%2F)     | Pass   | No errors or warnings found.                                                                                            |
+
+**Note:** All pages were validated while deployed on Heroku. The W3C validator checks the rendered HTML output, including dynamically generated content from Django templates.
+
+---
+
+### CSS Validation
+
+I used the official [W3C CSS Validation Service](https://jigsaw.w3.org/css-validator/) to validate all CSS files.
+
+| File       | Validator                                                                                                                                       | Result | Notes                    |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------ |
+| style.css  | [CSS Validator](https://jigsaw.w3.org/css-validator/validator?uri=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2Fstatic%2Fcss%2Fstyle.css) | Pass   | No errors found. Warnings related to CSS variables and vendor prefixes are expected and acceptable. |
+| email.css  | [CSS Validator](https://jigsaw.w3.org/css-validator/validator?uri=https%3A%2F%2Fgame-abyss-a25a8ac090c2.herokuapp.com%2Fstatic%2Fcss%2Femail.css) | Pass   | No errors or warnings found. |
+
+**Note:** Both CSS files were validated from the deployed Heroku instance to ensure proper URL encoding and static file serving.
+
+---
+
+### Python Code Quality
+
+I used [Pylint](https://pylint.pycqa.org/) to check all Python code quality and ensure best practices were followed.
+
+#### Pylint Score: 10.00/10
+
+The codebase achieved a **perfect score of 10.00/10**, demonstrating excellent code quality and clean structure.
+
+**Result:** `Your code has been rated at 10.00/10`
+
+![Pylint Test Results](documentation/pylint-tests.png)
+
+The screenshot shows multiple runs across all modules (accounts, blog, pages, gallery, core, manage.py), each scoring a perfect **10.00/10**.
+
+#### Django Check
+
+Django's built-in system check framework validates models, URLs, settings, and configurations.
+
+```bash
+python manage.py check
+```
+
+**Result:** `System check identified no issues (0 silenced).`
+
+#### Automated Tests
+
+All unit and integration tests pass successfully:
+
+```bash
+python manage.py test accounts blog pages
+```
+
+**Result:**
+- **76/76 tests passing** (100% success rate)
+- Coverage includes models, views, forms, signals, and permissions
+- Test database preserved for faster subsequent runs
+
+**Test Categories:**
+- Account management and authentication flows
+- Blog post creation, editing, deletion, and permissions
+- Comment system with moderation features
+- Contact form validation and submission
+- Profile management and email verification
+- Permission-based access control for staff/superuser actions
+
+#### Flake8 (PEP 8 Style Guide)
+
+Code style checked with [Flake8](https://flake8.pycqa.org/) for PEP 8 compliance:
+
+```bash
+python -m flake8 blog accounts pages gallery core --exclude=migrations --max-line-length=100
+```
+
+**Result:** 2 minor warnings (ignorable - one is an intentional signal import, the other a documentation line length)
+
+---
+
 ## Final Result
 
 After all rounds of manual, automated, and real-user testing, every core feature—authentication, blogging, gallery uploads, and page browsing—operates smoothly in production. I continue to keep the test checklist handy so future updates enjoy the same level of confidence.
