@@ -25,9 +25,10 @@ from .models import BlogPost, Comment, CommentReport
 #    ============================================================ */
 @receiver(post_save, sender=BlogPost, dispatch_uid="blog_post_created_notify")
 def on_post_created(
-    _sender, instance: BlogPost, created: bool, **_kwargs
+    sender, instance: BlogPost, created: bool, **kwargs
 ) -> None:
     """Notify superadmins when a new post is created."""
+    # pylint: disable=unused-argument
     if not created:
         return
     transaction.on_commit(lambda: notify_superadmins_new_post(instance))
@@ -35,9 +36,10 @@ def on_post_created(
 
 @receiver(post_save, sender=Comment, dispatch_uid="blog_comment_created_notify")
 def on_comment_created(
-    _sender, instance: Comment, created: bool, **_kwargs
+    sender, instance: Comment, created: bool, **kwargs
 ) -> None:
     """Notify superadmins when a new comment is created."""
+    # pylint: disable=unused-argument
     if not created:
         return
     transaction.on_commit(lambda: notify_superadmins_new_comment(instance))
@@ -49,9 +51,10 @@ def on_comment_created(
     dispatch_uid="blog_comment_report_created_notify",
 )
 def on_comment_report_created(
-    _sender, instance: CommentReport, created: bool, **_kwargs
+    sender, instance: CommentReport, created: bool, **kwargs
 ) -> None:
     """Notify staff when a comment is reported."""
+    # pylint: disable=unused-argument
     if not created:
         return
     transaction.on_commit(lambda: notify_staff_comment_report(instance))

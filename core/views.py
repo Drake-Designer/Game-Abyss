@@ -9,17 +9,21 @@ from django.shortcuts import render
 
 def permission_denied_view(
     request: HttpRequest,
-    _exception: Optional[Exception] = None,
+    exception: Optional[Exception] = None,
+    **kwargs,
 ) -> HttpResponse:
     """Custom 403 Forbidden handler."""
+    # pylint: disable=unused-argument
     return render(request, "errors/403.html", status=403)
 
 
 def page_not_found_view(
     request: HttpRequest,
-    _exception: Exception,
+    exception: Optional[Exception] = None,
+    **kwargs,
 ) -> HttpResponse:
     """Custom 404 Not Found handler."""
+    # pylint: disable=unused-argument
     return render(request, "errors/404.html", status=404)
 
 
