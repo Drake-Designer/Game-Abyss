@@ -364,7 +364,7 @@ hr {
 }
 
 .comp-pagination__page--active {
-  background: var(--color-primary);
+  background: #d94e1f;
   box-shadow: var(--shadow-md);
   color: #fff;
   cursor: default;
