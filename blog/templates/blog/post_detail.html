@@ -86,7 +86,7 @@
         </div>
       {% endif %}
       <!-- Post body. -->
-      <div class="page-post-detail__body">{{ post.body|linebreaks }}</div>
+      <div class="page-post-detail__body">{{ post.body|safe }}</div>
       {% if show_engagement %}
         <!-- Reactions block. -->
         <section class="mt-4">

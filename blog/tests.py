@@ -118,6 +118,27 @@ class BlogPostModelTests(TestCase):
         post.save()
         self.assertIsNone(post.published_at)
 
+    def test_body_is_sanitized_and_reading_time_counts_plain_text(self):
+        """Scripts are stripped but formatting is preserved."""
+        post = BlogPost.objects.create(
+            author=self.user,
+            title="Sanitized",
+            body="<script>alert('x')</script><p><strong>Hello</strong> world</p>",
+        )
+        self.assertNotIn("<script", post.body)
+        self.assertIn("<strong>", post.body)
+        self.assertGreaterEqual(post.reading_time, 1)
+
+    def test_reading_time_rounds_up_for_partial_minutes(self):
+        """Reading time should round up to the next minute."""
+        long_text = "word " * 250
+        post = BlogPost.objects.create(
+            author=self.user,
+            title="Long read",
+            body=f"<p>{long_text}</p>",
+        )
+        self.assertEqual(post.reading_time, 2)
+
 
 # /* ============================================================
 #    *** BLOG: Tests: Draft Workflow View Tests ***

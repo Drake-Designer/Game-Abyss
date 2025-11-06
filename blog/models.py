@@ -6,6 +6,8 @@
 # /* ============================================================
 #    *** BLOG: Models: Imports ***
 #    ============================================================ */
+import math
+
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.utils import timezone
@@ -18,6 +20,7 @@ except ImportError:  # pragma: no cover
 
 # Email helpers
 from .emails import notify_author_post_approved, notify_author_post_rejected
+from .html import extract_text, sanitize_post_html
 
 User = get_user_model()
 
@@ -217,13 +220,18 @@ class BlogPost(models.Model):  # pylint: disable=too-many-ancestors
 
             self.slug = unique_slug
 
+        # Clean rich text and derived metadata
+        self.body = sanitize_post_html(self.body or "")
+        self.excerpt = extract_text(self.excerpt or "")
         # Tags (normalize/clean duplicates)
         self.tags = _normalize_tag_string(self.tags) if self.tags else ""
 
-        # Reading time (~200 wpm)
-        if self.body:
-            words = len(self.body.split())
-            self.reading_time = max(1, words // 200)
+        plain_body = extract_text(self.body)
+        if plain_body:
+            words = len(plain_body.split())
+            self.reading_time = max(1, math.ceil(words / 200))
+        else:
+            self.reading_time = 0
 
         super().save(*args, **kwargs)
 

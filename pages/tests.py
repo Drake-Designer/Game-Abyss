@@ -5,6 +5,7 @@
 """Tests for pages views and homepage JSON partials without code duplication."""
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -204,7 +205,7 @@ class StaticViewsTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "<form", html=False)
 
-    def test_contact_post_valid_creates_help_request(self):
+    def test_contact_post_valid_creates_help_request_and_sends_emails(self):
         url = reverse("pages:contact")
         data = {
             "name": "Alice",
@@ -217,6 +218,12 @@ class StaticViewsTests(TestCase):
         self.assertEqual(res.status_code, 302)
         self.assertTrue(
             HelpRequest.objects.filter(email="alice@example.com").exists()
+        )
+        self.assertEqual(len(mail.outbox), 2)
+        recipient_lists = [sorted(message.to) for message in mail.outbox]
+        self.assertIn(["alice@example.com"], recipient_lists)
+        self.assertTrue(
+            any("team.gameabyss@gmail.com" in recipients for recipients in recipient_lists)
         )
 
     def test_contact_post_invalid_shows_errors(self):

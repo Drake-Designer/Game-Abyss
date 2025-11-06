@@ -3,8 +3,10 @@ Core-level views for custom error handling and other shared responses.
 """
 
 from typing import Optional
-from django.http import HttpRequest, HttpResponse
+
+from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 
 
 def permission_denied_view(
@@ -30,3 +32,9 @@ def page_not_found_view(
 def server_error_view(request: HttpRequest) -> HttpResponse:
     """Custom 500 Server Error handler."""
     return render(request, "errors/500.html", status=500)
+
+
+@csrf_exempt
+def summernote_attachment_disabled(request: HttpRequest) -> HttpResponseForbidden:
+    """Return a forbidden response for Summernote attachment uploads."""
+    return HttpResponseForbidden("File uploads are disabled for this editor.")

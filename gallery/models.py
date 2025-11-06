@@ -6,9 +6,13 @@
 # pylint: disable=too-many-ancestors
 
 
+import logging
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================
@@ -86,3 +90,14 @@ class GalleryImage(models.Model):  # pylint: disable=too-many-ancestors
         """Override save to enforce featured state consistency."""
         self.mark_featured()
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Remove the stored file when an image record is deleted."""
+        image_field = self.image
+        try:
+            if image_field:
+                image_field.delete(save=False)
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
+                "Failed to delete gallery image file '%s'", image_field)
+        super().delete(*args, **kwargs)

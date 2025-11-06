@@ -22,6 +22,10 @@ from pages import (
 from gallery.models import GalleryImage
 
 # Local imports (relative)
+from .emails import (
+    notify_support_new_help_request,
+    send_help_request_confirmation,
+)
 from .forms import HelpRequestForm
 from .models import HelpRequest
 
@@ -169,9 +173,12 @@ class ContactView(View):
             )
             help_request.save()
 
+            notify_support_new_help_request(help_request)
+            send_help_request_confirmation(help_request)
+
             messages.success(
                 request,
-                "Thanks for reaching out! Your help request has been submitted successfully.",
+                "Thanks for reaching out! We emailed you a confirmation and the team has been notified.",
             )
             return redirect("pages:contact")
 

@@ -9,6 +9,10 @@
 {% block title %}
   New Post · Game Abyss
 {% endblock title %}
+{% block extra_head %}
+  {{ block.super }}
+  {{ form.media }}
+{% endblock extra_head %}
 {% block content %}
   <!-- Render new post creation section. -->
   <section class="page-new-post container">

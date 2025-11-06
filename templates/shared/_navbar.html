@@ -52,6 +52,12 @@
         <li class="nav-item">
           <a class="nav-link comp-navbar__link" href="{% url 'gallery:list' %}">Gallery</a>
         </li>
+        {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link comp-navbar__link"
+               href="{% url 'gallery:my_images' %}">My uploads</a>
+          </li>
+        {% endif %}
       </ul>
       <ul class="navbar-nav ms-lg-auto align-items-lg-center">
         {% if user.is_authenticated %}

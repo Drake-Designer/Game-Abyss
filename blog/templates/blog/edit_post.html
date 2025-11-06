@@ -8,6 +8,10 @@
 {% block title %}
   Edit Post · Game Abyss
 {% endblock title %}
+{% block extra_head %}
+  {{ block.super }}
+  {{ form.media }}
+{% endblock extra_head %}
 {% block content %}
   <!-- Render main edit post section. -->
   <section class="container page-blog-edit-post">

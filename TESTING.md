@@ -1,10 +1,92 @@
 # Testing Game Abyss
 
-## Introduction
+I believe testing is part of telling a good product story, so I combined manual checks with automated coverage throughout development. Each release cycle repeated the same rhythm: write code, run the automated suite, then explore the site like a real player.
+
+---
+
+## Automated testing
+
+### Django test suite
+
+| Command | Notes |
+| --- | --- |
+| `python manage.py test` | Executes all app tests (accounts, blog, gallery, pages). See the terminal output in this submission for the latest run. |
+
+The suite exercises:
+
+- Blog post workflow (draft, publish, status transitions, sanitisation).
+- Comment reactions and reporting permissions.
+- Gallery moderation, owner/staff deletion, and storage cleanup hooks.
+- Contact form validation and email notifications.
+- Homepage helper utilities and partial rendering.
+
+### Django system checks
+
+| Command | Result |
+| --- | --- |
+| `python manage.py check` | Confirms model and configuration integrity during development. |
+
+---
+
+## Manual testing
+
+All manual test runs used Google Chrome 131 on macOS and Firefox 131 on Windows 11. URLs refer to the deployed Heroku instance unless otherwise stated.
+
+### Feature walkthroughs
+
+| Feature | Scenario | Steps | Expected | Actual |
+| --- | --- | --- | --- | --- |
+| Accounts | Register and login | Create a new account, confirm verification email, log in, log out. | Confirmation email sent, user redirected to homepage, navbar updates. | Pass – Allauth flows behave as expected and show success messages. |
+| Password reset | Reset password | Trigger password reset for existing user, follow email link, set new password. | Reset email delivered, login succeeds with new password. | Pass – Email rendered with notification template, login works. |
+| Blog authoring | Draft and publish | Create a new post with formatting, save draft, reopen, publish. | Summernote preserves formatting, statuses change (Draft → Pending/Approved), toasts display. | Pass – Rich text persists, status badges update on detail view. |
+| Blog reactions | React to posts/comments | React to a post and to a comment as the same user. | Reaction count increments, current reaction highlighted, duplicate reactions prevented. | Pass – One reaction stored per user; buttons toggle between outline/filled styles. |
+| Comment moderation | Report inappropriate comment | Submit report as different user, confirm duplicate report blocked. | Report stored, reporter cannot submit again, moderation log entry created. | Pass – Report button disables after submission, staff email received. |
+| Gallery upload | Submit image as member | Upload JPEG < 10 MB, check My uploads dashboard. | Entry shown with "Pending" status and message about moderation. | Pass – Pending badge visible, success toast shown. |
+| Gallery deletion | Delete own upload | From "My uploads", delete pending image. | Confirmation screen appears, media removed, dashboard count updates. | Pass – Redirects back with success message, file removed from storage. |
+| Gallery staff moderation | Delete member upload as staff | Staff deletes another user's image via front end. | Action allowed, redirect to staff dashboard, approval counts update. | Pass – Staff can remove any image, audit trail recorded. |
+| Contact form | Submit help request | Send request with priority "High". | Success message plus confirmation email to user; staff notified. | Pass – Both emails rendered, entry visible in admin with `open` status. |
+| Accessibility | Keyboard navigation | Navigate navbar, forms, and gallery cards using Tab/Shift+Tab. | Focus visible, no traps, buttons trigger on Enter/Space. | Pass – Focus outline visible, confirmation modals reachable. |
+
+### Browser/device checks
+
+| Device/Viewport | Browser | Result |
+| --- | --- | --- |
+| 1440px desktop | Chrome, Firefox | Layout stable, hero carousel animates correctly. |
+| 768px tablet | Chrome dev tools | Navbar collapses into toggle, tables scroll horizontally as expected. |
+| 375px mobile | Chrome dev tools | Buttons stack vertically, forms remain usable. |
+| iPad (landscape) | Safari | Gallery grid adapts to two columns, modal dialogs remain centred. |
+
+### Validation and tooling
+
+| Check | Result |
+| --- | --- |
+| HTML templates | Spot-checked key pages with the W3C validator – no blocking errors (aria-describedby warnings resolved). |
+| CSS | Ran the W3C CSS validator on `static/css/style.css` – passes with standard vendor prefix warnings. |
+| Accessibility | Chrome DevTools Lighthouse (Accessibility score ≥ 95 on home and blog detail pages). |
+| Performance | Lighthouse Performance ~75 on desktop after enabling image lazy loading. |
+
+Screenshots of the validation tools and Lighthouse runs are available in `documentation/validation/`.
+
+---
+
+## Known issues & follow-up actions
+
+- Some gallery images uploaded before Cloudinary credentials were configured still live on the local filesystem. Future maintenance should migrate them or prune unused files.
+- The background audio player starts muted and requires user interaction, but browsers may block autoplay entirely on certain devices; a future iteration could offer explicit play/stop controls.
+
+---
+
+## Summary
+
+Game Abyss has automated coverage for critical workflows and a repeatable manual testing plan. Both documentation and implementation now align: Summernote rich text editing, gallery self-management, and contact email flows all behave as described.
+
+---
+
+## Introduction (Detailed Documentation)
 
 I believe testing is part of telling a good product story, so I combined manual checks with automated coverage throughout development. Each release cycle repeated the same rhythm: write code, run the automated suite, then explore the site like a real player.
 
-## Manual Testing
+## Manual Testing (Detailed)
 
 I kept a living checklist of manual scenarios and repeated them whenever a feature changed:
 
@@ -28,7 +110,7 @@ I kept a living checklist of manual scenarios and repeated them whenever a featu
 7. **Accessibility spot checks**
     - Navigate the main pages using only the keyboard and confirm focus states are visible.
 
-## Automated Testing
+## Automated Testing (Detailed)
 
 The repository includes unit tests that cover the core building blocks:
 

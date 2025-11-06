@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load datetime_extras %}
+{% block title %}
+    Delete Gallery Image · Game Abyss
+{% endblock title %}
+{% block content %}
+    <section class="page-gallery-delete py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="comp-card">
+                    <div class="comp-card__body p-4 text-center">
+                        <h1 class="h4 mb-3">Delete this upload?</h1>
+                        <p class="text-muted">This action removes the image from the community gallery and deletes the stored media.</p>
+                        <figure class="mb-3">
+                            <img src="{{ image.image.url }}"
+                                 alt="{{ image.title|default:'Gallery image' }}"
+                                 class="img-fluid rounded"
+                                 width="400"
+                                 height="260">
+                            {% if image.caption %}<figcaption class="small text-muted mt-2">{{ image.caption }}</figcaption>{% endif %}
+                        </figure>
+                        {% with request.GET.next|default:request.META.HTTP_REFERER as return_url %}
+                            <form method="post">
+                                {% csrf_token %}
+                                {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+                                <div class="d-flex justify-content-center gap-3">
+                                    <a class="comp-button comp-button--outline"
+                                       href="{% if return_url %}{{ return_url }}{% else %}{% url 'gallery:my_images' %}{% endif %}">
+                                        Cancel
+                                    </a>
+                                    <button type="submit" class="comp-button comp-button--primary">
+                                        <i class="fas fa-trash me-2"></i>Delete image
+                                    </button>
+                                </div>
+                            </form>
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}

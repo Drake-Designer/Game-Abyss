@@ -10,6 +10,12 @@ from core import views as core_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path(
+        "summernote/upload_attachment/",
+        core_views.summernote_attachment_disabled,
+        name="django_summernote-upload_attachment",
+    ),
+    path("summernote/", include("django_summernote.urls")),
 
     # Auth
     path(

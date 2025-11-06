@@ -53,6 +53,8 @@
     <link rel="icon"
           type="image/svg+xml"
           href="{% static 'favicon/game-abyss-favicon.svg' %}">
+    {% block extra_head %}
+    {% endblock extra_head %}
   </head>
   <body class="d-flex flex-column min-vh-100 bg-dark text-light">
     {% include "shared/_navbar.html" %}

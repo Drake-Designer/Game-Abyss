@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "widget_tweaks",
+    "django_summernote",
     # Local apps
     "core",
     "pages",
@@ -298,3 +299,26 @@ if USE_CLOUDINARY:
     )
     # Keep legacy var for compatibility with some third-party apps
     DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
+
+
+# ---------------------------------------------------------------------------
+# Summernote rich text editor
+# ---------------------------------------------------------------------------
+
+SUMMERNOTE_THEME = "bs5"
+SUMMERNOTE_CONFIG = {
+    "iframe": False,
+    "summernote": {
+        "placeholder": "Share your story with the community...",
+        "width": "100%",
+        "height": 340,
+        "toolbar": [
+            ["style", ["style", "bold", "italic", "underline", "clear"]],
+            ["para", ["ul", "ol", "paragraph"]],
+            ["insert", ["link", "picture"]],
+            ["view", ["fullscreen", "codeview"]],
+        ],
+    },
+    "codemirror": False,
+    "disable_attachment": True,
+}

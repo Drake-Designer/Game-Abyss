@@ -13,6 +13,7 @@ import re
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django_summernote.widgets import SummernoteWidget
 
 from .models import BlogPost, Comment
 
@@ -44,11 +45,11 @@ class BlogPostForm(forms.ModelForm):  # pylint: disable=too-few-public-methods
                     "placeholder": "Title of your chronicle",
                 }
             ),
-            "body": forms.Textarea(
+            "body": SummernoteWidget(
                 attrs={
-                    "rows": 8,
-                    "class": "form-control",
-                    "placeholder": "Forge your story here...",
+                    "summernote": {
+                        "placeholder": "Forge your story here...",
+                    }
                 }
             ),
             "excerpt": forms.Textarea(
@@ -101,11 +102,11 @@ class PublicBlogPostForm(  # pylint: disable=too-few-public-methods
                     "placeholder": "Name your expedition",
                 }
             ),
-            "body": forms.Textarea(
+            "body": SummernoteWidget(
                 attrs={
-                    "rows": 8,
-                    "class": "form-control",
-                    "placeholder": "Share your build, review, or tale...",
+                    "summernote": {
+                        "placeholder": "Share your build, review, or tale...",
+                    }
                 }
             ),
             "excerpt": forms.Textarea(
