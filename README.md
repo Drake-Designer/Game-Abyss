@@ -477,6 +477,12 @@ Community gallery showcasing gaming screenshots and artwork uploaded by users.
 
 ![Gallery Page](documentation/website-pages/gallery.png)
 
+**My Uploads**
+
+Personal dashboard for users to manage their gallery submissions and track approval status.
+
+![My Uploads Page](documentation/website-pages/my-uploads.png)
+
 **Contact Page**
 
 Contact form for users to reach out to the Game Abyss team with questions or feedback.
