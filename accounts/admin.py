@@ -33,7 +33,8 @@ class UserProfileInline(admin.StackedInline):
         if obj and obj.avatar:
             try:
                 return format_html(
-                    '<img src="{}" style="max-height: 150px; max-width: 150px; border-radius: 8px;" />',
+                    '<img src="{}" style="max-height: 150px; '
+                    'max-width: 150px; border-radius: 8px;" />',
                     obj.avatar.url
                 )
             except (ValueError, FileNotFoundError):

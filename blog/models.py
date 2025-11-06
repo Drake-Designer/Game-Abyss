@@ -252,7 +252,7 @@ class BlogPost(models.Model):  # pylint: disable=too-many-ancestors
 
     def __str__(self) -> str:
         """Return readable post title."""
-        return self.title
+        return self.title or "Untitled Post"
 
     @property
     def tag_list(self) -> list[dict]:

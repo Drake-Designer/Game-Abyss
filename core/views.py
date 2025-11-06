@@ -35,6 +35,6 @@ def server_error_view(request: HttpRequest) -> HttpResponse:
 
 
 @csrf_exempt
-def summernote_attachment_disabled(request: HttpRequest) -> HttpResponseForbidden:
+def summernote_attachment_disabled(request: HttpRequest) -> HttpResponseForbidden:  # pylint: disable=unused-argument
     """Return a forbidden response for Summernote attachment uploads."""
     return HttpResponseForbidden("File uploads are disabled for this editor.")

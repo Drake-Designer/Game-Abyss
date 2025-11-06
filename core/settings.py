@@ -262,6 +262,7 @@ try:
 except ImportError:
     cloudinary = None  # type: ignore
 
+# pylint: disable=invalid-name
 USE_CLOUDINARY = False
 if cloudinary is not None:
     cloudinary_url = os.environ.get("CLOUDINARY_URL")

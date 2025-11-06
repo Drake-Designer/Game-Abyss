@@ -13,7 +13,7 @@ from .views import (
     GalleryUploadView,
 )
 
-app_name = "gallery"
+app_name = "gallery"  # pylint: disable=invalid-name
 
 urlpatterns = [
     path("", GalleryListView.as_view(), name="list"),

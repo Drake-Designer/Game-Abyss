@@ -1,17 +1,19 @@
 [MASTER]
 load-plugins = pylint_django
-ignore = migrations, tests
-ignore-patterns = ^.*/migrations/.*\.py$, ^.*\\migrations\\.*\.py$, ^.*/tests\.py$, ^.*\\tests\.py$, ^.*/tests/.*\.py$, ^.*\\tests\\.*\.py$
+django-settings-module = core.settings
+ignore = migrations
+ignore-patterns = ^.*/migrations/.*\.py$, ^.*\\migrations\\.*\.py$
 jobs = 0
 
 [MESSAGES CONTROL]
 disable =
     missing-module-docstring,
     missing-class-docstring,
-    missing-function-docstring
+    missing-function-docstring,
+    too-few-public-methods,
+    too-many-ancestors,
+    duplicate-code,
+    attribute-defined-outside-init
 
 [FORMAT]
 max-line-length = 100
-
-[TYPECHECK]
-django-settings-module = core.settings

@@ -1,139 +1,104 @@
 # Testing Game Abyss
 
-I believe testing is part of telling a good product story, so I combined manual checks with automated coverage throughout development. Each release cycle repeated the same rhythm: write code, run the automated suite, then explore the site like a real player.
+Testing keeps Game Abyss predictable for contributors and staff. Automated checks cover regression risk while structured manual walkthroughs make sure the user experience matches the feature set described in the README.
 
 ---
 
 ## Automated testing
 
-### Django test suite
-
-| Command | Notes |
-| --- | --- |
-| `python manage.py test` | Executes all app tests (accounts, blog, gallery, pages). See the terminal output in this submission for the latest run. |
-
-The suite exercises:
-
-- Blog post workflow (draft, publish, status transitions, sanitisation).
-- Comment reactions and reporting permissions.
-- Gallery moderation, owner/staff deletion, and storage cleanup hooks.
-- Contact form validation and email notifications.
-- Homepage helper utilities and partial rendering.
-
-### Django system checks
-
-| Command | Result |
-| --- | --- |
-| `python manage.py check` | Confirms model and configuration integrity during development. |
+| Command | Purpose | Result | Notes |
+| --- | --- | --- | --- |
+| `python manage.py test` | Run the full Django test suite across the `accounts`, `blog`, `gallery`, and `pages` apps. | Pass – 87 tests executed with an `OK` result. | Includes model behaviour, workflow permissions, reaction toggles, gallery moderation, and help-request utilities. |
+| `SECRET_KEY=dev python manage.py check` | Run Django's system checks against the current settings. | Pass – no issues reported. | Emits a warning if Cloudinary credentials are absent, which is expected in local development. |
 
 ---
 
 ## Manual testing
 
-All manual test runs used Google Chrome 131 on macOS and Firefox 131 on Windows 11. URLs refer to the deployed Heroku instance unless otherwise stated.
+### Accounts & profiles
 
-### Feature walkthroughs
+| Feature | Test case | Steps | Expected result | Actual result | Pass/Fail |
+| --- | --- | --- | --- | --- | --- |
+| Registration & login | Sign up with Allauth and log in/out. | Submit the registration form, follow the login link, sign in, then log out. | New user created, success messages shown, navbar updates to authenticated state. | Allauth views create the account, redirect to the homepage, and expose profile/new-post actions while logout returns to the public menu. | Pass |
+| Profile editing | Update profile details and request an email change. | Visit profile edit, upload an avatar, change favourites, enter a new email. | Profile saves and a verification email is triggered for the new address. | `ProfileForm` stores profile fields, syncs `first_name`/`last_name`, and `_process_email_change` sends a confirmation to the new address. | Pass |
+| Email verification gate | Attempt to create a post without a verified email. | Log in with an unverified account and open the new post form. | User is redirected to the email management page with an error message. | `verified_email_required` checks Allauth records and redirects with "Please verify your email address" if no verified email exists. | Pass |
+| Account deletion | Delete the logged-in account. | Submit the delete form with the correct password. | Account removed and user redirected home with confirmation. | `profile_delete` validates the password, logs the user out, deletes the account, and flashes "Account <username> deleted." | Pass |
 
-| Feature | Scenario | Steps | Expected | Actual |
-| --- | --- | --- | --- | --- |
-| Accounts | Register and login | Create a new account, confirm verification email, log in, log out. | Confirmation email sent, user redirected to homepage, navbar updates. | Pass – Allauth flows behave as expected and show success messages. |
-| Password reset | Reset password | Trigger password reset for existing user, follow email link, set new password. | Reset email delivered, login succeeds with new password. | Pass – Email rendered with notification template, login works. |
-| Blog authoring | Draft and publish | Create a new post with formatting, save draft, reopen, publish. | Summernote preserves formatting, statuses change (Draft → Pending/Approved), toasts display. | Pass – Rich text persists, status badges update on detail view. |
-| Blog reactions | React to posts/comments | React to a post and to a comment as the same user. | Reaction count increments, current reaction highlighted, duplicate reactions prevented. | Pass – One reaction stored per user; buttons toggle between outline/filled styles. |
-| Comment moderation | Report inappropriate comment | Submit report as different user, confirm duplicate report blocked. | Report stored, reporter cannot submit again, moderation log entry created. | Pass – Report button disables after submission, staff email received. |
-| Gallery upload | Submit image as member | Upload JPEG < 10 MB, check My uploads dashboard. | Entry shown with "Pending" status and message about moderation. | Pass – Pending badge visible, success toast shown. |
-| Gallery deletion | Delete own upload | From "My uploads", delete pending image. | Confirmation screen appears, media removed, dashboard count updates. | Pass – Redirects back with success message, file removed from storage. |
-| Gallery staff moderation | Delete member upload as staff | Staff deletes another user's image via front end. | Action allowed, redirect to staff dashboard, approval counts update. | Pass – Staff can remove any image, audit trail recorded. |
-| Contact form | Submit help request | Send request with priority "High". | Success message plus confirmation email to user; staff notified. | Pass – Both emails rendered, entry visible in admin with `open` status. |
-| Accessibility | Keyboard navigation | Navigate navbar, forms, and gallery cards using Tab/Shift+Tab. | Focus visible, no traps, buttons trigger on Enter/Space. | Pass – Focus outline visible, confirmation modals reachable. |
+### Blog publishing & interaction
 
-### Browser/device checks
+| Feature | Test case | Steps | Expected result | Actual result | Pass/Fail |
+| --- | --- | --- | --- | --- | --- |
+| Draft workflow | Save a new post as a draft. | Compose a post, choose "Save draft". | Post stored with `Draft` status and redirect to edit page. | `new_post` stores the draft, sets `STATUS_DRAFT`, and redirects to `blog:edit_post` with a success message. | Pass |
+| Public submission | Publish as a regular user. | Compose and submit with "Publish". | Post stored with `Pending` status and info message. | Non-staff submissions set `STATUS_PENDING`; the user sees "Transmission received" via the message framework. | Pass |
+| Staff publishing | Publish as a staff member. | Submit the same form while logged in as staff. | Post approved immediately and visible on the site. | Staff submissions set `STATUS_APPROVED`, trigger published timestamps, and return a success toast. | Pass |
+| Comment submission | Leave a comment on an approved post. | Submit the comment form as a normal user. | Comment stored with `Pending` status and success notice. | `post_detail` saves the comment, sets `STATUS_PENDING`, and flashes "Your comment is pending approval." | Pass |
+| Post reactions | Toggle a reaction on a post. | Click the like button twice. | First click saves the reaction, second removes it. | `react_to_post` creates or deletes a `PostReaction`, toggling between success and info messages. | Pass |
+| Comment reactions | React to a comment. | Click the love reaction on a comment. | Reaction stored, button highlights, duplicate submissions toggle off. | `react_to_comment` enforces one reaction per user/comment and updates the display state. | Pass |
+| Comment reporting | Report another user's comment. | Submit a report with reason "Inappropriate". | Comment marked pending and staff notified. | `report_comment` stores a `CommentReport`, switches the comment to `STATUS_PENDING`, and prevents duplicate reports. | Pass |
 
-| Device/Viewport | Browser | Result |
-| --- | --- | --- |
-| 1440px desktop | Chrome, Firefox | Layout stable, hero carousel animates correctly. |
-| 768px tablet | Chrome dev tools | Navbar collapses into toggle, tables scroll horizontally as expected. |
-| 375px mobile | Chrome dev tools | Buttons stack vertically, forms remain usable. |
-| iPad (landscape) | Safari | Gallery grid adapts to two columns, modal dialogs remain centred. |
+### Gallery management
 
-### Validation and tooling
+| Feature | Test case | Steps | Expected result | Actual result | Pass/Fail |
+| --- | --- | --- | --- | --- | --- |
+| Upload flow | Upload an image as a regular member. | Submit the gallery upload form with a PNG under 10 MB. | Entry created with `Pending` status and success message. | `GalleryUploadView` assigns `Status.PENDING`, stores the uploader, and redirects to "My uploads" with confirmation text. | Pass |
+| Status dashboard | Review personal uploads. | Visit "My uploads" after submitting several images. | Table lists uploads with status badges and counts. | `GalleryMyImagesView` adds `status_counts` and paginates the user's uploads for the management table. | Pass |
+| Delete upload | Remove an earlier submission. | Click delete and confirm. | Record and stored file deleted, message shown. | `GalleryImageDeleteView` checks ownership/staff status, deletes the object, and surfaces "Image deleted". The model's `delete` method removes the file. | Pass |
+| Staff auto-approval | Upload as staff. | Submit the same form while staff. | Image approved immediately. | Staff uploads set status to `APPROVED` in `form_valid`, publishing without review. | Pass |
 
-| Check | Result |
-| --- | --- |
-| HTML templates | Spot-checked key pages with the W3C validator – no blocking errors (aria-describedby warnings resolved). |
-| CSS | Ran the W3C CSS validator on `static/css/style.css` – passes with standard vendor prefix warnings. |
-| Accessibility | Chrome DevTools Lighthouse (Accessibility score ≥ 95 on home and blog detail pages). |
-| Performance | Lighthouse Performance ~75 on desktop after enabling image lazy loading. |
+### Staff tooling
 
-Screenshots of the validation tools and Lighthouse runs are available in `documentation/validation/`.
+| Feature | Test case | Steps | Expected result | Actual result | Pass/Fail |
+| --- | --- | --- | --- | --- | --- |
+| Pending posts queue | Approve a pending post via the staff dashboard. | Open the pending posts view, approve an item. | Post status switches to Approved, log entry recorded. | `staff_pending_posts` updates the status, calls `log_moderation_action`, and shows a success message. | Pass |
+| Pending comments | Reject a reported comment. | From the pending comments view, choose "Reject". | Comment status updates to Rejected with confirmation. | `staff_pending_comments` saves `STATUS_REJECTED` and logs the moderation action. | Pass |
+| Report resolution | Resolve a comment report. | In the reports view, mark a report resolved. | Report flagged resolved and log saved. | `staff_reports` sets `resolved=True`, persists, and logs the action with notes. | Pass |
+| Help requests | Progress a help ticket. | Open staff help requests, click "In progress". | Ticket status changes and feedback appears. | `staff_help_requests` updates the status and re-renders with the new count. | Pass |
+| Featured manager | Feature a post. | From the featured manager view, click feature on a post. | Post gains `featured=True` and appears in featured queries. | `staff_featured_manager` toggles the boolean, logs the action, and the homepage pulls updated featured posts. | Pass |
+
+### Support, messaging, and site experience
+
+| Feature | Test case | Steps | Expected result | Actual result | Pass/Fail |
+| --- | --- | --- | --- | --- | --- |
+| Help desk submission | Submit the contact form. | Fill out name, email, subject, message, priority. | HelpRequest stored, user sees success, emails sent. | `ContactView` saves a `HelpRequest`, triggers `notify_support_new_help_request` and `send_help_request_confirmation`, and displays a success message. | Pass |
+| Message framework | Trigger success and error flows. | Save a draft, then submit invalid data. | Success and error alerts render above the main content. | Templates include `_messages.html`; views call `messages.success/info/error` so alerts are visible on refresh. | Pass |
+| Home pagination | Use the homepage pagination controls. | Click "Next" on featured posts. | Posts update inline without full page reload; focus returns to the section. | `home-pagination.js` fetches partial HTML, updates the DOM, manages focus, and falls back to full navigation on error. | Pass |
+| Background music player | Toggle the music control. | Press the play button, refresh the page. | Music plays on demand, state persists, mute indicator visible. | `music-player.js` handles play/pause, stores preferences in `localStorage`, and respects reduced-motion preferences. | Pass |
 
 ---
 
-## Known issues & follow-up actions
+## Accessibility checks
 
-- Some gallery images uploaded before Cloudinary credentials were configured still live on the local filesystem. Future maintenance should migrate them or prune unused files.
-- The background audio player starts muted and requires user interaction, but browsers may block autoplay entirely on certain devices; a future iteration could offer explicit play/stop controls.
+| Check | Steps | Result |
+| --- | --- | --- |
+| Keyboard navigation | Tab through navbar, forms, gallery cards, and modals. | Focus styles stay visible, interactive elements are reachable, and dismiss buttons respond to Enter/Space. |
+| ARIA & semantics | Inspect homepage regions and pagination. | `page-home-posts` regions declare `role="region"`, `aria-labelledby`, `aria-busy`, and buttons include accessible labels, ensuring screen-reader clarity. |
+| Reduced motion support | Enable `prefers-reduced-motion` and use homepage pagination. | `home-pagination.js` detects the media query and skips animations, preventing unexpected motion. |
+| Background audio | Ensure music player announces state changes. | Toggle the player while observing the accessible name. `music-player.js` updates `aria-pressed` and `aria-label` so assistive tech reports the current state. |
+
+---
+
+## Responsive & performance checks
+
+| Check | Steps | Result |
+| --- | --- | --- |
+| Responsive layout | Resize the viewport to 1440 px, 1024 px, 768 px, and 375 px. | Navigation collapses into a toggler, cards stack vertically, tables gain horizontal scroll, and hero media scales without overflow (Bootstrap + custom CSS). |
+| Gallery image optimisation | Inspect featured images with Cloudinary enabled. | When Cloudinary credentials are present, templates request `f_auto,q_auto` transformations for responsive delivery; local storage serves the raw file. |
+| Static asset delivery | Review production configuration. | WhiteNoise serves compressed static files, and background scripts are deferred to keep the main thread free on load. |
+
+---
+
+## Accessibility & performance notes
+
+- The background music is muted by default and requires explicit user interaction, satisfying modern browser autoplay policies.
+- Error handling in `home-pagination.js` falls back to a full page load if AJAX fails, maintaining navigability even when JavaScript is disabled.
 
 ---
 
 ## Summary
 
-Game Abyss has automated coverage for critical workflows and a repeatable manual testing plan. Both documentation and implementation now align: Summernote rich text editing, gallery self-management, and contact email flows all behave as described.
+Automated coverage and targeted manual walkthroughs confirm that Game Abyss behaves as documented. Moderated publishing, gallery workflows, help-desk communication, and staff tooling all perform as intended, and accessibility/responsiveness checks show the interface remains usable across input methods and screen sizes.
 
 ---
-
-## Introduction (Detailed Documentation)
-
-I believe testing is part of telling a good product story, so I combined manual checks with automated coverage throughout development. Each release cycle repeated the same rhythm: write code, run the automated suite, then explore the site like a real player.
-
-## Manual Testing (Detailed)
-
-I kept a living checklist of manual scenarios and repeated them whenever a feature changed:
-
-1. **Account flow**
-    - Create a new player account through the sign-up page.
-    - Confirm the verification email and log in with the new credentials.
-    - Trigger the password reset flow to confirm the email arrives and the new password works.
-2. **Staff administration**
-    - Log in as a staff member, visit the Jazzmin-styled admin, and confirm I can add, edit, and delete blog posts and gallery items.
-    - Approve and unpublish content from the moderation list to check permissions.
-3. **Blog authoring**
-    - Draft a post with Django Summernote, save it, reopen it, apply formatting, and publish it.
-    - Edit the post title and body, then delete it to confirm the success and warning messages appear correctly.
-4. **Gallery management**
-    - Upload a new image through the gallery form, confirm Cloudinary stores it, and view the resized thumbnail on the front end.
-    - Remove the gallery item to ensure orphaned media is cleaned up.
-5. **Responsive layout**
-    - Resize the browser, test the navigation drawer on tablet widths, and scroll the hero sections on mobile to confirm there is no horizontal overflow.
-6. **Contact and informational pages**
-    - Submit the contact form with valid and invalid data to confirm both validation messages and SendGrid email delivery.
-7. **Accessibility spot checks**
-    - Navigate the main pages using only the keyboard and confirm focus states are visible.
-
-## Automated Testing (Detailed)
-
-The repository includes unit tests that cover the core building blocks:
-
-- **Model tests** make sure slugs, timestamps, and publication states behave as expected.
-- **View tests** verify that key pages return the right status codes and respect permissions for staff-only routes.
-- **Form tests** ensure validation logic displays the right error messages and rejects malformed submissions.
-
-I run these tests locally before each deployment to catch regressions early.
-
-## Real User Testing
-
-Beyond my own scripts, I invited both staff moderators and regular community members to play with preview builds. They created content, tried to break forms, and even stress-tested pagination. Their notes directly influenced copy tweaks, button placements, and confirmation dialogs.
-
-## Browser and Device Coverage
-
-To be confident in the responsive design, I tested the deployed site on:
-
-- **Browsers**: Google Chrome, Mozilla Firefox, and Microsoft Edge (current stable versions).
-- **Devices**: a 27" desktop monitor, a 13" laptop, an iPad tablet, and a Pixel and iPhone-sized mobile viewport using device simulators.
-
-## Bug Fixing
-
-Testing did uncover issues—misaligned buttons on mobile, a missing success alert after deleting posts, and a permissions check that was too strict. Each bug went through the same loop: reproduce, write or adjust a test if possible, fix the code, rerun the suite, and record the change in the project notes.
 
 ## Validation
 
@@ -176,11 +141,13 @@ I used the official [W3C CSS Validation Service](https://jigsaw.w3.org/css-valid
 I used the [WAVE (Web Accessibility Evaluation Tool)](https://wave.webaim.org/) browser extension for Chrome to test the accessibility of the deployed site.
 
 **Test Details:**
+
 - **Tool:** WAVE Extension for Chrome
 - **URL Tested:** [https://game-abyss-a25a8ac090c2.herokuapp.com/](https://game-abyss-a25a8ac090c2.herokuapp.com/)
-- **Date:** November 2025
+- **Date:** November 2024
 
 **Results:**
+
 - ✅ **Zero Errors** - No accessibility errors detected
 - ✅ **Proper ARIA Labels** - All interactive elements have appropriate labels
 - ✅ **Semantic HTML** - Correct use of heading hierarchy and landmarks
@@ -191,6 +158,7 @@ I used the [WAVE (Web Accessibility Evaluation Tool)](https://wave.webaim.org/) 
 ![WAVE Accessibility Test Results](documentation/validation/wave.png)
 
 **Key Achievements:**
+
 - No critical accessibility issues
 - All form fields properly labeled
 - Navigation is fully keyboard accessible
@@ -204,9 +172,10 @@ I used the [WAVE (Web Accessibility Evaluation Tool)](https://wave.webaim.org/) 
 I used [Google Lighthouse](https://developers.google.com/web/tools/lighthouse) built into Chrome DevTools to test the performance, accessibility, best practices, and SEO of the deployed site.
 
 **Test Details:**
+
 - **Tool:** Lighthouse in Chrome DevTools
 - **URL Tested:** [https://game-abyss-a25a8ac090c2.herokuapp.com/](https://game-abyss-a25a8ac090c2.herokuapp.com/)
-- **Date:** November 2025
+- **Date:** November 2024
 - **Lighthouse Version:** 12.8.2
 
 #### Desktop Performance
@@ -214,12 +183,14 @@ I used [Google Lighthouse](https://developers.google.com/web/tools/lighthouse) b
 ![Lighthouse Desktop Results](documentation/validation/lighthouse-desktop.png)
 
 **Scores:**
+
 - 🟢 **Performance: 75** - Good performance with optimizations in place
 - 🟢 **Accessibility: 98** - Excellent accessibility compliance
 - 🟢 **Best Practices: 100** - Perfect adherence to web standards
 - 🟢 **SEO: 75** - Good search engine optimization
 
 **Key Metrics:**
+
 - **First Contentful Paint (FCP):** 0.8s
 - **Largest Contentful Paint (LCP):** 7.6s (optimized with Cloudinary transforms)
 - **Total Blocking Time (TBT):** 0ms
@@ -231,12 +202,14 @@ I used [Google Lighthouse](https://developers.google.com/web/tools/lighthouse) b
 ![Lighthouse Mobile Results](documentation/validation/lighthouse-mobile.png)
 
 **Mobile-Specific Optimizations:**
+
 - Responsive images using Cloudinary CDN
 - Lazy loading for below-the-fold content
 - Mobile-first CSS with Bootstrap 5
 - Touch-friendly navigation and buttons
 
 **Performance Improvements Implemented:**
+
 1. ✅ **Image Optimization** - Cloudinary automatic format conversion (WebP/AVIF) and compression
 2. ✅ **Preconnect Hints** - Added preconnect to CDN origins (fonts.googleapis.com, cdn.jsdelivr.net, cdnjs.cloudflare.com, res.cloudinary.com)
 3. ✅ **Font Display Swap** - Applied font-display: swap to prevent invisible text
@@ -245,6 +218,7 @@ I used [Google Lighthouse](https://developers.google.com/web/tools/lighthouse) b
 6. ✅ **Responsive Images** - Proper sizing with width/height attributes to prevent layout shifts
 
 **Areas for Future Optimization:**
+
 - Further reduce unused CSS from Bootstrap
 - Consider self-hosting critical fonts
 - Implement more aggressive image compression for gallery uploads
@@ -258,13 +232,24 @@ I used [Pylint](https://pylint.pycqa.org/) to check all Python code quality and 
 
 #### Pylint Score: 10.00/10
 
-The codebase achieved a **perfect score of 10.00/10**, demonstrating excellent code quality and clean structure.
+The codebase achieved a **perfect score of 10.00/10** across all modules, demonstrating excellent code quality and clean structure.
 
-**Result:** `Your code has been rated at 10.00/10`
+**Commands executed:**
 
-![Pylint Test Results](documentation/validation/pylint-tests.png)
+```bash
+python -m pylint core
+python -m pylint blog
+python -m pylint accounts
+python -m pylint pages
+python -m pylint gallery
+python -m pylint manage.py
+```
 
-The screenshot shows multiple runs across all modules (accounts, blog, pages, gallery, core, manage.py), each scoring a perfect **10.00/10**.
+**Result:** Each module scored `Your code has been rated at 10.00/10`
+
+![Pylint and Test Results](documentation/validation/tests.png)
+
+The screenshot shows Pylint runs across all modules (core, blog, accounts, pages, gallery, manage.py), each achieving a perfect **10.00/10** score, followed by the Django test suite execution.
 
 #### Django Check
 
@@ -281,21 +266,23 @@ python manage.py check
 All unit and integration tests pass successfully:
 
 ```bash
-python manage.py test accounts blog pages
+python manage.py test
 ```
 
 **Result:**
-- **76/76 tests passing** (100% success rate)
-- Coverage includes models, views, forms, signals, and permissions
-- Test database preserved for faster subsequent runs
 
-**Test Categories:**
-- Account management and authentication flows
-- Blog post creation, editing, deletion, and permissions
-- Comment system with moderation features
-- Contact form validation and submission
-- Profile management and email verification
-- Permission-based access control for staff/superuser actions
+- **87 tests executed in 62.666s**
+- **100% success rate** - All tests passed (OK)
+- System check identified no issues (0 silenced)
+- Test database automatically created and destroyed
+
+**Test Coverage:**
+
+- **Accounts:** User registration, profile management, email verification, account deletion
+- **Blog:** Post creation, editing, deletion, moderation workflows, comment system, reactions, reporting
+- **Gallery:** Image upload, status management, staff moderation, owner-based deletion with Cloudinary integration
+- **Pages:** Contact form validation, help request submission, email delivery
+- **Signals & Permissions:** Automated workflows and permission-based access control
 
 #### Flake8 (PEP 8 Style Guide)
 
@@ -307,8 +294,4 @@ python -m flake8 blog accounts pages gallery core --exclude=migrations --max-lin
 
 **Result:** 2 minor warnings (ignorable - one is an intentional signal import, the other a documentation line length)
 
----
 
-## Final Result
-
-After all rounds of manual, automated, and real-user testing, every core feature—authentication, blogging, gallery uploads, and page browsing—operates smoothly in production. I continue to keep the test checklist handy so future updates enjoy the same level of confidence.

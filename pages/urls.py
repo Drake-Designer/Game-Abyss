@@ -7,7 +7,7 @@
 from django.urls import path
 from .views import HomeView, AboutView, ContactView, HomePostsPartialView
 
-app_name = "pages"
+app_name = "pages"  # pylint: disable=invalid-name
 
 urlpatterns = [
     # Home page

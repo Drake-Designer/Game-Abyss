@@ -75,7 +75,7 @@ class HomePostsPartialView(View):
 
     http_method_names = ["get"]
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):  # pylint: disable=unused-argument
         """Handle AJAX pagination for homepage post lists."""
         if request.headers.get("x-requested-with") != "XMLHttpRequest":
             return HttpResponseBadRequest("Invalid request.")
@@ -178,7 +178,8 @@ class ContactView(View):
 
             messages.success(
                 request,
-                "Thanks for reaching out! We emailed you a confirmation and the team has been notified.",
+                "Thanks for reaching out! We emailed you a confirmation "
+                "and the team has been notified.",
             )
             return redirect("pages:contact")
 
