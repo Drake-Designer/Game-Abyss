@@ -1094,7 +1094,9 @@ Building Game Abyss was a learning journey, and I relied on countless resources,
 
 ### Special Thanks
 
-- **Lewis Dillon** ([GitHub](https://github.com/LewisMDillon) | [LinkedIn](https://www.linkedin.com/in/lewis-dillon/)) - My mentor who reviewed the site, helped with content, provided valuable feedback, and served as a staff member to test moderation features. Thank you for pushing me to improve!
+- **Jubril Akolade** ([LinkedIn](https://www.linkedin.com/in/jubrilakolade/)) - Mentor who reviewed the project and gave very helpful guidance leading to several improvements before submission. His suggestions included: adding clear fork & clone instructions in the Deployment section, personalising all delete post alerts and user/admin confirmation messages across the site, and fixing the DESIGN section layout by arranging elements in the correct order.
+
+- **Lewis Dillon** ([GitHub](https://github.com/LewisMDillon) | [LinkedIn](https://www.linkedin.com/in/lewis-dillon/)) - Who reviewed the site, helped with content, provided valuable feedback, and served as a staff member to test moderation features. Thank you for pushing me to improve!
 
 - **Andrea Contarino** ([GitHub](https://github.com/andconta) | [LinkedIn](https://www.linkedin.com/in/andreacontarino/)) - Senior Software Engineer who provided invaluable advice on code implementation, site structure, and best practices. Also tested the site as a staff member. Your expertise made a huge difference!
 
