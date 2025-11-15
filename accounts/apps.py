@@ -12,4 +12,5 @@ class AccountsConfig(AppConfig):
 
     def ready(self) -> None:  # pragma: no cover
         """Import signals when the app is ready."""
-        from . import signals  # pylint: disable=import-outside-toplevel, unused-import
+        from importlib import import_module
+        import_module("accounts.signals")
