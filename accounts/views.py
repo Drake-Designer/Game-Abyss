@@ -70,7 +70,7 @@ def _process_email_change(request, user, new_email):
     email_record.send_confirmation(request=request)
     messages.info(
         request,
-        "We've sent a confirmation email. Please verify the new address to activate it.",
+        "Confirmation sent — check your inbox to verify the new address.",
     )
 
 
@@ -231,7 +231,7 @@ def profile_edit(request):
             form.save()
             if getattr(form, "email_changed", False):
                 _process_email_change(request, request.user, form.new_email)
-            messages.success(request, "Profile updated.")
+            messages.success(request, "All set! Your profile was updated.")
             return redirect("accounts:profile", request.user.username)
     else:
         form = ProfileForm(instance=profile_obj, user=request.user)
@@ -246,14 +246,16 @@ def profile_delete(request):
     if request.method == "POST":
         password = (request.POST.get("confirm_password") or "").strip()
         if not request.user.check_password(password):
-            messages.error(request, "Incorrect password. Account not deleted.")
+            messages.error(
+                request, "Incorrect password — account not deleted.")
             return redirect("accounts:profile_delete")
 
         user = request.user
         logout(request)
         username = user.username
         user.delete()
-        messages.success(request, f"Account {username} deleted.")
+        messages.success(
+            request, f"Your account '{username}' has been deleted.")
         return redirect("pages:home")
 
     return render(request, "accounts/profile_delete.html")
@@ -351,18 +353,19 @@ def staff_pending_posts(request):
             post.status = BlogPost.STATUS_APPROVED
             post.save()
             log_moderation_action(request.user, "approve_post", post)
-            messages.success(request, f"Approved '{post.title}'.")
+            messages.success(
+                request, f"Approved — '{post.title}' is now live.")
         elif action == "reject":
             post.status = BlogPost.STATUS_REJECTED
             post.save()
             log_moderation_action(request.user, "reject_post", post)
-            messages.info(request, f"Rejected '{post.title}'.")
+            messages.info(request, f"Rejected — '{post.title}' is hidden.")
         elif action == "delete":
             log_moderation_action(request.user, "delete_post", post)
             post.delete()
-            messages.warning(request, "Post deleted.")
+            messages.warning(request, "Deleted — the post was removed.")
         else:
-            messages.error(request, "Unknown action.")
+            messages.error(request, "Oops — unknown action.")
         return redirect("accounts:staff_pending_posts")
 
     qs = BlogPost.objects.filter(
@@ -390,18 +393,18 @@ def staff_pending_comments(request):
             comment.status = Comment.STATUS_APPROVED
             comment.save()
             log_moderation_action(request.user, "approve_comment", comment)
-            messages.success(request, "Comment approved.")
+            messages.success(request, "Approved — the comment is now visible.")
         elif action == "reject":
             comment.status = Comment.STATUS_REJECTED
             comment.save()
             log_moderation_action(request.user, "reject_comment", comment)
-            messages.info(request, "Comment rejected.")
+            messages.info(request, "Rejected — the comment is hidden.")
         elif action == "delete":
             log_moderation_action(request.user, "delete_comment", comment)
             comment.delete()
-            messages.warning(request, "Comment deleted.")
+            messages.warning(request, "Deleted — the comment was removed.")
         else:
-            messages.error(request, "Unknown action.")
+            messages.error(request, "Oops — unknown action.")
         return redirect("accounts:staff_pending_comments")
 
     qs = Comment.objects.filter(status=Comment.STATUS_PENDING).select_related(
@@ -433,7 +436,7 @@ def staff_reports(request):
             log_moderation_action(
                 request.user, "resolve_report", comment, notes=f"Report #{report.pk} resolved"
             )
-            messages.success(request, "Report marked as resolved.")
+            messages.success(request, "Resolved — the report has been closed.")
         elif action == "reject_comment":
             if comment:
                 comment.status = Comment.STATUS_REJECTED
@@ -443,7 +446,8 @@ def staff_reports(request):
                 )
             report.resolved = True
             report.save(update_fields=["resolved"])
-            messages.info(request, "Comment rejected and report resolved.")
+            messages.info(
+                request, "Rejected — comment hidden and report closed.")
         elif action == "delete_comment" and comment:
             log_moderation_action(
                 request.user, "delete_comment", comment, notes=f"Report #{report.pk}"
@@ -451,9 +455,10 @@ def staff_reports(request):
             comment.delete()
             report.resolved = True
             report.save(update_fields=["resolved"])
-            messages.warning(request, "Comment deleted and report resolved.")
+            messages.warning(
+                request, "Deleted — comment removed and report closed.")
         else:
-            messages.error(request, "Unknown action.")
+            messages.error(request, "Oops — unknown action.")
         return redirect("accounts:staff_reports")
 
     qs = CommentReport.objects.filter(resolved=False).select_related(
@@ -478,13 +483,13 @@ def staff_help_requests(request):
         if action == "resolve":
             help_request.status = HelpRequest.STATUS_RESOLVED
             help_request.save(update_fields=["status", "updated_at"])
-            messages.success(request, "Help request resolved.")
+            messages.success(request, "Resolved — help request closed.")
         elif action == "progress":
             help_request.status = HelpRequest.STATUS_IN_PROGRESS
             help_request.save(update_fields=["status", "updated_at"])
-            messages.info(request, "Help request marked in progress.")
+            messages.info(request, "In progress — help request updated.")
         else:
-            messages.error(request, "Unknown action.")
+            messages.error(request, "Oops — unknown action.")
         return redirect("accounts:staff_help_requests")
 
     qs = HelpRequest.objects.exclude(status=HelpRequest.STATUS_RESOLVED)
@@ -530,14 +535,16 @@ def staff_featured_manager(request):
             post.featured = True
             post.save(update_fields=["featured", "updated_at"])
             log_moderation_action(request.user, "feature_post", post)
-            messages.success(request, f"Featured '{post.title}'.")
+            messages.success(
+                request, f"Featured — '{post.title}' is now spotlighted.")
         elif action == "unfeature":
             post.featured = False
             post.save(update_fields=["featured", "updated_at"])
             log_moderation_action(request.user, "unfeature_post", post)
-            messages.info(request, f"Removed '{post.title}' from featured.")
+            messages.info(
+                request, f"Unfeatured — '{post.title}' removed from spotlight.")
         else:
-            messages.error(request, "Unknown action.")
+            messages.error(request, "Oops — unknown action.")
         return redirect("accounts:staff_featured_manager")
 
     qs = BlogPost.objects.select_related("author").order_by(

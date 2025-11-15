@@ -60,13 +60,13 @@ class GalleryUploadView(LoginRequiredMixin, CreateView):
             gallery_image.status = GalleryImage.Status.APPROVED
             messages.success(
                 self.request,
-                "Your image has been uploaded and approved.",
+                "Live now — your image is visible.",
             )
         else:
             gallery_image.status = GalleryImage.Status.PENDING
             messages.success(
                 self.request,
-                "Your image has been uploaded and is pending approval.",
+                "Thanks! Your image is awaiting a quick review.",
             )
 
         gallery_image.save()
@@ -138,5 +138,5 @@ class GalleryImageDeleteView(
         self.object = self.get_object()
         success_url = self.get_success_url()
         self.object.delete()
-        messages.success(request, "Image deleted from the gallery.")
+        messages.success(request, "Image removed from your gallery.")
         return HttpResponseRedirect(success_url)

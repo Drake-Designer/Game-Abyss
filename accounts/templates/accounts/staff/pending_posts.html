@@ -58,7 +58,10 @@
                     {% csrf_token %}
                     <input type="hidden" name="post_id" value="{{ post.pk }}">
                     <input type="hidden" name="action" value="delete">
-                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                    <button class="btn btn-sm btn-outline-danger"
+                            type="submit"
+                            data-confirm="Are you sure you want to delete this pending post? This is an admin-only action and cannot be undone."
+                            data-confirm-title="Delete '{{ post.title }}'?">Delete</button>
                   </form>
                 </td>
               </tr>

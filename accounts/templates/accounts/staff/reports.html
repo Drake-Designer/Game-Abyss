@@ -67,18 +67,20 @@
                     <button type="submit"
                             name="delete"
                             value="{{ report.id }}"
-                            class="btn btn-sm btn-danger">Delete</button>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </form>
-    {% else %}
-      <!-- Empty state message. -->
-      <p class="text-muted">No reports found.</p>
-    {% endif %}
-  </section>
-  <!-- End staff comment reports management page. -->
+                            class="btn btn-sm btn-danger"
+                            data-confirm="Are you sure you want to delete this reported comment? This is an admin-only action and cannot be undone."
+                            data-confirm-title="Delete reported comment?">Delete</button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </form>
+  {% else %}
+    <!-- Empty state message. -->
+    <p class="text-muted">No reports found.</p>
+  {% endif %}
+</section>
+<!-- End staff comment reports management page. -->
 {% endblock content %}

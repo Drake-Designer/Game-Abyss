@@ -24,7 +24,10 @@
               (posts, comments, reactions, etc.). To confirm, enter your password below.
             </p>
             <!-- Deletion form. -->
-            <form method="post" class="mt-4">
+            <form method="post"
+                  class="mt-4"
+                  data-confirm="Are you sure you want to permanently delete your account? This will remove all your posts, comments, and data. This action cannot be undone."
+                  data-confirm-title="Delete account '{{ request.user.username }}'?">
               {% csrf_token %}
               <!-- Password confirmation input. -->
               <div class="mb-3">

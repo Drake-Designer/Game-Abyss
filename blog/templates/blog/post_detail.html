@@ -63,7 +63,8 @@
             {% if post.can_delete %}
               <form method="post"
                     action="{% url 'blog:delete_post' post.pk %}"
-                    onsubmit="return confirm('Delete this post?');">
+                    data-confirm="Are you sure you want to delete this post? This action cannot be undone."
+                    data-confirm-title="Delete '{{ post.title }}'?">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-danger">
                   <i class="fas fa-trash"></i> Delete post
@@ -184,7 +185,10 @@
                         </a>
                       {% endif %}
                       {% if comment.can_delete %}
-                        <form method="post" action="{% url 'blog:delete_comment' comment.pk %}">
+                        <form method="post"
+                              action="{% url 'blog:delete_comment' comment.pk %}"
+                              data-confirm="Are you sure you want to remove this comment? This action cannot be undone."
+                              data-confirm-title="Delete comment?">
                           {% csrf_token %}
                           <input type="hidden" name="next" value="{{ request.get_full_path }}">
                           <button type="submit" class="btn btn-sm btn-outline-danger">

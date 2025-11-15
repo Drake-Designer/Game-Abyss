@@ -73,7 +73,9 @@
                     <input type="hidden" name="action" value="delete">
                     <button class="btn btn-sm btn-outline-danger"
                             type="submit"
-                            aria-label="Delete comment {{ comment.pk }}">Delete</button>
+                            aria-label="Delete comment {{ comment.pk }}"
+                            data-confirm="Are you sure you want to delete this pending comment? This is an admin-only action and cannot be undone."
+                            data-confirm-title="Delete comment by {{ comment.author.username }}?">Delete</button>
                   </form>
                 </td>
               </tr>

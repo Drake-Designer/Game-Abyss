@@ -178,13 +178,12 @@ class ContactView(View):
 
             messages.success(
                 request,
-                "Thanks for reaching out! We emailed you a confirmation "
-                "and the team has been notified.",
+                "Thanks for reaching out! We’ve emailed a confirmation and notified the team.",
             )
             return redirect("pages:contact")
 
         messages.error(
             request,
-            "We couldn't send your request. Please review the errors below and try again.",
+            "Oops — we couldn't send your request. Please fix the errors and try again.",
         )
         return render(request, self.template_name, {"form": form})

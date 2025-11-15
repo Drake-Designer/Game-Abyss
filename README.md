@@ -1,4 +1,4 @@
-﻿﻿![Code Institute Project](documentation/code-institute-img.png)
+﻿![Code Institute Project](documentation/code-institute-img.png)
 
 <h1 align="center">
   <img src="documentation/game-abyss-favicon.webp" width="25" height="23" alt="Game Abyss Favicon"/>
@@ -244,6 +244,23 @@ Django's auth, session, and Allauth tables supplement these application models.
 
 ## Deployment
 
+### Fork and clone this repository
+
+If you plan to contribute or customize your own copy:
+
+1. Fork on GitHub
+    - Open the repository page and click "Fork" to create your copy under your account.
+2. Clone your fork locally
+    - Replace <your-username> with your GitHub handle:
+       - `git clone https://github.com/<your-username>/Game-Abyss.git`
+       - `cd Game-Abyss`
+3. (Optional) Keep your fork up to date
+    - Add the original repository as `upstream`:
+       - `git remote add upstream https://github.com/Drake-Designer/Game-Abyss.git`
+    - Pull updates later with:
+       - `git fetch upstream`
+       - `git merge upstream/main`
+
 The reference deployment uses Heroku with PostgreSQL, Cloudinary, and SendGrid.
 
 1. **Create the Heroku app.** Provision a PostgreSQL add-on and, if needed, a Cloudinary account.
@@ -375,6 +392,14 @@ Each app is self-contained with its own models, views, templates, and URLs. This
 ---
 
 ## User Experience Design
+
+To keep this section clear and easy to scan, it’s organized in the following order:
+1. User Stories
+2. Site Structure
+   - Site Pages Overview
+3. Wireframes
+4. Color Palette
+5. Typography
 
 ### User Stories
 

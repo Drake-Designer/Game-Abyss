@@ -72,6 +72,29 @@
     <div class="comp-music-player"
          role="region"
          aria-label="Background music player">
+      <!-- Global confirmation modal -->
+      <div class="modal fade"
+           id="gaConfirmModal"
+           tabindex="-1"
+           aria-hidden="true"
+           aria-labelledby="gaConfirmTitle">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content comp-confirm-modal">
+            <div class="modal-body p-4 text-center">
+              <h1 class="h4 mb-3 comp-confirm-modal__title" id="gaConfirmTitle">Confirm action</h1>
+              <p class="text-muted comp-confirm-modal__body"></p>
+              <div class="d-flex justify-content-center gap-3 mt-4">
+                <button type="button"
+                        class="comp-button comp-button--outline"
+                        data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="comp-button comp-button--primary ga-confirm-yes">
+                  <i class="fas fa-check me-2"></i>Yes, continue
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <button id="gaMusicBtn"
               class="comp-music-toggle util-is-paused"
               type="button"
@@ -107,6 +130,7 @@
             crossorigin="anonymous"
             defer></script>
     <script src="{% static 'js/music-player.js' %}" defer></script>
+    <script src="{% static 'js/confirm-modal.js' %}" defer></script>
     {% block extra_scripts %}
     {% endblock extra_scripts %}
   </body>

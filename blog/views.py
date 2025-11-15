@@ -72,7 +72,7 @@ def new_post(request):
                 post.status = BlogPost.STATUS_DRAFT
                 messages.success(
                     request,
-                    "Draft saved. Only you can see it for now.",
+                    "Draft saved — visible only to you.",
                 )
                 post.save()
                 return redirect("blog:edit_post", pk=post.pk)
@@ -81,13 +81,13 @@ def new_post(request):
                 post.status = BlogPost.STATUS_APPROVED
                 messages.success(
                     request,
-                    "Deployed. Your post is live on the front page.",
+                    "Live now — your post is published.",
                 )
             else:
                 post.status = BlogPost.STATUS_PENDING
                 messages.info(
                     request,
-                    "Transmission received. Your post is in review and will surface once approved.",
+                    "Thanks! Your post is awaiting a quick review.",
                 )
 
             post.save()
@@ -205,7 +205,7 @@ def post_detail(request, year, month, day, slug):
             if not request.user.is_authenticated:
                 messages.error(
                     request,
-                    "Log in to add your signal to the constellation.",
+                    "Please sign in to join the conversation.",
                 )
             else:
                 redirect_response = ensure_verified_email(request)
@@ -219,16 +219,17 @@ def post_detail(request, year, month, day, slug):
                 if request.user.is_staff or request.user.is_superuser:
                     comment.status = Comment.STATUS_APPROVED
                     comment.save()
-                    messages.success(request, "Comment live.")
+                    messages.success(
+                        request, "Live now — your staff comment is visible.")
                 else:
                     comment.status = Comment.STATUS_PENDING
                     comment.save()
                     messages.success(
-                        request, "Your comment is pending approval."
+                        request, "Thanks! Your comment is awaiting a quick review."
                     )
                 return redirect(post.get_absolute_url())
 
-            messages.error(request, "We could not accept that comment.")
+            messages.error(request, "Oops — we couldn’t accept that comment.")
 
         # Comments (approved only for public)
         approved_comments = list(
@@ -371,15 +372,15 @@ def edit_post(request, pk):
             updated_post = form.save(commit=False)
             updated_post.author = post.author
             action = request.POST.get("action") or "save"
-            message_text = "Post updated."
+            message_text = "All set! Your post was updated."
             message_level = messages.success
             if request.user.is_staff or request.user.is_superuser:
                 if action == "save_draft":
                     updated_post.status = BlogPost.STATUS_DRAFT
-                    message_text = "Draft saved."
+                    message_text = "Draft saved — visible only to you."
                 elif action == "publish":
                     updated_post.status = BlogPost.STATUS_APPROVED
-                    message_text = "Post published."
+                    message_text = "Live now — your post is published."
             else:
                 if action == "save_draft":
                     updated_post.status = BlogPost.STATUS_DRAFT
@@ -387,17 +388,17 @@ def edit_post(request, pk):
                 elif action == "publish":
                     if original_status == BlogPost.STATUS_APPROVED:
                         updated_post.status = BlogPost.STATUS_APPROVED
-                        message_text = "Post updated."
+                        message_text = "All set! Your post was updated."
                     else:
                         updated_post.status = BlogPost.STATUS_PENDING
-                        message_text = "Post submitted for review."
+                        message_text = "Thanks! Your post is awaiting a quick review."
                         message_level = messages.info
                 else:
                     updated_post.status = original_status
                     if original_status == BlogPost.STATUS_DRAFT:
                         message_text = "Draft updated."
                     elif original_status == BlogPost.STATUS_PENDING:
-                        message_text = "Post updated. Still pending review."
+                        message_text = "Post updated — still awaiting review."
                         message_level = messages.info
 
                 if hasattr(updated_post, "featured"):
@@ -448,7 +449,7 @@ def edit_comment(request, pk):
         if form.is_valid():
             comment.body = form.cleaned_data["body"]
             comment.save(update_fields=["body", "updated_at"])
-            messages.success(request, "Comment updated.")
+            messages.success(request, "All set! Your comment was updated.")
             return redirect(redirect_url)
     else:
         form = CommentForm(instance=comment)
@@ -473,7 +474,7 @@ def react_to_post(request, pk):
     redirect_url = request.POST.get("next") or post.get_absolute_url()
 
     if reaction_value not in REACTION_VALUES:
-        messages.error(request, "Invalid reaction.")
+        messages.error(request, "Oops — that reaction isn’t valid.")
         return redirect(redirect_url)
 
     reaction, created = PostReaction.objects.get_or_create(
@@ -487,7 +488,7 @@ def react_to_post(request, pk):
     else:
         reaction.reaction = reaction_value
         reaction.save(update_fields=["reaction", "updated_at"])
-        messages.success(request, "Reaction recorded!")
+        messages.success(request, "Reaction saved!")
 
     return redirect(redirect_url)
 
@@ -505,12 +506,12 @@ def react_to_comment(request, pk):
 
     # Only staff can react to non-approved comments
     if comment.status != Comment.STATUS_APPROVED and not request.user.is_staff:
-        messages.error(request, "You cannot react to a non-approved comment.")
+        messages.error(request, "You can’t react to a non-approved comment.")
         return redirect(redirect_url)
 
     reaction_value = request.POST.get("reaction")
     if reaction_value not in REACTION_VALUES:
-        messages.error(request, "Invalid reaction.")
+        messages.error(request, "Oops — that reaction isn’t valid.")
         return redirect(redirect_url)
 
     reaction, created = CommentReaction.objects.get_or_create(
@@ -524,7 +525,7 @@ def react_to_comment(request, pk):
     else:
         reaction.reaction = reaction_value
         reaction.save(update_fields=["reaction", "updated_at"])
-        messages.success(request, "Comment reaction recorded!")
+        messages.success(request, "Comment reaction saved!")
 
     return redirect(redirect_url)
 
@@ -546,14 +547,14 @@ def report_comment(request, pk):
         raise PermissionDenied("Staff members cannot report comments.")
 
     if comment.author_id == request.user.id:
-        messages.error(request, "You cannot report your own comment.")
+        messages.error(request, "You can’t report your own comment.")
         return redirect(redirect_url)
 
     reason = request.POST.get("reason")
     notes = (request.POST.get("notes") or "").strip()
 
     if reason not in CommentReport.Reason.values:
-        messages.error(request, "Invalid report reason.")
+        messages.error(request, "Pick a valid reason to report.")
         return redirect(redirect_url)
 
     _report, created = CommentReport.objects.get_or_create(
@@ -568,10 +569,10 @@ def report_comment(request, pk):
         comment.save(update_fields=["status", "updated_at"])
         messages.success(
             request,
-            "Thanks for the report. The moderation team has been notified.",
+            "Thanks for flagging this — our moderators have been notified.",
         )
     else:
-        messages.info(request, "You already reported this comment.")
+        messages.info(request, "You’ve already reported this comment.")
 
     return redirect(redirect_url)
 
@@ -591,7 +592,7 @@ def delete_comment(request, pk):
         raise PermissionDenied("You cannot delete this comment.")
 
     comment.delete()
-    messages.success(request, "Comment deleted.")
+    messages.success(request, "Comment removed.")
     return redirect(redirect_url)
 
 
@@ -609,5 +610,5 @@ def delete_post(request, pk):
         raise PermissionDenied("You cannot delete this post.")
 
     post.delete()
-    messages.success(request, "Post deleted.")
+    messages.success(request, "Post removed.")
     return redirect("blog:index")

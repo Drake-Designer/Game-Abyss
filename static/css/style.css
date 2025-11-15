@@ -315,6 +315,37 @@ hr {
   color: #fff;
 }
 
+/* Confirmation modal */
+/* stylelint-disable selector-class-pattern, selector-id-pattern */
+#gaConfirmModal .modal-content {
+  background-color: var(--color-surface) !important;
+  border: 2px solid rgb(255 107 53 / 60%) !important;
+  border-radius: var(--radius);
+  box-shadow:
+    0 0 20px rgb(255 107 53 / 40%),
+    var(--shadow-lg);
+  color: var(--color-text);
+}
+
+#gaConfirmModal .modal-body {
+  background-color: transparent !important;
+}
+
+#gaConfirmModal .comp-confirm-modal__title {
+  color: #fff !important;
+  font-family: var(--font-headings);
+  font-size: var(--fs-card-title);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+#gaConfirmModal .comp-confirm-modal__body {
+  color: var(--color-text-muted) !important;
+  font-family: var(--font-secondary);
+  font-size: var(--fs-p);
+}
+/* stylelint-enable selector-class-pattern, selector-id-pattern */
+
 /* Pagination */
 .comp-pagination {
   align-items: center;

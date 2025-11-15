@@ -54,6 +54,8 @@
                       {% csrf_token %}
                       <button type="submit"
                               name="resolve"
+                              data-confirm="Mark this help request as resolved?"
+                              data-confirm-title="Resolve '{{ req.subject }}'?"
                               value="{{ req.id }}"
                               class="btn btn-sm btn-primary">Mark resolved</button>
                     </form>
@@ -62,6 +64,8 @@
                     {% csrf_token %}
                     <button type="submit"
                             name="delete"
+                            data-confirm="Are you sure you want to delete this help request? This is an admin-only action and cannot be undone."
+                            data-confirm-title="Delete '{{ req.subject }}'?"
                             value="{{ req.id }}"
                             class="btn btn-sm btn-danger">Delete</button>
                   </form>

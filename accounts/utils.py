@@ -20,9 +20,8 @@ from blog.models import BlogPost, Comment, CommentReport, log_moderation_action
 # ============================================================
 
 EMAIL_VERIFICATION_REQUIRED_MESSAGE = (
-    "Please verify your email address before continuing. "
-    "Check your inbox for the confirmation link or request a new one "
-    "from the Email Addresses page."
+    "Please verify your email to continue. Check your inbox for our confirmation link, "
+    "or request a new one from the Email Addresses page."
 )
 
 
