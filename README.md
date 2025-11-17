@@ -5,7 +5,7 @@
   Milestone Project 3: Game Abyss
 </h1>
 
-![Game Abyss homepage screenshot](documentation/validation/am-i-responsive.png)
+![Game Abyss homepage screenshot](documentation/validation/am-i-responsive.webp)
 
 [Live Site](https://game-abyss-a25a8ac090c2.herokuapp.com/)
 
