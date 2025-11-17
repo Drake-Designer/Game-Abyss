@@ -177,7 +177,7 @@ I used [Google Lighthouse](https://developers.google.com/web/tools/lighthouse) i
 
 #### Desktop results
 
-![Lighthouse Desktop Results](documentation/validation/lighthouse-desktop.png)
+![Lighthouse Desktop Results](documentation/validation/lighthouse-desktop.webp)
 
 **Scores:**
 
@@ -190,7 +190,7 @@ All core Web Vitals are green, with negligible blocking time and no layout shift
 
 #### Mobile results
 
-![Lighthouse Mobile Results](documentation/validation/lighthouse-mobile.png)
+![Lighthouse Mobile Results](documentation/validation/lighthouse-mobile.webp)
 
 **Scores:**
 
