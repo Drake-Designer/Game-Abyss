@@ -11,76 +11,122 @@
 {% block content %}
   <!-- Render staff comment reports management page. -->
   <section class="container py-4">
-    <!-- Page heading. -->
     <h1 class="h3 mb-3">Reported comments</h1>
-    {% if reports %}
-      <!-- Reports table. -->
-      <form method="post">
-        {% csrf_token %}
-        <div class="table-responsive">
-          <table class="table table-striped align-middle">
-            <thead>
-              <tr>
-                <th scope="col">Comment</th>
-                <th scope="col">Reported by</th>
-                <th scope="col">Reason</th>
-                <th scope="col">Notes</th>
-                <th scope="col">Created</th>
-                <th scope="col">Resolved</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for report in reports %}
-                <tr class="{% if report.resolved %}table-light{% else %}table-warning{% endif %}">
-                  <!-- Reported comment. -->
-                  <td>
-                    <a href="{{ report.comment.post.get_absolute_url }}#comment-{{ report.comment.id }}"
-                       target="_blank"
-                       rel="noopener">{{ report.comment.body|truncatewords:12 }}</a>
-                  </td>
-                  <!-- Reporter. -->
-                  <td>
-                    <a href="{% url 'accounts:profile' report.reported_by.username %}">{{ report.reported_by.username }}</a>
-                  </td>
-                  <!-- Report details. -->
-                  <td>{{ report.get_reason_display }}</td>
-                  <td>{{ report.notes|default:"—" }}</td>
-                  <!-- Created date. -->
-                  <td>{{ report.created_at|date:"F j, Y H:i" }}</td>
-                  <!-- Resolution status. -->
-                  <td>
-                    {% if report.resolved %}
-                      <span class="badge bg-success">Yes</span>
-                    {% else %}
-                      <span class="badge bg-danger">No</span>
-                    {% endif %}
-                  </td>
-                  <!-- Action buttons. -->
-                  <td>
-                    {% if not report.resolved %}
-                      <button type="submit"
-                              name="resolve"
-                              value="{{ report.id }}"
-                              class="btn btn-sm btn-primary">Mark resolved</button>
-                    {% endif %}
-                    <button type="submit"
-                            name="delete"
-                            value="{{ report.id }}"
-                            class="btn btn-sm btn-danger"
-                            data-confirm="Are you sure you want to delete this reported comment? This is an admin-only action and cannot be undone."
-                            data-confirm-title="Delete reported comment?">Delete</button>
+    <p class="text-muted small mb-3">Open reports: {{ total_reports }}</p>
+    {% if page_obj.object_list %}
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead>
+            <tr>
+              <th scope="col">Comment</th>
+              <th scope="col">Reported by</th>
+              <th scope="col">Reason</th>
+              <th scope="col">Notes</th>
+              <th scope="col">Created</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for report in page_obj.object_list %}
+              <tr class="{% if report.resolved %}table-light{% else %}table-warning{% endif %}">
+                <!-- Reported comment -->
+                <td>
+                  <a href="{{ report.comment.post.get_absolute_url }}#comment-{{ report.comment.id }}"
+                     target="_blank"
+                     rel="noopener">{{ report.comment.body|truncatewords:12 }}</a>
+                </td>
+                <!-- Reporter -->
+                <td>
+                  <a href="{% url 'accounts:profile' report.reported_by.username %}">{{ report.reported_by.username }}</a>
+                </td>
+                <!-- Details -->
+                <td>{{ report.get_reason_display }}</td>
+                <td>{{ report.notes|default:"—" }}</td>
+                <td>{{ report.created_at|date:"F j, Y H:i" }}</td>
+                <!-- Status badge -->
+                <td>
+                  {% if report.resolved %}
+                    <span class="badge bg-success">Resolved</span>
+                  {% else %}
+                    <span class="badge bg-danger">Open</span>
+                  {% endif %}
+                </td>
+                <!-- Row action buttons -->
+                <td>
+                  {% if not report.resolved %}
+                    <div class="d-flex gap-2 flex-wrap">
+                      <!-- Resolve (close without touching comment) -->
+                      <form method="post" class="m-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="report_id" value="{{ report.id }}" />
+                        <input type="hidden" name="action" value="resolve" />
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-primary"
+                                title="Mark report resolved">Resolve</button>
+                      </form>
+                      <!-- Reject comment (hide comment) -->
+                      <form method="post" class="m-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="report_id" value="{{ report.id }}" />
+                        <input type="hidden" name="action" value="reject_comment" />
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-warning"
+                                title="Reject and hide comment">Reject</button>
+                      </form>
+                      <!-- Delete comment -->
+                      <form method="post"
+                            class="m-0"
+                            data-confirm="Are you sure? This permanently deletes the comment."
+                            data-confirm-title="Delete comment?">
+                        {% csrf_token %}
+                        <input type="hidden" name="report_id" value="{{ report.id }}" />
+                        <input type="hidden" name="action" value="delete_comment" />
+                        <button type="submit"
+                                class="btn btn-sm btn-outline-danger"
+                                title="Delete comment permanently">Delete</button>
+                      </form>
+                    </div>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
                 </td>
               </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-    </form>
-  {% else %}
-    <!-- Empty state message. -->
-    <p class="text-muted">No reports found.</p>
-  {% endif %}
-</section>
-<!-- End staff comment reports management page. -->
+      <!-- Pagination -->
+      {% if page_obj.paginator.num_pages > 1 %}
+        <nav aria-label="Reports pagination" class="mt-3">
+          <ul class="pagination pagination-sm">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">«</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link">«</span>
+              </li>
+            {% endif %}
+            <li class="page-item disabled">
+              <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">»</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled">
+                <span class="page-link">»</span>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+    {% else %}
+      <p class="text-muted">No reports found.</p>
+    {% endif %}
+  </section>
+  <!-- End staff comment reports management page. -->
 {% endblock content %}
