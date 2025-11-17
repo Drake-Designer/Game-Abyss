@@ -5,11 +5,11 @@
   Milestone Project 3: Game Abyss
 </h1>
 
-![Game Abyss screenshot showing the dark themed homepage](documentation/validation/am-i-responsive.png)
+![Game Abyss homepage screenshot](documentation/validation/am-i-responsive.png)
 
-[Live site on Heroku](https://game-abyss-a25a8ac090c2.herokuapp.com/)
+[Live Site](https://game-abyss-a25a8ac090c2.herokuapp.com/)
 
-Game Abyss is a community-driven gaming blog built with Django. Players can draft posts with a rich text editor, react to each other's content, share screenshots, and reach the moderation team through a structured help desk.
+Game Abyss is a simple community gaming blog. You can write posts, react to other posts, leave comments, share game images, and contact staff for help.
 
 ---
 
@@ -17,377 +17,128 @@ Game Abyss is a community-driven gaming blog built with Django. Players can draf
 
 - [Project Overview](#project-overview)
 - [How Game Abyss Works](#how-game-abyss-works)
-- [How I Split the Project into Apps](#how-i-split-the-project-into-apps)
+- [Feature Summary](#feature-summary)
 - [User Experience Design](#user-experience-design)
-  - [User Stories](#user-stories)
-  - [Site Structure](#site-structure)
-  - [Wireframes](#wireframes)
-  - [Color Palette](#color-palette)
-  - [Typography](#typography)
 - [Features](#features)
 - [Technical Overview](#technical-overview)
-- [Database Schema](#database-schema)
+- [Technologies Used](#technologies-used)
+ - [Email System](#email-system)
+- [Database Design](#database-design)
 - [Testing and Bug Fixes](#testing-and-bug-fixes)
-- [Behind the Scenes: My Development Journey](#behind-the-scenes-my-development-journey)
-- [Future Improvements](#future-improvements)
 - [Running the Project Locally](#running-the-project-locally)
 - [Deployment](#deployment)
+- [Behind the Scenes: My Development Journey](#behind-the-scenes-my-development-journey)
+- [Future Improvements](#future-improvements)
 - [Credits](#credits)
 
 ---
 
 ## Project Overview
 
-Welcome to **Game Abyss!**
+**Game Abyss** is a small community blog about games.
 
-A modern, community-driven gaming blog platform designed for gamers, by gamers. Whether you're a casual player or a hardcore enthusiast, Game Abyss is your space to:
+You can:
 
-> Share your thoughts, read reviews, discover new games, and connect with fellow gamers from around the world!
+> Write posts, read others, react, comment, and share images.
+
+I built it while learning Django. Instead of a throwaway demo, I wanted something real I can grow after the course.
 
 ### The Story Behind Game Abyss
 
-Here's the truth: **I've wanted to create a gaming blog for ages!**
+For a long time I wanted a small friendly place to talk about games. Big sites felt noisy. When I learned Django I realised I could build it myself.
 
-For years, I've been thinking: _"Wouldn't it be cool to have my own gaming community where people can share reviews, discuss their favorite games, and just... talk about gaming?"_ But I never knew where to start or how to build it.
+I kept the goal simple: a clean blog where people can write, react, and share images without clutter.
 
-Then came my journey with **Python and Django** through the Code Institute course, and suddenly everything clicked! 🎯
+So this project mixes:
 
-I realized: _"Wait a minute... I'm literally learning exactly what I need to build that blog I've always wanted!"_
+- My love for gaming since childhood
+- Learning and practising Django
+- A real project I can improve after the course
 
-So instead of creating just another practice project to tick off the assessment requirements, I thought: **"Why not make this count? Why not build something I actually care about and can continue developing after graduation?"**
+I chose to start small, make it work well, and then add ideas later instead of rushing many half-finished features.
 
-And that's how Game Abyss was born! 🚀
+### What You Get
 
-This project is my way of combining:
+- Write and edit posts with a rich text editor
+- Account system (signup, login, password reset, email check)
+- Real emails for resets and notifications
+- Comments and reactions (like / love / dislike) on posts and comments
+- User profiles with avatar and basic stats
+- Image gallery with an "My uploads" page
+- Staff tools to approve, reject, and feature content
+- Dark responsive layout for mobile and desktop
+- Clean admin panel (Jazzmin themed)
+- Hosted on Heroku with PostgreSQL and optional Cloudinary
 
-- ✅ My passion for gaming (I've been a gamer since I was a kid!)
-- ✅ My newly acquired Python and Django skills
-- ✅ My long-term dream of running a gaming community
-- ✅ A real-world portfolio project I'm genuinely proud of
+### Who It Is For
 
-The best part? This isn't just a one-and-done academic project. I'm already thinking about features to add in the future, like better profile image cropping, improved staff moderation tools, and much more. Game Abyss is just getting started! 💪
+- Players who want to share thoughts
+- Readers who want quick, honest game views
+- Staff who need simple moderation
+- Anyone who wants a quiet gaming corner
 
-### What Game Abyss Offers
-
-Game Abyss is a modern, community-focused gaming hub built with Django. It exists for players who want a space that blends thoughtful long-form posts, quick reactions, community screenshots, and a responsive moderation team.
-
-**Core Features:**
-
-- **Full Blog System**: Create, edit, delete, and publish blog posts with rich text editing (Django Summernote)
-- **User Authentication**: Secure registration, login, and password reset via Django Allauth with email verification
-- **Professional Email System**: Real password reset and notification emails via SendGrid (not just console output!)
-- **Comment & Reaction System**: Engage with posts through comments, likes, loves, and reactions
-- **User Profiles**: Personalized profile pages showing stats, activity, favorite games, and genres
-- **Gallery System**: Upload and share gaming screenshots and artwork with "My uploads" dashboard
-- **Moderation Tools**: Staff dashboard for content approval, comment management, and moderation logs
-- **Responsive Design**: Beautiful dark theme that works perfectly on desktop, tablet, and mobile
-- **Admin Dashboard**: Elegant Django admin panel styled with Jazzmin for easy content management
-- **Production-Ready**: Deployed on Heroku with PostgreSQL, Cloudinary, and WhiteNoise
-
-### Target Audience
-
-Game Abyss is built for:
-
-- **Gamers** who want to share their gaming experiences, reviews, and opinions
-- **Players** looking for honest reviews and recommendations from real people (not just critics!)
-- **Gaming enthusiasts** who enjoy community discussions and debates
-- **Content creators** who want a platform for their gaming content
-- **Staff moderators** who need an audit-friendly workflow to keep the space safe
-- **Anyone** who loves games and wants to be part of a friendly, welcoming community
-
-**Why it exists:** Mainstream gaming sites can feel noisy or anonymous. Game Abyss keeps things smaller on purpose: every post is moderated, the gallery is curated, and the help desk connects players directly with staff. Email notifications and clear status badges mean contributors always know what happens to their submissions.
+Every post goes through approval. Gallery uploads are checked. A help form lets users reach staff. Clear status labels show what happened to your content.
 
 ---
 
 ## How Game Abyss Works
 
-1. **Browse or join.** Anyone can read the blog and gallery. Signing up (via Django Allauth) unlocks reactions, comments, uploads, and profile pages.
-2. **Publish responsibly.** Authors write in a Summernote editor, save drafts, or request publication. Staff-approved posts appear on the homepage and in the blog index.
-3. **Engage with the community.** Readers react with like/love/dislike buttons, leave comments, report issues, and follow links to author profiles.
-4. **Share visuals.** Uploaders add screenshots to the gallery and manage them from a "My uploads" dashboard. Staff can feature standout images in the homepage hero carousel.
-5. **Reach support.** The contact form logs help requests, emails both sides, and lets staff track status inside a moderation workspace.
-6. **Enjoy the atmosphere.** Optional background music, animated homepage pagination, and accessible UI elements round out the experience.
+1. Read posts and view the gallery without an account.
+2. Sign up to write posts, comment, react, upload images, and edit your profile.
+3. Posts start as draft or pending; staff approve or reject them.
+4. You can like, love, or dislike posts and comments.
+5. Upload game images; staff can mark some as featured.
+6. Use the contact form to send a help request to staff.
+7. Small extras: optional music, simple animations, clear focus styles.
 
 ---
 
-## Feature Set
+## Feature Summary
 
-### Blogging and community conversation
+### Blog
 
-- **Rich authoring.** Summernote powers headings, lists, and links while Bleach sanitises the saved HTML. Reading time, excerpts, and tags are calculated automatically.
-- **Moderated workflow.** Posts move through Draft → Pending → Approved/Rejected. Authors always see current status and can edit or delete their own work.
-- **Comment system.** Logged-in users add comments (email verification required), edit their own text, and see approval badges.
-- **Reactions.** Posts and comments support like/love/dislike toggles with per-user limits. Counts update instantly on refresh.
-- **Reporting.** Members can flag inappropriate comments; reports push the comment back into moderation and notify staff.
+- Write posts with a rich text editor (HTML is cleaned for safety)
+- Draft → Pending → Approved or Rejected flow
+- Edit or delete your own posts
+- Tags, excerpts, reading time auto set
 
-### Gallery management
+### Comments & Reactions
 
-- **Community uploads.** Authenticated users upload JPEG, PNG, WEBP, or GIF files up to 10 MB. Non-staff uploads start as Pending, staff uploads go live immediately.
-- **My uploads dashboard.** Contributors track approval counts, paginate through submissions, and remove entries. Deleting a record also deletes the stored media.
-- **Featured highlights.** Staff can flag gallery images as featured; the homepage carousel pulls from this curated list.
+- Add a comment (needs verified email)
+- Like / Love / Dislike posts and comments (one per user)
+- Report a comment if it breaks rules
 
-### Accounts and profiles
+### Gallery
 
-- **Profiles with stats.** Every account has a profile page showing avatar, biography, favourite games/genres, and contribution counts. Dates of birth display in a privacy-aware format.
-- **Profile editing.** Users can update personal data, upload avatars, and request an email change. New addresses trigger Allauth confirmation flows.
-- **Account safety.** Verified emails are required for publishing, commenting, reacting, and deleting accounts. Deletion asks for the password and logs the user out cleanly.
-- **Background music controls.** A persistent player lets users opt into the bundled soundtrack, remembers preferences, and respects reduced-motion settings.
+- Upload game images (common formats, size limit)
+- See and manage your uploads
+- Staff can feature images for the homepage
 
-### Support & messaging
+### Profiles
 
-- **Help desk form.** Visitors submit their name, email, subject, message, and priority. Authenticated users get pre-filled details.
-- **Email notifications.** Staff receive HTML notifications for new help requests, posts, comments, and comment reports. Authors get emails when posts are approved, rejected, or featured.
-- **Message framework.** Success, info, and error messages appear across the site so users always know what happened.
+- Avatar, short bio, favourite games / genres
+- Update details and email
+- Email must be verified for key actions
 
-### Staff operations
+### Help & Messages
 
-- **Staff dashboard.** Moderators see counts for pending posts/comments, unresolved reports, open help requests, featured posts, and total users.
-- **Moderation tools.** Dedicated views handle post approvals, comment moderation, report resolution, help request triage, featured flag management, content search, and viewing the site as any user.
-- **Audit logging.** Every approve/reject/delete action records a `ModerationActionLog` entry with actor, target, and notes.
+- Simple contact form
+- Emails sent for approvals, rejections, reports
+- Clear success / error messages across the site
 
-### Site experience
+### Staff Tools
 
-- **Responsive layout.** Bootstrap 5 plus custom styles deliver a consistent dark theme from mobile to desktop. Tables wrap, cards stack, and navigation collapses cleanly.
-- **Accessible interactions.** Visible focus states, semantic landmarks, ARIA attributes on dynamic sections, and keyboard-friendly controls support inclusive use.
-- **Dynamic homepage.** JavaScript fetches paginated featured and latest posts without a full page reload and honours `prefers-reduced-motion`.
-- **Static asset pipeline.** WhiteNoise serves compiled CSS/JS, and Cloudinary (when configured) optimises media delivery.
+- Dashboard with counts
+- Approve or reject posts and comments
+- Resolve reports and feature content
+- Log each action for audit
 
----
+### General Experience
 
-## Technical Overview
-
-### Architecture
-
-- **Framework:** Django 5 configured as a multi-app project (`pages`, `blog`, `gallery`, `accounts`, `core`).
-- **Authentication:** Django Allauth provides registration, login, password reset, and email management. Email verification is optional but enforced for sensitive flows via decorators.
-- **Templating:** Django templates with componentised partials for navigation, pagination, cards, and emails.
-- **Front-end:** Bootstrap 5, Font Awesome 6, and custom CSS (`static/css/style.css`). JavaScript enhancements live in `static/js/home-pagination.js` and `static/js/music-player.js`.
-
-### Editors & media handling
-
-- **Rich text:** Django Summernote embeds a WYSIWYG editor; attachments are disabled to keep uploads inside the gallery workflow.
-- **Sanitisation:** `blog/html.py` sanitises HTML and extracts plain text for excerpts and reading-time calculations.
-- **Media storage:** Local file storage in development; optional Cloudinary integration activates automatically when credentials are supplied. Gallery deletions also remove the media file.
-
-### Email workflow
-
-- **Renderer:** `core.emailing` composes HTML and plain-text emails, injects shared branding, inlines CSS when Premailer is installed, and falls back gracefully.
-- **Triggers:** Signals fire on new posts, comments, and comment reports. Views trigger notifications for approvals, rejections, features, and help requests.
-- **Transport:** Console backend in development; SendGrid-compatible SMTP settings in production. Support email recipients default to `PRIMARY_SUPERADMIN_EMAIL` when no other address is set.
-
-### Additional tooling
-
-- **Static serving:** WhiteNoise manages static assets in production builds.
-- **Admin UI:** Jazzmin reskins the Django admin for staff usability.
-- **Node-based linting:** `npm install` enables optional ESLint, Stylelint, and Prettier scripts for front-end files.
-
----
-
-## Database Schema
-
-| Model | Key fields | Description |
-| --- | --- | --- |
-| `accounts.UserProfile` | `user`, `avatar`, `date_of_birth`, `bio`, `favorite_games`, `favorite_genres` | One-to-one extension of the Django user model with profile data and avatar helpers. |
-| `blog.BlogPost` | `author`, `title`, `slug`, `excerpt`, `body`, `image`, `tags`, `status`, `featured`, `reading_time`, `published_at` | Blog articles with moderation state, unique slugs, sanitised HTML, tag metadata, and derived reading time. |
-| `blog.Comment` | `post`, `author`, `body`, `status`, timestamps | User comments linked to posts and subject to approval. |
-| `blog.PostReaction` | `post`, `user`, `reaction`, timestamps | One-per-user reaction records for posts. |
-| `blog.CommentReaction` | `comment`, `user`, `reaction`, timestamps | One-per-user reaction records for comments. |
-| `blog.CommentReport` | `comment`, `reported_by`, `reason`, `notes`, `resolved` | Tracks moderation reports and prevents duplicate submissions per user/comment pair. |
-| `blog.ModerationActionLog` | `actor`, `action`, `target_model`, `target_id`, `target_repr`, `notes`, `created_at` | Audit log entry created whenever staff moderate posts, comments, or reports. |
-| `gallery.GalleryImage` | `image`, `uploaded_by`, `title`, `caption`, `status`, `is_featured`, `featured_at`, `created_at` | Community gallery items with moderation status, feature tracking, and cleanup logic. |
-| `pages.HelpRequest` | `user`, `name`, `email`, `subject`, `message`, `priority`, `status`, timestamps | Stored help desk ticket that powers staff notifications and progress tracking. |
-
-Django's auth, session, and Allauth tables supplement these application models.
-
----
-
-## Running the Project Locally
-
-1. **Clone and set up Python.** Use Python 3.13 (the version used for automated tests) and create a virtual environment.
-   ```bash
-   git clone https://github.com/<your-username>/Game-Abyss.git
-   cd Game-Abyss
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows use .venv\\Scripts\\activate
-   ```
-2. **Install dependencies.**
-   ```bash
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   pip install -r dev-requirements.txt  # optional helpers for formatting/tests
-   ```
-   To use the optional lint scripts, also run `npm install`.
-3. **Configure environment variables.** Create an `env.py` (loaded by `core/settings.py`) or export variables in your shell:
-   ```python
-   import os
-   os.environ.setdefault("SECRET_KEY", "dev-secret")
-   os.environ.setdefault("DEBUG", "True")
-   os.environ.setdefault("SITE_DOMAIN", "localhost:8000")
-   os.environ.setdefault("DEFAULT_FROM_EMAIL", "Game Abyss <dev@example.com>")
-   os.environ.setdefault("PRIMARY_SUPERADMIN_EMAIL", "dev@example.com")
-   ```
-   Optional variables:
-   - `DATABASE_URL` for PostgreSQL
-   - `CLOUDINARY_URL` or `CLOUDINARY_CLOUD_NAME` + API keys for hosted media
-   - `SENDGRID_API_KEY` or SMTP credentials (`EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, etc.)
-   - `ALLOWED_HOSTS`, `SITE_BASE_URL`, and `SUPPORT_EMAIL` for production-friendly URLs
-   - `BLOG_COMMENT_BANNED_WORDS` and `BLOG_COMMENT_MAX_LINKS` to tune moderation rules
-4. **Prepare the database and run the server.**
-   ```bash
-   python manage.py migrate
-   python manage.py createsuperuser  # optional but recommended for admin access
-   python manage.py runserver
-   ```
-5. **Access the site.** Visit `http://localhost:8000/` and log in with your created account. Use the Django admin (`/admin/`) for staff controls.
-
----
-
-## Deployment
-
-### Fork and clone this repository
-
-If you plan to contribute or customize your own copy:
-
-1. Fork on GitHub
-    - Open the repository page and click "Fork" to create your copy under your account.
-2. Clone your fork locally
-    - Replace <your-username> with your GitHub handle:
-       - `git clone https://github.com/<your-username>/Game-Abyss.git`
-       - `cd Game-Abyss`
-3. (Optional) Keep your fork up to date
-    - Add the original repository as `upstream`:
-       - `git remote add upstream https://github.com/Drake-Designer/Game-Abyss.git`
-    - Pull updates later with:
-       - `git fetch upstream`
-       - `git merge upstream/main`
-
-The reference deployment uses Heroku with PostgreSQL, Cloudinary, and SendGrid.
-
-1. **Create the Heroku app.** Provision a PostgreSQL add-on and, if needed, a Cloudinary account.
-2. **Set config vars.** At minimum provide `SECRET_KEY`, `DATABASE_URL` (auto-set by Heroku Postgres), `ALLOWED_HOSTS`, `SITE_DOMAIN`, `PRIMARY_SUPERADMIN_EMAIL`, `DEFAULT_FROM_EMAIL`, and your email backend credentials (`SENDGRID_API_KEY` or SMTP settings). Add Cloudinary credentials when using hosted media.
-3. **Push the code.** Heroku installs `requirements.txt`, runs `python manage.py collectstatic` through WhiteNoise, and executes migrations via the `release` command in `Procfile`.
-4. **Create admin users.** Run `heroku run python manage.py createsuperuser` to seed moderation accounts. Staff can then operate through the Jazzmin-themed admin or the built-in staff dashboard.
-
-The `Procfile` configures Gunicorn for web serving and runs migrations on each release.
-
----
-
-## Testing
-
-Automated and manual testing are documented in [TESTING.md](TESTING.md). The Django test suite currently runs 87 tests across accounts, blog, gallery, and pages apps, covering workflows, permissions, and utilities.
-
----
-
-## Credits
-
-- **Frameworks & libraries:** Django, Django Allauth, Django Summernote, Bleach, Jazzmin, Bootstrap 5, Font Awesome, WhiteNoise.
-- **Media & tooling:** Cloudinary (optional media storage), SendGrid-compatible SMTP for transactional email.
-- **Front-end polish:** Home pagination and background music scripts are bespoke and live in `static/js/`.
-- **Team & inspiration:** Thanks to the Game Abyss community testers and mentors who provided feedback during development.
-
-All other assets (including the favicon, hero art, and bundled audio theme) ship with this repository. Replace them with your own licensed media if you fork the project.
-
----
-
-## How Game Abyss Evolved
-
-One of the most exciting parts of building Game Abyss was watching it grow organically, commit after commit. I didn't plan every feature upfront - instead, I let the project evolve naturally as I learned more about Django and got new ideas.
-
-Here's how Game Abyss came to life:
-
-### Phase 1: The Foundation
-
-- **Basic Django Setup**: Started with the core project structure, apps, and basic templates
-- **User Authentication**: Integrated Django Allauth for registration, login, and password reset
-- **Email System**: Set up SendGrid for real email delivery (not just console!)
-- **Blog Models**: Created the `BlogPost` model with title, body, slug, author, and timestamps
-- **Responsive Layout**: Built the dark-themed UI with Bootstrap and custom CSS
-
-### Phase 2: Growing the Blog
-
-- **Rich Text Editor**: Added Django Summernote for beautiful post editing
-- **Draft System**: Implemented draft/pending/approved/rejected status workflow
-- **Slug Generation**: Made slugs globally unique and automatic based on post titles
-- **Featured Posts**: Added ability to feature posts on the homepage
-- **Tags System**: Created tag parsing, normalization, and filtering
-- **Reading Time**: Auto-calculated reading time based on word count
-- **Pagination**: Added elegant pagination for posts with carousel-style featured section
-
-### Phase 3: User Engagement
-
-- **Comments**: Built a full comment system with moderation
-- **Reactions**: Added like/love/dislike reactions for posts and comments
-- **Comment Reports**: Let users report inappropriate comments
-- **User Profiles**: Created personalized profile pages with stats and activity
-- **Avatar Upload**: Added profile picture uploads with default fallback
-- **Favorite Games & Genres**: Let users showcase their gaming interests
-- **Profile Badges**: Visual badges for staff and super admin users
-
-### Phase 4: Content Management
-
-- **Gallery App**: Built a separate app for screenshots and artwork
-- **Moderation Dashboard**: Created staff tools for approving content
-- **Moderation Logs**: Added audit trail of all moderation actions
-- **Email Notifications**: Sent styled HTML emails when posts get approved/rejected
-- **Draft Management**: Let authors view and manage their draft, pending, and approved posts
-- **Post Editing**: Added full edit capabilities with status transitions
-
-### Phase 5: Polish & Security
-
-- **Access Control**: Restricted editing to post owners, deleting to staff/admins
-- **Email Verification**: Required verified email for sensitive actions (posting, commenting, reacting)
-- **Password Confirmation**: Added password check before account deletion
-- **Profile Visibility**: Made profiles visible only to logged-in users with proper permissions
-- **Error Pages**: Custom 403, 404, and 500 error templates matching site design
-- **Code Quality**: Achieved **10/10 Pylint score** across all apps with comprehensive documentation
-
-### Phase 6: Professional Touches
-
-- **Jazzmin Admin**: Styled the Django admin panel to look modern and professional
-- **Cloudinary Integration**: Moved media files to cloud storage for scalability
-- **WhiteNoise**: Optimized static file serving for production
-- **Custom Email Templates**: Beautiful HTML emails with inline CSS via Premailer
-- **Comprehensive Testing**: Wrote **76 unit tests** with **100% pass rate**
-- **HTML/CSS/Python Validation**: All code validated and compliant with W3C and PEP 8 standards
-
-### Smart Dependency Management
-
-One decision I'm particularly proud of is how I organized the project dependencies:
-
-I created **two separate requirements files**:
-
-1. **`requirements.txt`** - Contains only production dependencies needed to run the site on Heroku (Django, gunicorn, database drivers, etc.)
-2. **`dev-requirements.txt`** - Contains development tools (Pylint, Flake8, djlint, formatters, testing tools, etc.)
-
-This approach keeps the Heroku deployment **lean and fast**, while giving me all the dev tools I need locally. It's a simple but effective way to optimize both environments!
-
-When deploying to Heroku, only `requirements.txt` is installed, which reduces build time, memory usage, and keeps the slug size small. Locally, I can install both files to get the full development experience.
-
-### The Jazzmin Choice
-
-Early on, I decided to use **django-jazzmin** to style the admin panel. Why? Because the default Django admin, while functional, looks pretty bland and outdated. I wanted staff and moderators to **enjoy** using the admin dashboard, not dread it!
-
-Jazzmin transformed the admin from a boring gray interface into a modern, colorful, and intuitive dashboard that matches the Game Abyss aesthetic. It was a small addition that made a huge difference in the overall feel of the project.
-
-Plus, it made content moderation feel less like a chore and more like actually managing a professional platform!
-
----
-
-## How I Split the Project into Apps
-
-I organized Game Abyss into **5 Django apps**, each handling a specific area of functionality:
-
-- **core** - The project's central nervous system. Handles settings, URL routing, email configuration, and error pages (404, 403, 500). This is where all the global configurations live.
-
-- **accounts** - Everything related to user authentication and profiles. Registration, login, password reset, profile management, avatar uploads, and favorite games. Uses django-allauth for the heavy lifting.
-
-- **pages** - Simple static content pages like the homepage, About, Contact, and Privacy Policy. These don't need database models, just views and templates.
-
-- **blog** - The heart of Game Abyss! Handles blog posts, comments, reactions (like/dislike), moderation actions, and email notifications. This is the most complex app with the richest functionality.
-
-- **gallery** - A place for users to upload and share gaming screenshots and images. It's a simpler app, but adds a nice visual element to the community.
-
-Each app is self-contained with its own models, views, templates, and URLs. This makes the codebase easier to navigate, test, and maintain.
+- Dark responsive layout
+- Keyboard friendly
+- Optional background music
+- Fast static asset serving
 
 ---
 
@@ -403,15 +154,16 @@ To keep this section clear and easy to scan, it’s organized in the following o
 
 ### User Stories
 
+
 I designed Game Abyss with **four types of users** in mind:
 
-**1. Casual Visitor (Unauthenticated User)**
+#### Casual Visitor (Unauthenticated User)
 - I want to read blog posts about games without needing to create an account
 - I want to browse the gallery to see gaming screenshots
 - I want to understand what the site is about from the homepage
 - I want to easily find and read the privacy policy and terms
 
-**2. Community Member (Authenticated User)**
+#### Community Member (Authenticated User)
 - I want to create an account and customize my profile
 - I want to write and publish blog posts about games I love
 - I want to comment on other people's posts and join discussions
@@ -420,14 +172,14 @@ I designed Game Abyss with **four types of users** in mind:
 - I want to mark certain games as my favorites on my profile
 - I want to edit or delete my own content
 
-**3. Content Moderator (Staff User)**
+#### Content Moderator (Staff User)
 - I want to review flagged posts and comments quickly
 - I want to approve or reject reported content with a reason
 - I want to see pending content that needs moderation
 - I want a clean, modern admin interface (Jazzmin)
 - I want to receive email notifications about new reports
 
-**4. Site Administrator (Superuser)**
+#### Site Administrator (Superuser)
 - I want full control over all content and users
 - I want to manage moderation actions and view logs
 - I want to configure site settings and email templates
@@ -466,79 +218,80 @@ The navigation bar adapts based on authentication status. Logged-out users see "
 
 #### Site Pages Overview
 
-**Homepage**
+#### Homepage
 
 The main landing page featuring a hero section with the site logo, latest blog posts, and featured content carousel.
 
 ![Homepage](documentation/website-pages/home.png)
 
-**About Page**
+#### About Page
 
 Information about Game Abyss, its mission, and the community-driven approach to gaming content.
 
 ![About Page](documentation/website-pages/about.png)
 
-**Blog Page**
+#### Blog Page
 
 Browse all published blog posts with pagination, filtering by tags, and search functionality.
 
 ![Blog Page](documentation/website-pages/blog.png)
 
-**Create New Post**
+#### Create New Post
 
 Rich text editor (Summernote) for creating and publishing blog posts with image uploads and tagging.
 
 ![New Post Page](documentation/website-pages/new-post.png)
 
-**User Profile**
+#### User Profile
 
 Personalized profile pages showing user stats, avatar, favorite games, and published posts.
 
 ![Profile Page](documentation/website-pages/profile.png)
 
-**Gallery**
+#### Gallery
 
 Community gallery showcasing gaming screenshots and artwork uploaded by users.
 
 ![Gallery Page](documentation/website-pages/gallery.png)
 
-**My Uploads**
+#### My Uploads
 
 Personal dashboard for users to manage their gallery submissions and track approval status.
 
 ![My Uploads Page](documentation/website-pages/my-uploads.png)
 
-**Contact Page**
+#### Contact Page
 
 Contact form for users to reach out to the Game Abyss team with questions or feedback.
 
 ![Contact Page](documentation/website-pages/contact.png)
 
-**Registration**
+#### Registration
 
 Sign up form for new users to create an account with email verification.
 
 ![Registration Page](documentation/website-pages/register.png)
 
-**Login**
+#### Login
 
 Secure login page for existing users to access their accounts.
 
 ![Login Page](documentation/website-pages/login.png)
 
-**Password Reset**
+#### Password Reset
 
 Email-based password recovery flow for users who forgot their credentials.
 
 ![Password Reset Page](documentation/website-pages/password-reset.png)
 
-**Password Reset Confirmation**
+#### Password Reset Confirmation
 
 Confirmation page after requesting a password reset link.
 
 ![Password Reset Done](documentation/website-pages/password-reset-done.png)
 
 ### Wireframes
+
 
 I sketched out wireframes for the main pages before diving into code. This helped me visualize the layout and user flow early on. Key pages included:
 
@@ -563,35 +316,51 @@ Testing across different screen sizes: iPhone 15 Pro (6.1"), iPad Pro 12.9", and
 
 ### Color Palette
 
-I chose a **dark, gaming-inspired theme** that's easy on the eyes for long reading sessions:
 
-| Color Name | Hex Code | Usage |
-|------------|----------|-------|
-| Dark Background | `#1a1a1a` | Main background, dark sections |
-| Charcoal | `#2d2d2d` | Cards, containers, elevated elements |
-| Accent Purple | `#8b5cf6` | Primary buttons, links, highlights |
-| Accent Blue | `#3b82f6` | Secondary buttons, info elements |
-| Success Green | `#10b981` | Success messages, positive actions |
-| Warning Orange | `#f59e0b` | Warning alerts, pending status |
-| Danger Red | `#ef4444` | Error messages, delete actions |
-| Light Text | `#f9fafb` | Primary text on dark backgrounds |
-| Gray Text | `#9ca3af` | Secondary text, muted information |
+Current palette is defined entirely via CSS custom properties in `:root` for easy global theming:
 
-The color scheme creates a modern, professional look while being comfortable for gaming content consumption.
+| Token | Hex / Value | Purpose |
+|-------|-------------|---------|
+| `--color-dark` | `#0a0a0f` | Deep background gradient base |
+| `--color-surface` | `#1a1a24` | Card surfaces, modal backgrounds, elevated panels |
+| `--color-primary` | `#ff6b35` | Primary accent (buttons, borders, glow effects) |
+| `--color-secondary` | `#4ecdc4` | Secondary accent (focus outlines, highlights) |
+| `--color-text` | `#e8e8e8` | Main body and heading text |
+| `--color-text-muted` | `rgb(232 232 232 / 75%)` | Muted / secondary text and Bootstrap `--bs-secondary-color` hook |
+
+These replace an earlier draft palette (purple/blue/green set) and better match the warm neon-orange + teal contrast used throughout the UI. Keeping them in `:root` lets me adjust theme accents quickly without hunting through component files.
+
+The gradients (`--gradient-primary`, `--gradient-surface`, `--gradient-highlight`) and shadow/glow filters (`--shadow-*`, `--filter-glow-*`) build on this base to achieve the luminous gaming aesthetic.
 
 ### Typography
 
+
 I kept typography simple and readable:
 
-- **Headers (H1-H6)** - System font stack (`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`)
-- **Body Text** - Same system font stack for consistency and performance
-- **Code Blocks** - Monospace font family for technical content
+Root-level CSS custom properties centralize all font families and the fluid type scale so they can be reused consistently across components:
 
-Font weights vary between 400 (normal), 500 (medium), 600 (semibold), and 700 (bold) to create visual hierarchy without loading custom web fonts.
+```css
+:root {
+   --font-primary: 'Rubik', sans-serif;        /* Base body text */
+   --font-secondary: 'Inter', sans-serif;      /* Paragraphs, meta info */
+   --font-headings: 'Orbitron', sans-serif;    /* All headings H1–H6 */
+   /* ...fluid size variables (see style.css) */
+}
+```
+
+I always define fonts and sizing in `:root` in my projects for convenience and maintainability. This makes it easy to adjust global typography (or theme) in a single place without hunting through multiple files.
+
+- **Headers (H1–H6)** use `var(--font-headings)` (`Orbitron`) for a sci‑fi gaming feel.
+- **Body text** uses `var(--font-primary)` (`Rubik`) for readable paragraphs.
+- **Secondary text / paragraphs** (`p`) intentionally pull from `var(--font-secondary)` (`Inter`) for subtle contrast.
+- **Code blocks** use the default monospace system stack.
+
+Font weights vary between 400 (normal), 500 (medium), 600 (semibold), and 700 (bold) to create hierarchy, while the fluid clamp-based scale (`--fs-*` variables) ensures legibility from mobile to large desktop screens without loading extra responsive utilities.
 
 ---
 
 ## Features
+
 
 Game Abyss is packed with features built iteratively over the development process. Here's what makes it special:
 
@@ -675,6 +444,7 @@ Game Abyss is packed with features built iteratively over the development proces
 - **Form Validation** - Client and server-side validation for all forms
 - **Loading States** - Clear feedback during async operations
 - **Error Pages** - Custom 404, 403, and 500 error pages
+- **Front-end polish** - Home pagination and ambient background music scripts (custom, `static/js/`) enhancing UX without bloat
 
 ### 9. Security Features
 
@@ -697,6 +467,145 @@ Game Abyss is packed with features built iteratively over the development proces
 
 ---
 
+## Technical Overview
+
+### Structure
+
+The project uses Django with several apps (`core`, `accounts`, `pages`, `blog`, `gallery`). Each app handles its own models, views, and templates.
+
+### Auth
+
+Signup, login, logout, password reset and email checks use Django Allauth. Email verification is required for posting, commenting, reacting.
+
+### Templates & Front End
+
+Pages are plain Django templates. Shared parts (nav, cards, pagination) are reused. Styling uses Bootstrap 5 plus custom CSS in `static/css/style.css`. Small JavaScript files add homepage paging and music controls.
+
+### Editor
+
+Posts use Summernote. Uploaded HTML is cleaned with Bleach before saving. Reading time and excerpts are calculated from the cleaned text.
+
+### Media
+
+Local files in development. Optional Cloudinary for images when configured. Removing a gallery item also removes its image.
+
+### Email
+
+`core/emailing.py` builds emails and inlines CSS if Premailer is available. If not, it sends a simple HTML version. Emails notify users of approvals, rejections, features, reports and help requests.
+
+### Static Files
+
+WhiteNoise serves static assets in production.
+
+### Admin
+
+Jazzmin gives a cleaner look for staff work.
+
+### Code Quality (optional locally)
+
+You can install dev tools (linting, formatting) from `dev-requirements.txt`.
+
+---
+
+## Technologies Used
+
+### Core Web Technologies
+
+- **HTML5** - Semantic markup for content structure
+- **CSS3** - Custom styling with modern features (Grid, Flexbox, CSS Variables)
+- **JavaScript (ES6+)** - Interactive features and dynamic content
+- **Bootstrap 5.3** - Responsive CSS framework for layout and components
+
+### Backend and Database
+
+- **Python 3.13** - Primary programming language
+- **Django 5.2.7** - High-level Python web framework
+- **PostgreSQL** - Production database (Heroku Postgres addon)
+- **SQLite** - Local development database
+- **Gunicorn** - Python WSGI HTTP server for production
+
+### Django Packages and Extensions
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `django-allauth` | 65.3.0 | Authentication (signup, login, social auth ready) |
+| `django-summernote` | 0.8.20.0 | WYSIWYG rich text editor for blog posts |
+| `django-crispy-forms` | 2.3 | Better form rendering with Bootstrap |
+| `crispy-bootstrap5` | 2024.10 | Bootstrap 5 template pack for crispy forms |
+| `django-jazzmin` | 3.0.1 | Modern, colorful admin dashboard styling |
+| `django-cloudinary-storage` | 0.3.0 | Cloudinary integration for media storage |
+| `whitenoise` | 6.8.2 | Simplified static file serving for Django |
+
+### Email and Communication
+
+- **SendGrid** - Email delivery service (production)
+- **premailer** - Inline CSS in HTML emails for compatibility
+- **dj-database-url** - Parse database URLs from environment variables
+
+### Development & Testing Tools
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| `pylint` | 3.3.5 | Python code linting and quality checks |
+| `pylint-django` | 2.6.1 | Django-specific Pylint plugin |
+| `flake8` | 7.1.1 | Python style guide enforcement (PEP 8) |
+| `djlint` | 1.36.4 | Django/Jinja template linter and formatter |
+| `black` | 24.10.0 | Opinionated Python code formatter |
+
+### Deployment and Hosting
+
+- **Heroku** - Cloud platform for app deployment
+- **Cloudinary** - CDN for image and media storage
+- **Git** - Version control
+- **GitHub** - Code repository hosting
+
+### Design and Media Tools
+
+- **Balsamiq** - Wireframing tool for initial layouts
+- **Coolors** - Color palette generator
+- **Font Awesome** - Icon library
+- **Google Fonts** - Web typography (system fonts used for performance)
+
+---
+
+## Email System
+
+This section explains how Game Abyss sends and receives emails for both internal staff awareness and user interactions. It is designed to keep moderators informed about site activity while delivering branded, helpful messages to end users.
+
+### Admin and Site Notifications
+
+The project uses the inbox `team.gameabyss@gmail.com` as the central address for the Game Abyss team. This mailbox receives automatically generated notification emails when key events occur, helping staff stay aware of anything that may require review or action. Typical internal notification triggers include:
+
+- A new user completes registration.
+- A user submits a new blog post for review (pending/needs moderation).
+- A user publishes content that enters a moderation workflow (e.g. first-time author, flagged criteria).
+- (Optional) A help or contact request is submitted through the site’s support/contact form.
+
+These notifications focus on surfacing new registrations and potentially actionable content so staff can quickly moderate, approve, reject, or follow‑up without constantly checking the admin interface.
+
+Admin notification example:
+
+![Admin notification example](documentation/email-confirmation/admin-email.png)
+
+### User Facing Emails via SendGrid
+
+Outbound emails to end users are delivered through a SendGrid backend configured in Django settings (using environment variables for API keys/SMTP credentials). All user emails are HTML-based and rendered from templates to maintain Game Abyss branding (colors, typography, and consistent layout). Where available, CSS is inlined (Premailer) to improve compatibility across email clients.
+
+Automatic user-facing email types include:
+
+- Email verification message containing a confirmation link after registration.
+- Password reset emails with secure time-limited links.
+- Post approval confirmation when staff publish a previously pending blog post.
+- (Optional) Rejection or moderation decision emails clarifying why a submission was not approved.
+- (Optional) Follow‑up or resolution notices regarding reported comments or help requests.
+
+Each email is triggered by specific application events (e.g. registration save, post status transition, moderation action). The sending logic assembles context, selects the appropriate HTML template, and (if available) runs it through the inlining pass before dispatch. This ensures both reliability (via SendGrid) and consistent presentation.
+
+User confirmation email example:
+
+![User confirmation email example](documentation/email-confirmation/user-email.png)
+
+---
 
 ## Database Design
 
@@ -806,86 +715,226 @@ The database consists of **8 main models** spread across different apps:
 
 ---
 
-## Technologies Used
-
-### Core Web Technologies
-
-- **HTML5** - Semantic markup for content structure
-- **CSS3** - Custom styling with modern features (Grid, Flexbox, CSS Variables)
-- **JavaScript (ES6+)** - Interactive features and dynamic content
-- **Bootstrap 5.3** - Responsive CSS framework for layout and components
-
-### Backend and Database
-
-- **Python 3.11** - Primary programming language
-- **Django 5.2.7** - High-level Python web framework
-- **PostgreSQL** - Production database (Heroku Postgres addon)
-- **SQLite** - Local development database
-- **Gunicorn** - Python WSGI HTTP server for production
-
-### Django Packages and Extensions
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `django-allauth` | 65.3.0 | Authentication (signup, login, social auth ready) |
-| `django-summernote` | 0.8.20.0 | WYSIWYG rich text editor for blog posts |
-| `django-crispy-forms` | 2.3 | Better form rendering with Bootstrap |
-| `crispy-bootstrap5` | 2024.10 | Bootstrap 5 template pack for crispy forms |
-| `django-jazzmin` | 3.0.1 | Modern, colorful admin dashboard styling |
-| `django-cloudinary-storage` | 0.3.0 | Cloudinary integration for media storage |
-| `whitenoise` | 6.8.2 | Simplified static file serving for Django |
-
-### Email and Communication
-
-- **SendGrid** - Email delivery service (production)
-- **premailer** - Inline CSS in HTML emails for compatibility
-- **dj-database-url** - Parse database URLs from environment variables
-
-### Development & Testing Tools
-
-| Tool | Version | Purpose |
-|------|---------|---------|
-| `pylint` | 3.3.5 | Python code linting and quality checks |
-| `pylint-django` | 2.6.1 | Django-specific Pylint plugin |
-| `flake8` | 7.1.1 | Python style guide enforcement (PEP 8) |
-| `djlint` | 1.36.4 | Django/Jinja template linter and formatter |
-| `black` | 24.10.0 | Opinionated Python code formatter |
-
-### Deployment and Hosting
-
-- **Heroku** - Cloud platform for app deployment
-- **Cloudinary** - CDN for image and media storage
-- **Git** - Version control
-- **GitHub** - Code repository hosting
-
-### Design and Media Tools
-
-- **Balsamiq** - Wireframing tool for initial layouts
-- **Coolors** - Color palette generator
-- **Font Awesome** - Icon library
-- **Google Fonts** - Web typography (system fonts used for performance)
-
----
-
 ## Testing and Bug Fixes
 
 Testing was a **huge focus** throughout development. I wanted to make sure every feature worked correctly and handled edge cases gracefully.
 
 **For detailed testing documentation, see [TESTING.md](TESTING.md)**
 
-### Testing Highlights
-
-✅ **76 automated tests** written covering models, views, forms, and utilities
-✅ **10/10 Pylint score** on all Python files (pylint-django used)
-✅ **PEP 8 compliant** code verified with Flake8
-✅ **HTML validation** passed for all templates (W3C Validator)
-✅ **CSS validation** passed for style.css and email.css
-✅ **Manual testing** performed on all user flows and edge cases
-✅ **Responsive testing** on mobile, tablet, and desktop devices
-✅ **Browser compatibility** tested on Chrome, Firefox, Safari, and Edge
-✅ **Real user testing** feedback incorporated from beta testers
-
 The testing documentation includes test coverage breakdowns, bug reports with fixes, validation screenshots, and user testing feedback.
+
+### Notable Bug Fixes
+
+Below are issues solved during development. Each entry links directly to an observed problem, the root cause, and the implemented fix.
+
+#### 1. Blog Post Slug Collisions / Confusing URLs
+
+**Problem**: Slugs were date-scoped only (`unique_for_date='published_at'`). Two drafts or pending posts created the same day with identical titles produced repetitive long slugs containing the date and numeric suffixes, and moving a post between draft/published states could shift which queryset was used for collision checks.
+
+Original field + generation logic excerpt:
+
+```python
+slug = models.SlugField(
+   max_length=120,
+   unique_for_date='published_at',
+   blank=True,
+   editable=False,
+)
+# In save(): builds base like f"{base}-{date_str}" then only checks posts on that same date
+```
+
+**Fix**: Made slug globally unique (`unique=True`) and replaced the date-scoped approach with a simple incremental suffix loop that trims intelligently.
+
+New field + generation logic excerpt:
+
+```python
+slug = models.SlugField(
+   max_length=120,
+   unique=True,
+   blank=True,
+   editable=False,
+)
+# In save():
+base_slug = slugify(self.title)[: slug_field.max_length] or 'post'
+unique_slug = base_without_suffix
+counter = 2
+while existing.filter(slug=unique_slug).exists():
+   unique_slug = f"{trimmed_base}-{counter}"  # ensures global uniqueness
+```
+
+**Result**: Stable, human-friendly slugs that no longer depend on publication date and avoid rare edge collisions when status changes.
+
+#### 2. Draft Posts Exposing Engagement (Reactions & Comments Visible)
+
+**Problem**: Draft posts displayed reaction buttons and the full comments interface. Users could interact with content not yet approved, creating moderation and leakage issues.
+
+Original template fragment:
+
+```django
+<!-- Always rendered -->
+<section class="mt-4">
+   <h3>Post Reactions</h3>
+   ... reaction forms ...
+</section>
+<section class="mt-5">
+   <h2>Comments</h2>
+   ... comment list & form ...
+</section>
+```
+
+**Fix**: Introduced `is_draft` check in the view and a `show_engagement = not is_draft` flag. Template now renders reactions and comments only when `show_engagement` is true.
+
+View logic excerpt:
+
+```python
+is_draft = post.status == BlogPost.STATUS_DRAFT
+show_engagement = not is_draft
+if show_engagement:
+      # build comment_form, reaction displays
+```
+
+Template now wraps those sections with `{% if show_engagement %} ... {% endif %}` (omitted here for brevity).
+
+**Result**: Drafts are private to the author/staff; no premature engagement data leaks.
+
+#### 3. Role Badge Inconsistency (Multiple Badges & Rarity Token)
+
+**Problem**: Profile pages could show a "rarity" badge plus both Staff and Superuser badges simultaneously, leading to clutter and inconsistent semantics.
+
+Original snippet:
+
+```django
+<span class="comp-badge bg-primary text-dark fw-bold">{{ rarity }}</span>
+{% if profile_user.is_staff and not profile_user.is_superuser %}
+   <span class="comp-badge bg-info text-dark">Staff</span>
+{% endif %}
+{% if profile_user.is_superuser %}
+   <span class="comp-badge bg-warning text-dark">Superuser</span>
+{% endif %}
+```
+
+**Fix**: Simplified logic superusers show only `SUPERUSER`, staff users show only `STAFF`, regular users show nothing. Removed the extra rarity badge.
+
+Fixed snippet:
+
+```django
+{% if profile_user.is_superuser %}
+   <span class="comp-badge bg-warning text-dark">SUPERUSER</span>
+{% elif profile_user.is_staff %}
+   <span class="comp-badge bg-info text-dark">STAFF</span>
+{% endif %}
+```
+
+**Result**: Clear single-role representation; UI less noisy.
+
+#### 4. Custom Error Pages Not Rendering (Missing 404 & 500 Handlers)
+
+**Problem**: Only `handler403` was registered. Custom templates for 404 and 500 never appeared; Django defaults were served.
+
+Original `core/urls.py` tail:
+
+```python
+handler403 = "core.views.permission_denied_view"
+```
+
+Original `core/views.py` only defined `permission_denied_view`.
+
+**Fix**: Added missing handlers and view functions.
+
+Updated `core/urls.py` tail:
+
+```python
+handler403 = "core.views.permission_denied_view"
+handler404 = "core.views.page_not_found_view"
+handler500 = "core.views.server_error_view"
+```
+
+Updated `core/views.py` excerpt:
+
+```python
+def page_not_found_view(request, exception):
+   return render(request, "errors/404.html", status=404)
+
+def server_error_view(request):
+   return render(request, "errors/500.html", status=500)
+```
+
+**Result**: All error states consistently use branded templates improving UX and transparency.
+
+---
+
+Each fix was accompanied by targeted test adjustments or new tests (e.g. profile badge rendering, slug generation uniqueness, draft access rules, error handler resolution) ensuring regressions are caught early.
+
+---
+
+## Running the Project Locally
+
+1. **Clone and set up Python.** Use Python 3.13 (the version used for automated tests) and create a virtual environment.
+   ```bash
+   git clone https://github.com/<your-username>/Game-Abyss.git
+   cd Game-Abyss
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows use .venv\\Scripts\\activate
+   ```
+2. **Install dependencies.**
+   ```bash
+   pip install --upgrade pip
+   pip install -r requirements.txt
+   pip install -r dev-requirements.txt  # optional helpers for formatting/tests
+   ```
+   To use the optional lint scripts, also run `npm install`.
+3. **Configure environment variables.** Create an `env.py` (loaded by `core/settings.py`) or export variables in your shell:
+   ```python
+   import os
+   os.environ.setdefault("SECRET_KEY", "dev-secret")
+   os.environ.setdefault("DEBUG", "True")
+   os.environ.setdefault("SITE_DOMAIN", "localhost:8000")
+   os.environ.setdefault("DEFAULT_FROM_EMAIL", "Game Abyss <dev@example.com>")
+   os.environ.setdefault("PRIMARY_SUPERADMIN_EMAIL", "dev@example.com")
+   ```
+   Optional variables:
+   - `DATABASE_URL` for PostgreSQL
+   - `CLOUDINARY_URL` or `CLOUDINARY_CLOUD_NAME` + API keys for hosted media
+   - `SENDGRID_API_KEY` or SMTP credentials (`EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, etc.)
+   - `ALLOWED_HOSTS`, `SITE_BASE_URL`, and `SUPPORT_EMAIL` for production-friendly URLs
+   - `BLOG_COMMENT_BANNED_WORDS` and `BLOG_COMMENT_MAX_LINKS` to tune moderation rules
+4. **Prepare the database and run the server.**
+   ```bash
+   python manage.py migrate
+   python manage.py createsuperuser  # optional but recommended for admin access
+   python manage.py runserver
+   ```
+5. **Access the site.** Visit `http://localhost:8000/` and log in with your created account. Use the Django admin (`/admin/`) for staff controls.
+
+---
+
+## Deployment
+
+### Fork and clone this repository
+
+If you plan to contribute or customize your own copy:
+
+1. Fork on GitHub
+    - Open the repository page and click "Fork" to create your copy under your account.
+2. Clone your fork locally
+    - Replace <your-username> with your GitHub handle:
+       - `git clone https://github.com/<your-username>/Game-Abyss.git`
+       - `cd Game-Abyss`
+3. (Optional) Keep your fork up to date
+    - Add the original repository as `upstream`:
+       - `git remote add upstream https://github.com/Drake-Designer/Game-Abyss.git`
+    - Pull updates later with:
+       - `git fetch upstream`
+       - `git merge upstream/main`
+
+The reference deployment uses Heroku with PostgreSQL, Cloudinary, and SendGrid.
+
+1. **Create the Heroku app.** Provision a PostgreSQL add-on and, if needed, a Cloudinary account.
+2. **Set config vars.** At minimum provide `SECRET_KEY`, `DATABASE_URL` (auto-set by Heroku Postgres), `ALLOWED_HOSTS`, `SITE_DOMAIN`, `PRIMARY_SUPERADMIN_EMAIL`, `DEFAULT_FROM_EMAIL`, and your email backend credentials (`SENDGRID_API_KEY` or SMTP settings). Add Cloudinary credentials when using hosted media.
+3. **Push the code.** Heroku installs `requirements.txt`, runs `python manage.py collectstatic` through WhiteNoise, and executes migrations via the `release` command in `Procfile`.
+4. **Create admin users.** Run `heroku run python manage.py createsuperuser` to seed moderation accounts. Staff can then operate through the Jazzmin-themed admin or the built-in staff dashboard.
+
+The `Procfile` configures Gunicorn for web serving and runs migrations on each release.
 
 ---
 
@@ -905,31 +954,23 @@ I followed a simple approach:
 
 This kept me from getting overwhelmed and ensured each piece was solid before moving forward.
 
-### Challenges I Faced (and Solved)
+### Challenges
 
-**Challenge 1: Email CSS Not Rendering in Gmail**
+**1. Email styles missing in Gmail**
+Gmail removed my `<style>` block, so emails looked plain.
+Solution: Use Premailer to turn CSS into inline styles. If Premailer is not installed, send the HTML with a simple embedded style tag.
 
-Gmail strips `<style>` tags from emails, breaking the formatting of my notification emails.
+**2. Double reactions**
+Fast clicks could save two reactions.
+Solution: Add a database unique rule (one reaction per user per post/comment). Duplicate attempts fail cleanly.
 
-**Solution**: I discovered the `premailer` package, which automatically converts CSS in `<style>` tags to inline `style` attributes. Problem solved! Now emails look perfect in all email clients.
+**3. Unsafe pasted HTML**
+Users could paste risky tags.
+Solution: Clean all post HTML on save with Bleach using a short allow list.
 
-**Challenge 2: Duplicate Reactions from Double-Clicking**
-
-Users could double-click the "like" button and create duplicate reactions, breaking the "one reaction per user" rule.
-
-**Solution**: I added a **unique constraint** at the database level (`unique_together` on the PostReaction and CommentReaction models). Now Django raises an error if a duplicate is attempted, and I handle it gracefully in the view.
-
-**Challenge 3: Summernote Editor Security**
-
-The rich text editor allowed users to paste ANY HTML, including `<script>` tags, which is a massive security risk (XSS attacks).
-
-**Solution**: I configured Summernote to **strip dangerous tags** and only allow safe formatting tags like `<p>`, `<strong>`, `<em>`, `<ul>`, etc. I also use Django's `|safe` filter carefully in templates.
-
-**Challenge 4: Heroku Slug Size Too Large**
-
-My initial Heroku deployment failed because the slug size exceeded 500MB. I had installed all development dependencies in production!
-
-**Solution**: I split `requirements.txt` (production only) from `dev-requirements.txt` (development tools). This reduced the slug size significantly and deployment succeeded.
+**4. Large Heroku build**
+All dev packages were installed, making the slug huge.
+Solution: Separate production requirements from development ones.
 
 ### Continuous Learning
 
@@ -949,92 +990,18 @@ Building Game Abyss wasn't just about writing code. It was about **problem-solvi
 
 ## Future Improvements
 
-While I'm proud of what Game Abyss has become, there are several features I'd love to add in the future. Here's what's on the roadmap:
+Possible next steps:
 
-### 1. Profile Image Cropping
+1. Avatar cropping tool
+2. Small staff bar showing pending counts
+3. Search for posts by title/text/tag
+4. User badges for milestones
+5. In-site notifications (new comment, reaction)
+6. Follow users and view a follow feed
+7. Game API lookups for favourite games
+8. Embed video/audio links in posts
 
-**What**: Allow users to crop and position their avatar when uploading, instead of relying on automatic cropping.
-
-**Why It Would Be Cool**: Right now, when users upload a profile picture, it might not be centered the way they want. A crop tool (like a draggable box) would let users choose exactly how their avatar looks.
-
-**How I'd Build It**: Use a JavaScript library like **Cropper.js** on the frontend to let users adjust the crop area. Send the crop coordinates to the backend, and use **Pillow** (Python imaging library) to process and save the cropped version.
-
-### 2. Staff Bar with Pending Notifications
-
-**What**: A notification bar for staff users showing the number of pending reports, new posts awaiting approval, and other moderation tasks.
-
-**Why It Would Be Cool**: Right now, staff have to go into the admin panel to check if there's anything to moderate. A visible notification bar on the main site would make moderation much more efficient and proactive.
-
-**How I'd Build It**: Add a context processor that counts pending reports and unapproved content. Display it in the navbar for staff users with badge indicators (like "3 reports pending"). Clicking it takes them directly to the moderation dashboard.
-
-### 3. Search Functionality
-
-**What**: A search bar to find blog posts by title, content, author, or tags.
-
-**Why It Would Be Cool**: As the blog grows, users need a way to find specific topics or posts without scrolling through pages of content.
-
-**How I'd Build It**: Use Django's `Q` objects for basic search queries (`title__icontains`, `content__icontains`, `tags__icontains`). For more advanced search, integrate **PostgreSQL full-text search** or a service like **Algolia**.
-
-### 4. Gamification (Badges and Achievements)
-
-**What**: Award badges to users for milestones like "First Post", "10 Comments", "100 Likes Received", etc.
-
-**Why It Would Be Cool**: Gamification encourages engagement and makes the community more fun. People love collecting achievements!
-
-**How I'd Build It**: Create a `Badge` model and a `UserBadge` model (many-to-many relationship). Use **Django signals** to automatically award badges when users hit milestones. Display badges on user profiles.
-
-### 5. In-App Notifications
-
-**What**: A notification system where users get alerts for comments on their posts, reactions, or replies.
-
-**Why It Would Be Cool**: Right now, users have to manually check their posts to see if anyone commented. Notifications would keep them engaged and bring them back to the site.
-
-**How I'd Build It**: Create a `Notification` model linked to users. Use Django signals to create notifications when someone comments on a user's post. Display a notification icon in the navbar with unread count.
-
-### 6. Following System
-
-**What**: Let users follow each other to see their latest posts in a personalized feed.
-
-**Why It Would Be Cool**: This adds a social networking aspect to Game Abyss, making it more community-driven.
-
-**How I'd Build It**: Create a `Follow` model (many-to-many self-referencing relationship). Add "Follow" buttons on user profiles. Create a "Following Feed" view that shows posts only from users you follow.
-
-### 7. Game Database Integration
-
-**What**: Connect to a gaming API (like IGDB or RAWG) to let users search for games and add them to their profile with official data.
-
-**Why It Would Be Cool**: Instead of manually typing "Favorite Game 1", users could search a database of thousands of games and select them, with official cover art and metadata.
-
-**How I'd Build It**: Use the **RAWG API** (free tier available) to fetch game data. Add an autocomplete search field on the profile edit page. Store the game ID and fetch details dynamically.
-
-### 8. Rich Media Embeds
-
-**What**: Allow users to embed YouTube videos, Twitch clips, and Spotify playlists directly in blog posts.
-
-**Why It Would Be Cool**: Gaming content is visual and audio-rich. Embedding videos and music would make posts way more engaging.
-
-**How I'd Build It**: Use **oEmbed** services or a library like **Django-embed-video** to convert URLs into embedded players. Add custom Summernote buttons for quick embedding.
-
----
-
-### Why Not Now?
-
-You might wonder: "Why didn't you build all these features?"
-
-The honest answer: **scope management**. For a student project with a deadline, I had to prioritize the **core features** that demonstrate my skills:
-
-- Full CRUD functionality ✅
-- User authentication and profiles ✅
-- Robust moderation system ✅
-- Email notifications ✅
-- Responsive design ✅
-- Comprehensive testing ✅
-
-The features above are **enhancements** that would take this from a great project to a commercial-level platform. But they're not essential to prove I can build a full-stack Django application.
-
-I'm confident I could implement them (and I've outlined exactly how), but I chose to focus on **polishing what I have** rather than rushing to add half-finished features.
-
-Quality over quantity, always.
+I skipped these to keep scope small and finish a stable base first.
 
 ---
 
@@ -1100,6 +1067,38 @@ Building Game Abyss was a learning journey, and I relied on countless resources,
 
 - **Andrea Contarino** ([GitHub](https://github.com/andconta) | [LinkedIn](https://www.linkedin.com/in/andreacontarino/)) - Senior Software Engineer who provided invaluable advice on code implementation, site structure, and best practices. Also tested the site as a staff member. Your expertise made a huge difference!
 
+#### Andrea Contarino – Advanced DEBUG Configuration Support
+
+Andrea Contarino not only guided me on architecture, code cleanliness, and Django best practices, but also significantly improved the automatic handling of `DEBUG`. His solution prevents common mistakes (accidentally leaving `DEBUG=True` in production or forgetting to enable it locally) and saved me considerable time during fast build–test cycles.
+
+The approach relies on a single environment variable (`DEBUG`). Locally it defaults to `True` (so no manual toggle is needed), while on Heroku I explicitly set `DEBUG=False`. This removes noisy commits, reduces the risk of exposing sensitive details (full tracebacks, debug panels), and keeps deployment friction low.
+
+Exact snippet from `core/settings.py` powering the automatic configuration:
+
+```python
+# Security / Environment flags
+SECRET_KEY = os.environ.get("SECRET_KEY")
+DEBUG = os.environ.get("DEBUG", "True") == "True"
+
+# Protocol derived from DEBUG: force HTTPS in production
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if not DEBUG else "http"
+```
+
+How it behaves in practice:
+
+1. Local development: no need to set `DEBUG` → it stays `True` by default.
+2. Heroku deployment: set config var `DEBUG=False` → production runs safely.
+3. Allauth protocol automatically aligns (HTTP locally, HTTPS in production).
+
+Direct benefits:
+
+- No manual toggling before deploy
+- Lower risk of leaking stack traces or debug info
+- Cleaner Pull Requests (fewer incidental setting changes)
+- Clear, centralized intent (environment controls runtime mode)
+
+Thank you Andrea for the elegant solution and the time you invested in reviews and optimizations—it made the build–test–deploy workflow smoother and more reliable.
+
 - **Giuseppe Strano** ([GitHub](https://github.com/zupeppe)) - Beta tester who thoroughly tested the site from a user perspective, posted game reviews, and provided great feedback on the user experience.
 
 - **Luca Di Blasi** ([LinkedIn](https://www.linkedin.com/in/luca-di-blasi-b21544a3/)) - Beta tester who tested the site as a user, uploaded photos to the gallery, and posted game reviews, helping me test multiple features.
@@ -1121,13 +1120,9 @@ User-uploaded images in the gallery are the property of their respective uploade
 
 ---
 
-<div align="center">
-
 **Thank you for checking out Game Abyss!**
 
 If you have any questions or feedback, feel free to reach out. Happy gaming! 🎮
 
 Made with ❤️ by [Drake-Designer](https://github.com/Drake-Designer)
-
-</div>
 
