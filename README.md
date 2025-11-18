@@ -416,6 +416,26 @@ Game Abyss is packed with features built iteratively over the development proces
 - **Image Captions** - Add descriptions to uploaded images
 - **Pagination** - Handle large numbers of images efficiently
 
+#### Gallery Image Moderation
+
+Gallery uploads use a simple three state workflow:
+
+- `PENDING` - default state when a user uploads an image
+- `APPROVED` - image is visible in the public gallery
+- `REJECTED` - image is hidden from the gallery
+
+At the moment, image approval is managed only through the Django admin panel.
+
+Staff must:
+
+1. Log into Django admin (`/admin/`)
+2. Go to `Gallery` → `Gallery images`
+3. Filter by `PENDING`
+4. Change the status to `APPROVED` or `REJECTED`
+5. Optionally mark images as `Featured` to show them on the homepage
+
+The built in staff tools on the site do not handle gallery image approval yet. They are focused on posts, comments, and reports.
+
 ### 6. Moderation System
 
 - **Report Posts** - Users can flag inappropriate blog posts
@@ -1000,6 +1020,7 @@ Possible next steps:
 6. Follow users and view a follow feed
 7. Game API lookups for favourite games
 8. Embed video/audio links in posts
+9. Add gallery image approval to the in site staff tools so moderators can review and approve uploads without using Django admin
 
 I skipped these to keep scope small and finish a stable base first.
 
@@ -1047,6 +1068,7 @@ Building Game Abyss was a learning journey, and I relied on countless resources,
 - **Code Institute** - Full Stack Developer Course and learning platform
 - **Corey Schafer's Django Tutorials** - YouTube series for Django fundamentals
 - **Real Python** - In-depth articles on Django, testing, and deployment
+- **Udemy Django Courses** - Comprehensive Django courses including Python and Django Full Stack Web Developer Bootcamp, and Django 4 and Python Full-Stack Developer Masterclass
 - **MDN Web Docs** - Reference for HTML, CSS, and JavaScript
 - **Stack Overflow** - Community Q&A for troubleshooting
 - **Django Forum** - Official Django community discussions
