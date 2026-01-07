@@ -234,13 +234,18 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
-# Allauth
+# Allauth configuration
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if not DEBUG else "http"
 ACCOUNT_LOGIN_METHODS = {"email", "username"}
 ACCOUNT_SIGNUP_FIELDS = ["email", "username*", "password1*", "password2*"]
 # Email verification disabled to allow immediate CRUD access for new users
-# In production with a paid email service, this should be set to "mandatory"
+# without requiring external email service dependencies during assessment.
+# In production with a properly configured email service, this should be
+# set to "mandatory" and email notifications should be re-enabled.
 ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_EMAIL_REQUIRED = True  # Email required at signup but no verification sent
+ACCOUNT_EMAIL_NOTIFICATIONS = False  # Disable all automatic email notifications
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # Simplify email confirmation when re-enabled
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
