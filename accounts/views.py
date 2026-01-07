@@ -240,7 +240,8 @@ def profile_edit(request):
 
 
 @login_required
-@verified_email_required
+# Email verification requirement removed to allow account deletion without
+# external email service dependencies during demo purposes.
 def profile_delete(request):
     """Delete the current user's account after password confirmation."""
     if request.method == "POST":

@@ -8,6 +8,7 @@ from functools import wraps
 from typing import Callable, Optional
 
 from allauth.account.models import EmailAddress
+from django.conf import settings
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
@@ -27,6 +28,10 @@ EMAIL_VERIFICATION_REQUIRED_MESSAGE = (
 
 def user_email_is_verified(user) -> bool:
     """Return True when the user has at least one verified email address."""
+    # Skip verification check if disabled in settings for demo purposes
+    if getattr(settings, 'ACCOUNT_EMAIL_VERIFICATION', None) == 'none':
+        return True
+
     email = getattr(user, "email", "") or ""
     if not email:
         # If the account has no email, do not block flows
@@ -41,6 +46,10 @@ def user_email_is_verified(user) -> bool:
 
 def ensure_verified_email(request: HttpRequest) -> Optional[HttpResponse]:
     """Redirect to the email management page when verification is required."""
+    # Skip verification check if disabled in settings for demo purposes
+    if getattr(settings, 'ACCOUNT_EMAIL_VERIFICATION', None) == 'none':
+        return None
+
     user = getattr(request, "user", None)
     if not user or not user.is_authenticated:
         return None

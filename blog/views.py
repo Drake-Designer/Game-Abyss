@@ -3,6 +3,7 @@
 #    ============================================================ */
 """Define blog view logic."""
 
+
 # /* ============================================================
 #    *** BLOG: Views: Imports ***
 #    ============================================================ */
@@ -28,6 +29,7 @@ from .models import (
     PostReaction,
     ReactionType,
 )
+
 
 # /* ============================================================
 #    *** BLOG: Views: Reaction Constants ***
@@ -58,7 +60,8 @@ DEFAULT_BLOG_INDEX_PAGE_SIZE = 9
 #    *** BLOG: Views: Post Creation ***
 #    ============================================================ */
 @login_required
-@verified_email_required
+# Email verification requirement removed to allow post creation without
+# external email service dependencies during demo purposes.
 def new_post(request):
     """Handle creation of a new blog post."""
     if request.method == "POST":
@@ -229,7 +232,7 @@ def post_detail(request, year, month, day, slug):
                     )
                 return redirect(post.get_absolute_url())
 
-            messages.error(request, "Oops — we couldn’t accept that comment.")
+            messages.error(request, "Oops — we couldn't accept that comment.")
 
         # Comments (approved only for public)
         approved_comments = list(
@@ -465,7 +468,8 @@ def edit_comment(request, pk):
 #    *** BLOG: Views: Reaction Handling ***
 #    ============================================================ */
 @login_required
-@verified_email_required
+# Email verification requirement removed to allow user engagement without
+# external email service dependencies during demo purposes.
 @require_POST
 def react_to_post(request, pk):
     """Manage a user's reaction on a post."""
@@ -474,7 +478,7 @@ def react_to_post(request, pk):
     redirect_url = request.POST.get("next") or post.get_absolute_url()
 
     if reaction_value not in REACTION_VALUES:
-        messages.error(request, "Oops — that reaction isn’t valid.")
+        messages.error(request, "Oops — that reaction isn't valid.")
         return redirect(redirect_url)
 
     reaction, created = PostReaction.objects.get_or_create(
@@ -494,7 +498,8 @@ def react_to_post(request, pk):
 
 
 @login_required
-@verified_email_required
+# Email verification requirement removed to allow user engagement without
+# external email service dependencies during assessment and demo purposes.
 @require_POST
 def react_to_comment(request, pk):
     """Manage a user's reaction on a comment."""
@@ -506,12 +511,12 @@ def react_to_comment(request, pk):
 
     # Only staff can react to non-approved comments
     if comment.status != Comment.STATUS_APPROVED and not request.user.is_staff:
-        messages.error(request, "You can’t react to a non-approved comment.")
+        messages.error(request, "You can't react to a non-approved comment.")
         return redirect(redirect_url)
 
     reaction_value = request.POST.get("reaction")
     if reaction_value not in REACTION_VALUES:
-        messages.error(request, "Oops — that reaction isn’t valid.")
+        messages.error(request, "Oops — that reaction isn't valid.")
         return redirect(redirect_url)
 
     reaction, created = CommentReaction.objects.get_or_create(
@@ -547,7 +552,7 @@ def report_comment(request, pk):
         raise PermissionDenied("Staff members cannot report comments.")
 
     if comment.author_id == request.user.id:
-        messages.error(request, "You can’t report your own comment.")
+        messages.error(request, "You can't report your own comment.")
         return redirect(redirect_url)
 
     reason = request.POST.get("reason")
@@ -572,7 +577,7 @@ def report_comment(request, pk):
             "Thanks for flagging this — our moderators have been notified.",
         )
     else:
-        messages.info(request, "You’ve already reported this comment.")
+        messages.info(request, "You've already reported this comment.")
 
     return redirect(redirect_url)
 

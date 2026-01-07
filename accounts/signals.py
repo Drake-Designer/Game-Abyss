@@ -4,6 +4,7 @@
 
 """Signal handlers for account lifecycle events (create/delete users)."""
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_logged_in
 from django.db.models import Q
@@ -28,6 +29,10 @@ def _collect_staff_recipients(exclude_user_ids=None) -> list[str]:
 
 def _notify_staff(subject: str, context: dict, exclude_user_ids=None) -> None:
     """Send a styled notification to all staff and superusers."""
+    # Skip staff notifications if email system is disabled for assessment demo
+    if getattr(settings, 'ACCOUNT_EMAIL_NOTIFICATIONS', True) is False:
+        return
+
     recipients = _collect_staff_recipients(exclude_user_ids)
     if not recipients:
         return

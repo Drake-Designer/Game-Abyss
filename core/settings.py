@@ -239,7 +239,7 @@ ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if not DEBUG else "http"
 ACCOUNT_LOGIN_METHODS = {"email", "username"}
 ACCOUNT_SIGNUP_FIELDS = ["email", "username*", "password1*", "password2*"]
 # Email verification disabled to allow immediate CRUD access for new users
-# without requiring external email service dependencies during assessment.
+# without requiring external email service dependencies during demo.
 # In production with a properly configured email service, this should be
 # set to "mandatory" and email notifications should be re-enabled.
 ACCOUNT_EMAIL_VERIFICATION = "none"
