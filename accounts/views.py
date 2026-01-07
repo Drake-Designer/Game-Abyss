@@ -67,11 +67,17 @@ def _process_email_change(request, user, new_email):
     elif changed:
         email_record.save(update_fields=changed)
 
-    email_record.send_confirmation(request=request)
-    messages.info(
-        request,
-        "Confirmation sent — check your inbox to verify the new address.",
-    )
+    try:
+        email_record.send_confirmation(request=request)
+        messages.info(
+            request,
+            "Confirmation sent — check your inbox to verify the new address.",
+        )
+    except Exception:  # pylint: disable=broad-except
+        messages.info(
+            request,
+            "Email updated. Verification emails are disabled for this demo.",
+        )
 
 
 def _compute_last_active(user, posts, comments, drafts, is_self):
