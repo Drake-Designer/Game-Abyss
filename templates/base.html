@@ -58,11 +58,14 @@
   </head>
   <body class="d-flex flex-column min-vh-100 bg-dark text-light">
     {% include "shared/_navbar.html" %}
+    <!-- Messages container - appears right after navbar -->
+    <div class="container mt-3">
+      {% include "shared/_messages.html" %}
+    </div>
     {% block hero %}
     {% endblock hero %}
     <main class="grow py-4">
       <div class="container">
-        {% include "shared/_messages.html" %}
         {% block content %}
         {% endblock content %}
       </div>
