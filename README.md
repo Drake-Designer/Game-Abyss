@@ -558,9 +558,12 @@ You can install dev tools (linting, formatting) from `dev-requirements.txt`.
 
 ### Email and Communication
 
-- **SendGrid** - Email delivery service (production)
-- **premailer** - Inline CSS in HTML emails for compatibility
-- **dj-database-url** - Parse database URLs from environment variables
+| Package | Version | Status | Purpose |
+|---------|---------|--------|---------|
+| **SendGrid** | ✅ Configured | **❌ DISABLED** | Email delivery (expired **19/12/2025**) |
+| **premailer** | ✅ Installed | **❌ DISABLED** | HTML email CSS inlining |
+| **dj-database-url** | ✅ Active | ✅ | DATABASE_URL parsing |
+| **Django SMTP** | ✅ Fallback | ✅ **DEMO** | Local/debug emails |
 
 ### Development & Testing Tools
 
@@ -590,40 +593,34 @@ You can install dev tools (linting, formatting) from `dev-requirements.txt`.
 
 ## Email System
 
-This section explains how Game Abyss sends and receives emails for both internal staff awareness and user interactions. It is designed to keep moderators informed about site activity while delivering branded, helpful messages to end users.
+**🚨 SENDGRID FREE TRIAL EXPIRED 19 DECEMBER 2025 - DEMO MODE ACTIVE**
 
-### Admin and Site Notifications
+### Current Status (Demo Mode)
+❌ SENDGRID DISABLED - Free trial expired 19/12/2025
+✅ Email verification DISABLED for demo purposes
+✅ Password reset → console output only (DEBUG=True)
+✅ Staff notifications → team.gameabyss@gmail.com
 
-The project uses the inbox `team.gameabyss@gmail.com` as the central address for the Game Abyss team. This mailbox receives automatically generated notification emails when key events occur, helping staff stay aware of anything that may require review or action. Typical internal notification triggers include:
+### Original Production Configuration
+SendGrid was configured via `SENDGRID_API_KEY` for:
+• Mandatory email verification after registration
+• Secure password reset links
+• Post/comment approval notifications
+• Branded HTML templates with Premailer CSS inlining
 
-- A new user completes registration.
-- A user submits a new blog post for review (pending/needs moderation).
-- A user publishes content that enters a moderation workflow (e.g. first-time author, flagged criteria).
-- (Optional) A help or contact request is submitted through the site’s support/contact form.
-
-These notifications focus on surfacing new registrations and potentially actionable content so staff can quickly moderate, approve, reject, or follow‑up without constantly checking the admin interface.
-
-Admin notification example:
+**Original email screenshots preserved:**
 
 ![Admin notification example](documentation/email-confirmation/admin-email.png)
-
-### User Facing Emails via SendGrid
-
-Outbound emails to end users are delivered through a SendGrid backend configured in Django settings (using environment variables for API keys/SMTP credentials). All user emails are HTML-based and rendered from templates to maintain Game Abyss branding (colors, typography, and consistent layout). Where available, CSS is inlined (Premailer) to improve compatibility across email clients.
-
-Automatic user-facing email types include:
-
-- Email verification message containing a confirmation link after registration.
-- Password reset emails with secure time-limited links.
-- Post approval confirmation when staff publish a previously pending blog post.
-- (Optional) Rejection or moderation decision emails clarifying why a submission was not approved.
-- (Optional) Follow‑up or resolution notices regarding reported comments or help requests.
-
-Each email is triggered by specific application events (e.g. registration save, post status transition, moderation action). The sending logic assembles context, selects the appropriate HTML template, and (if available) runs it through the inlining pass before dispatch. This ensures both reliability (via SendGrid) and consistent presentation.
-
-User confirmation email example:
-
 ![User confirmation email example](documentation/email-confirmation/user-email.png)
+
+### Reactivate for Production
+Get SendGrid paid plan (€10-15/month) or SMTP alternative
+
+Set SENDGRID_API_KEY environment variable
+
+Re-enable verifiedemailrequired decorators in views
+
+Set ACCOUNT_EMAIL_VERIFICATION=mandatory in settings
 
 ---
 
@@ -881,6 +878,31 @@ def server_error_view(request):
 
 **Result**: All error states consistently use branded templates improving UX and transparency.
 
+#### 5. SendGrid Free Trial Expired (19/12/2025) - Demo Mode Implementation
+
+**Problem**:
+SendGrid free tier limits reached 19 DECEMBER 2025
+
+Email verification blocked new demo users
+
+Heroku deployment failed without email credentials
+
+**Implemented Fixes**:
+🔧 Removed verifiedemailrequired decorator from:
+
+blog/views.py (comment creation, post reactions)
+
+accounts/views.py (profile updates)
+
+🔧 Added EMAIL_DISABLED_DEMO=True flag (core/settings.py)
+🔧 Django SMTP console fallback for DEBUG=True
+🔧 Preserved ALL email templates for reactivation
+
+**Result**:
+✅ Demo 100% functional without external dependencies
+✅ Production code preserved and immediately reactivatable
+✅ All existing tests pass without email service
+
 ---
 
 Each fix was accompanied by targeted test adjustments or new tests (e.g. profile badge rendering, slug generation uniqueness, draft access rules, error handler resolution) ensuring regressions are caught early.
@@ -918,6 +940,20 @@ Each fix was accompanied by targeted test adjustments or new tests (e.g. profile
    - `SENDGRID_API_KEY` or SMTP credentials (`EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, etc.)
    - `ALLOWED_HOSTS`, `SITE_BASE_URL`, and `SUPPORT_EMAIL` for production-friendly URLs
    - `BLOG_COMMENT_BANNED_WORDS` and `BLOG_COMMENT_MAX_LINKS` to tune moderation rules
+
+   ⚠️ **EMAIL WARNING - SENDGRID EXPIRED 19/12/2025 - DEMO MODE**
+   • Email verification DISABLED for frictionless testing
+   • No SENDGRID_API_KEY required locally
+   • Password reset → console output only (DEBUG=True)
+
+   Production reactivation steps:
+
+   ```bash
+   export SENDGRID_API_KEY="SG.xxxxxxxxxxxxxxxxxxxx..."
+   # OR alternative SMTP providers:
+   # export EMAIL_HOST="smtp.gmail.com"
+   # export EMAIL_HOST_USER="your@gmail.com"
+   ```
 4. **Prepare the database and run the server.**
    ```bash
    python manage.py migrate
@@ -1012,15 +1048,14 @@ Building Game Abyss wasn't just about writing code. It was about **problem-solvi
 
 Possible next steps:
 
-1. Avatar cropping tool
-2. Small staff bar showing pending counts
-3. Search for posts by title/text/tag
-4. User badges for milestones
-5. In-site notifications (new comment, reaction)
-6. Follow users and view a follow feed
-7. Game API lookups for favourite games
-8. Embed video/audio links in posts
-9. Add gallery image approval to the in site staff tools so moderators can review and approve uploads without using Django admin
+1. Gallery image approval in staff tools (not just Django admin)
+2. Search for posts by title/text/tag
+3. User badges for milestones
+4. In-site notifications (new comment, reaction)
+5. Follow users and view a follow feed
+6. Game API lookups for favourite games
+7. Embed video/audio links in posts
+8. Add gallery image approval to the in site staff tools so moderators can review and approve uploads without using Django admin
 
 I skipped these to keep scope small and finish a stable base first.
 
@@ -1147,4 +1182,3 @@ User-uploaded images in the gallery are the property of their respective uploade
 If you have any questions or feedback, feel free to reach out. Happy gaming! 🎮
 
 Made with ❤️ by [Drake-Designer](https://github.com/Drake-Designer)
-
