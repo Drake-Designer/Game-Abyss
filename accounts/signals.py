@@ -5,12 +5,14 @@
 """Signal handlers for account lifecycle events (create/delete users)."""
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.signals import user_logged_in
 from django.db.models import Q
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
+
+from allauth.account.signals import user_signed_up
 
 from core.emailing import build_absolute_uri, send_styled_email
 
@@ -29,7 +31,6 @@ def _collect_staff_recipients(exclude_user_ids=None) -> list[str]:
 
 def _notify_staff(subject: str, context: dict, exclude_user_ids=None) -> None:
     """Send a styled notification to all staff and superusers."""
-    # Skip staff notifications if email system is disabled for assessment demo
     if getattr(settings, 'ACCOUNT_EMAIL_NOTIFICATIONS', True) is False:
         return
 
@@ -46,8 +47,17 @@ def _notify_staff(subject: str, context: dict, exclude_user_ids=None) -> None:
 
 
 # ============================================================
-# Account creation/deletion signals
+# User signup signals
 # ============================================================
+
+@receiver(user_signed_up, dispatch_uid="accounts_user_signup_welcome")
+def welcome_new_user(sender, request, user, **kwargs):  # pylint: disable=unused-argument
+    """Display welcome message after successful user registration."""
+    messages.success(
+        request,
+        f"Welcome aboard, {user.username}! Your account is ready — dive into Game Abyss!",
+    )
+
 
 @receiver(post_save, sender=User, dispatch_uid="accounts_user_created_notify")
 def notify_staff_user_registered(sender, instance, created, **kwargs):  # pylint: disable=unused-argument
@@ -76,6 +86,10 @@ def notify_staff_user_registered(sender, instance, created, **kwargs):  # pylint
     _notify_staff(subject, context, exclude_user_ids=[instance.pk])
 
 
+# ============================================================
+# User deletion signal
+# ============================================================
+
 @receiver(post_delete, sender=User, dispatch_uid="accounts_user_deleted_notify")
 def notify_staff_user_deleted(sender, instance, **kwargs):  # pylint: disable=unused-argument
     """Notify staff when a user account is deleted."""
@@ -95,25 +109,3 @@ def notify_staff_user_deleted(sender, instance, **kwargs):  # pylint: disable=un
         "footer_note": "Notification for Game Abyss staff.",
     }
     _notify_staff(subject, context)
-
-
-# ============================================================
-# Login signal (optional)
-# ============================================================
-
-@receiver(user_logged_in, dispatch_uid="accounts_user_logged_in_notify")
-def notify_staff_user_logged_in(sender, request, user, **kwargs):  # pylint: disable=unused-argument
-    """Optional: notify staff on user login. Comment out to avoid noise."""
-    subject = f"User logged in: {user.username}"
-    context = {
-        "greeting": "Hey team,",
-        "intro": f"{user.username} has just logged in to Game Abyss.",
-        "detail_items": [
-            {"label": "Username", "value": user.username},
-            {"label": "Email", "value": user.email or "N/A"},
-        ],
-        "closing": "All systems operational.",
-        "signature": "Game Abyss Alerts",
-        "footer_note": "Login activity notification.",
-    }
-    _notify_staff(subject, context, exclude_user_ids=[user.pk])
