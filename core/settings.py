@@ -2,13 +2,16 @@
 Django settings for core project.
 """
 
+
 from importlib import import_module
 from pathlib import Path
 import os
 import sys
 import warnings
 
+
 import dj_database_url  # For Postgres when DATABASE_URL is set
+
 
 # Load env.py if present (it may set os.environ via side effects)
 try:
@@ -16,21 +19,27 @@ try:
 except ImportError:
     pass
 
+
 # ---------------------------------------------------------------------------
 # Base paths
 # ---------------------------------------------------------------------------
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 # ---------------------------------------------------------------------------
 # Test detection
 # ---------------------------------------------------------------------------
 
+
 RUNNING_TESTS = len(sys.argv) > 1 and sys.argv[1] == "test"
+
 
 # ---------------------------------------------------------------------------
 # Security
 # ---------------------------------------------------------------------------
+
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
@@ -41,17 +50,22 @@ if not SECRET_KEY:
             "SECRET_KEY is not set. Put it in env.py or in your hosting config vars."
         )
 
+
 DEBUG = os.environ.get("DEBUG", "True") == "True"
+
 
 _alh = os.environ.get("ALLOWED_HOSTS", "")
 ALLOWED_HOSTS = [h.strip() for h in _alh.split(",") if h.strip()]
 
+
 _cto = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in _cto.split(",") if o.strip()]
+
 
 # ---------------------------------------------------------------------------
 # Applications
 # ---------------------------------------------------------------------------
+
 
 INSTALLED_APPS = [
     "jazzmin",
@@ -76,11 +90,14 @@ INSTALLED_APPS = [
     "gallery",
 ]
 
+
 SITE_ID = int(os.environ.get("SITE_ID", "1"))
+
 
 # ---------------------------------------------------------------------------
 # Middleware and URLs
 # ---------------------------------------------------------------------------
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -95,11 +112,14 @@ MIDDLEWARE = [
     # "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
 ROOT_URLCONF = "core.urls"
+
 
 # ---------------------------------------------------------------------------
 # Templates
 # ---------------------------------------------------------------------------
+
 
 TEMPLATES = [
     {
@@ -117,11 +137,14 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = "core.wsgi.application"
+
 
 # ---------------------------------------------------------------------------
 # Database
 # ---------------------------------------------------------------------------
+
 
 DATABASES = {
     "default": {
@@ -129,6 +152,7 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
 
 db_url = os.environ.get("DATABASE_URL")
 if db_url:
@@ -138,9 +162,11 @@ if db_url:
         ssl_require=True,
     )
 
+
 # ---------------------------------------------------------------------------
 # Password validation
 # ---------------------------------------------------------------------------
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -149,27 +175,33 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+
 # ---------------------------------------------------------------------------
 # I18N and TZ
 # ---------------------------------------------------------------------------
+
 
 LANGUAGE_CODE = "en-gb"
 TIME_ZONE = "Europe/Dublin"
 USE_I18N = True
 USE_TZ = True
 
+
 # ---------------------------------------------------------------------------
 # Static and media
 # ---------------------------------------------------------------------------
+
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+
 # Whitenoise for static files in production
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 WHITENOISE_MANIFEST_STRICT = False
 WHITENOISE_USE_FINDERS = True
+
 
 # Django 5 storage API
 STORAGES = {
@@ -183,44 +215,55 @@ STORAGES = {
     },
 }
 
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 
 # ---------------------------------------------------------------------------
 # Authentication
 # ---------------------------------------------------------------------------
+
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
+
 # Allauth
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if not DEBUG else "http"
 ACCOUNT_LOGIN_METHODS = {"email", "username"}
 ACCOUNT_SIGNUP_FIELDS = ["email", "username*", "password1*", "password2*"]
-ACCOUNT_EMAIL_VERIFICATION = "optional"
+# Email verification disabled to allow immediate CRUD access for new users
+# In production with a paid email service, this should be set to "mandatory"
+ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
 ACCOUNT_EMAIL_SUBJECT_PREFIX = "[Game Abyss] "
 
+
 # ---------------------------------------------------------------------------
 # Email
 # ---------------------------------------------------------------------------
+
 
 DEFAULT_FROM_EMAIL = os.environ.get(
     "DEFAULT_FROM_EMAIL",
     "Game Abyss <team.gameabyss@gmail.com>",
 )
 
+
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
 PRIMARY_SUPERADMIN_EMAIL = os.environ.get(
     "PRIMARY_SUPERADMIN_EMAIL",
     "team.gameabyss@gmail.com",
 )
+
 
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -235,11 +278,14 @@ else:
     EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "apikey")
     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 
+
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
 
 # ---------------------------------------------------------------------------
 # App defaults
 # ---------------------------------------------------------------------------
+
 
 _banned_words_raw = os.environ.get(
     "BLOG_COMMENT_BANNED_WORDS",
@@ -250,17 +296,21 @@ BLOG_COMMENT_BANNED_WORDS = [
 ]
 BLOG_COMMENT_MAX_LINKS = int(os.environ.get("BLOG_COMMENT_MAX_LINKS", "2"))
 
+
 # Allow friendly iframes when needed (e.g., screenshot tools)
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
 
 # ---------------------------------------------------------------------------
 # Cloudinary (optional)
 # ---------------------------------------------------------------------------
 
+
 try:
     import cloudinary  # type: ignore
 except ImportError:
     cloudinary = None  # type: ignore
+
 
 # pylint: disable=invalid-name
 USE_CLOUDINARY = False
@@ -269,6 +319,7 @@ if cloudinary is not None:
     cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME")
     api_key = os.environ.get("CLOUDINARY_API_KEY")
     api_secret = os.environ.get("CLOUDINARY_API_SECRET")
+
 
     if cloudinary_url:
         cloudinary.config(cloudinary_url=cloudinary_url, secure=True)
@@ -293,6 +344,7 @@ else:
         RuntimeWarning,
     )
 
+
 if USE_CLOUDINARY:
     INSTALLED_APPS.extend(["cloudinary", "cloudinary_storage"])
     STORAGES["default"]["BACKEND"] = (
@@ -302,9 +354,11 @@ if USE_CLOUDINARY:
     DEFAULT_FILE_STORAGE = STORAGES["default"]["BACKEND"]
 
 
+
 # ---------------------------------------------------------------------------
 # Summernote rich text editor
 # ---------------------------------------------------------------------------
+
 
 SUMMERNOTE_THEME = "bs5"
 SUMMERNOTE_CONFIG = {
